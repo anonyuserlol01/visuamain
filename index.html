@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISUAREALM | Independent Film Production House</title>
+    
+    <!-- FAVICON -->
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+
+    <style>
+        /* =======================================================
+           1. CORE VARIABLES & RESET
+           ======================================================= */
+        :root {
+            --obsidian: #050505;
+            --bone: #E8E3DD;
+            --ember: #D95A2B;
+            --ash: #161616;
+            --font-display: 'Georgia', 'Playfair Display', serif;
+            --font-ui: 'Helvetica Neue', Helvetica, sans-serif;
+            --cursor-x: 50vw;
+            --cursor-y: 50vh;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        body, html {
+            background-color: var(--obsidian);
+            color: var(--bone);
+            font-family: var(--font-ui);
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
+        ::-webkit-scrollbar { display: none; }
+
+        /* =======================================================
+           2. SMOOTH SCROLL WRAPPER
+           ======================================================= */
+        #smooth-wrapper {
+            width: 100%; position: fixed; top: 0; left: 0; overflow: hidden;
+        }
+
+        /* =======================================================
+           3. CINEMATIC OVERLAYS
+           ======================================================= */
+        .film-grain {
+            position: fixed; inset: 0; z-index: 9998;
+            pointer-events: none; opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: noise 0.2s infinite steps(2);
+        }
+        @keyframes noise { 0% { transform: translate(0, 0); } 100% { transform: translate(-1%, 1%); } }
+
+        #cursor-dot {
+            position: fixed; top: 0; left: 0; width: 6px; height: 6px; background: var(--ember);
+            border-radius: 50%; pointer-events: none; z-index: 10000;
+            transform: translate(calc(var(--cursor-x) - 3px), calc(var(--cursor-y) - 3px));
+            mix-blend-mode: difference;
+        }
+
+        #cursor-ring {
+            position: fixed; top: 0; left: 0; width: 40px; height: 40px; border: 1px solid rgba(232,227,221,0.4);
+            border-radius: 50%; pointer-events: none; z-index: 9999;
+            transform: translate(calc(var(--cursor-x) - 20px), calc(var(--cursor-y) - 20px));
+            transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1), height 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.4s;
+            display: flex; justify-content: center; align-items: center;
+            font-family: var(--font-ui); font-size: 9px; font-weight: bold; color: transparent;
+            letter-spacing: 0.1em;
+        }
+
+        .hover-target:hover ~ #cursor-ring {
+            width: 110px; height: 110px;
+            transform: translate(calc(var(--cursor-x) - 55px), calc(var(--cursor-y) - 55px));
+            background: rgba(232, 227, 221, 0.95);
+            border-color: transparent; mix-blend-mode: exclusion; color: var(--obsidian);
+        }
+        .hover-target:hover ~ #cursor-ring::after { content: "WATCH"; }
+
+        /* =======================================================
+           4. FLUID INTRO LOADER
+           ======================================================= */
+        #loader {
+            position: fixed; inset: 0; z-index: 10001; background: var(--obsidian);
+            display: flex; justify-content: center; align-items: center;
+            transition: opacity 1.5s cubic-bezier(0.77, 0, 0.175, 1), transform 1.8s ease, filter 1.5s ease;
+        }
+        #loader.fade-out { opacity: 0; transform: scale(1.02); filter: blur(15px); }
+        #loader video { width: 100%; height: 100%; object-fit: contain; }
+
+        /* =======================================================
+           5. TIMECODE
+           ======================================================= */
+        .timecode-tracker {
+            position: fixed; right: 2vw; top: 50%; transform: translateY(-50%);
+            z-index: 9990; opacity: 0; transition: opacity 2s ease 1.5s;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+        }
+        .body-ready .timecode-tracker { opacity: 1; }
+        
+        .tc-label {
+            font-family: monospace; font-size: 0.55rem; color: var(--ember);
+            letter-spacing: 0.25em; text-transform: uppercase;
+        }
+        .tc-display {
+            font-family: monospace; font-size: 0.95rem; color: var(--bone);
+            letter-spacing: 0.15em; background: rgba(232,227,221,0.03);
+            padding: 8px 14px; border-left: 2px solid var(--ember);
+            backdrop-filter: blur(8px);
+        }
+
+        /* =======================================================
+           6. ANAMORPHIC HERO SECTION
+           ======================================================= */
+        .hero {
+            height: 100vh; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; position: relative;
+            overflow: hidden;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: clamp(3.5rem, 11vw, 14rem);
+            font-weight: 400; line-height: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.6em;
+            filter: blur(15px);
+            opacity: 0;
+            transition: letter-spacing 2s cubic-bezier(0.16, 1, 0.3, 1), filter 2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.8s ease;
+        }
+        .hero.active h1 {
+            letter-spacing: -0.02em;
+            filter: blur(0px);
+            opacity: 1;
+        }
+        
+        .hero p {
+            margin-top: 2.5rem; font-size: 1.1rem; color: var(--ember);
+            letter-spacing: 0.4em; text-transform: uppercase;
+            opacity: 0; transition: opacity 2s ease 1.2s; text-align: center;
+        }
+        .hero.active p { opacity: 1; }
+
+        /* =======================================================
+           7. KINETIC PRODUCTION MARQUEE
+           ======================================================= */
+        .motto-section { padding: 12vh 0; text-align: center; }
+        
+        .marquee-container {
+            width: 100%; overflow: hidden; background: var(--bone); color: var(--obsidian);
+            padding: 2.5vh 0; transform: rotate(-1.5deg) scale(1.02); margin: 6vh 0;
+        }
+        .marquee-track {
+            display: flex; width: max-content; animation: marquee 35s linear infinite;
+        }
+        .marquee-track h2 {
+            font-family: var(--font-ui); font-size: 2.2rem; font-weight: 900;
+            text-transform: uppercase; padding-right: 4rem; letter-spacing: 0.05em;
+        }
+        .marquee-track h2 span { color: var(--ember); }
+        @keyframes marquee { to { transform: translateX(-50%); } }
+
+        .motto-deep-dive {
+            max-width: 900px; margin: 10vh auto; font-family: var(--font-display);
+            font-size: clamp(1.4rem, 2.8vw, 2.3rem); line-height: 1.45; color: #8a8a8a;
+            padding: 0 6vw;
+        }
+        .motto-deep-dive span { color: var(--bone); }
+
+        /* =======================================================
+           8. STICKY FILM SHOWCASE
+           ======================================================= */
+        .film-section { position: relative; padding-top: 4vh; }
+        .section-header { text-align: center; margin-bottom: 6vh; font-family: var(--font-display); font-size: 2.8rem; letter-spacing: 0.05em; }
+        
+        .sticky-stack { position: relative; }
+        
+        .film-panel {
+            position: sticky; top: 0; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            background: var(--obsidian);
+        }
+
+        .film-content {
+            width: 90%; max-width: 1500px; display: grid; grid-template-columns: 1.3fr 1fr;
+            gap: 6vw; align-items: center; position: relative;
+        }
+        .film-content.reverse { grid-template-columns: 1fr 1.3fr; }
+
+        /* 3D Poster Container */
+        .image-container {
+            width: 100%; height: 72vh; position: relative;
+            perspective: 1800px;
+        }
+        
+        .poster-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.15s ease-out;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+
+        /* Aspect Ratio Frame Adjustment */
+        .cinematic-frame {
+            position: absolute; inset: 0; border: 0px solid var(--obsidian);
+            z-index: 2; pointer-events: none; transition: border 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .film-panel:hover .cinematic-frame { border-top: 20px solid var(--obsidian); border-bottom: 20px solid var(--obsidian); }
+
+        .poster-inner img {
+            width: 100%; height: 100%; object-fit: cover;
+            transform: scale(1.05);
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .film-panel:hover .poster-inner img { transform: scale(1); }
+        
+        /* GAFFER TAPE GENRE LABELS */
+        .genre-tape {
+            position: absolute; bottom: 35px; left: -15px;
+            background: var(--ember); color: var(--obsidian);
+            padding: 12px 28px; font-family: var(--font-ui); font-size: 0.85rem;
+            font-weight: 900; letter-spacing: 0.2em; text-transform: uppercase;
+            transform: rotate(-2.5deg) translateX(-40px) translateZ(40px); opacity: 0;
+            box-shadow: 4px 4px 12px rgba(0,0,0,0.4); z-index: 10;
+            transition: all 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .reverse .genre-tape {
+            left: auto; right: -15px; transform: rotate(2.5deg) translateX(40px) translateZ(40px);
+        }
+        .film-panel:hover .genre-tape { transform: rotate(-4deg) translateX(0) translateZ(40px); opacity: 1; }
+        .film-panel.reverse:hover .genre-tape { transform: rotate(4deg) translateX(0) translateZ(40px); opacity: 1; }
+
+        .film-info { position: relative; z-index: 5; }
+        .film-title { font-family: var(--font-display); font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: 1.05; margin-bottom: 1.5rem; }
+        .film-info p { font-size: 1.05rem; line-height: 1.65; color: #999; max-width: 480px; margin-bottom: 2rem; }
+        
+        /* IMDb Pill Buttons */
+        .imdb-btn {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 0.9rem 1.8rem; border: 1px solid var(--bone); border-radius: 50px;
+            font-family: var(--font-ui); font-size: 0.75rem; font-weight: bold;
+            text-transform: uppercase; letter-spacing: 0.15em; color: var(--bone);
+            text-decoration: none; position: relative; overflow: hidden;
+            transition: color 0.4s ease;
+        }
+        .imdb-btn::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bone); transform: scaleX(0); transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: -1;
+        }
+        .imdb-btn:hover { color: var(--obsidian); }
+        .imdb-btn:hover::before { transform: scaleX(1); transform-origin: left; }
+
+        /* =======================================================
+           9. ARTSY FOOTER
+           ======================================================= */
+        .creative-footer {
+            min-height: 100vh; background: var(--ember); color: var(--obsidian);
+            display: flex; flex-direction: column; justify-content: space-between;
+            padding: 12vh 5vw 5vh 5vw; position: relative; z-index: 4; text-align: center;
+            overflow: hidden;
+        }
+        
+        .footer-bg-orb {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 140vw; height: 140vw; background: radial-gradient(circle, rgba(244,240,235,0.18) 0%, rgba(217,90,43,0) 65%);
+            z-index: 0; animation: pulse 8s ease-in-out infinite alternate; pointer-events: none;
+        }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-50%, -50%) scale(1.08); } }
+
+        .footer-top { position: relative; z-index: 1; }
+        .footer-top p {
+            font-family: var(--font-display); font-size: clamp(1.8rem, 3.5vw, 3.5rem);
+            max-width: 850px; margin: 0 auto; line-height: 1.25; font-weight: 400;
+        }
+        
+        .magnetic-wrap { position: relative; display: inline-block; padding: 3rem; margin-top: 4vh; }
+        .insta-btn {
+            background: var(--obsidian); color: var(--bone); padding: 1.8rem 3.5rem;
+            border-radius: 200px; font-size: 1.3rem; font-weight: bold;
+            text-transform: uppercase; letter-spacing: 0.15em; text-decoration: none;
+            display: inline-block; transition: transform 0.2s ease, background 0.3s;
+        }
+        .insta-btn:hover { background: var(--bone); color: var(--obsidian); }
+
+        .footer-bottom {
+            display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+            width: 100%; border-top: 1px solid rgba(5,5,5,0.15); padding-top: 5vh;
+            position: relative; z-index: 1;
+        }
+        .huge-logo {
+            font-family: var(--font-display); font-size: clamp(3.5rem, 14vw, 18rem);
+            line-height: 0.8; letter-spacing: -0.03em; color: var(--obsidian);
+            margin: 0; text-transform: uppercase;
+        }
+        .legal { font-size: 0.75rem; letter-spacing: 0.25em; text-transform: uppercase; font-weight: bold; }
+
+        /* =======================================================
+           10. RESPONSIVE ARCHITECTURE (MOBILE ENGINE)
+           ======================================================= */
+        @media (max-width: 768px) {
+            * { cursor: auto !important; }
+            #cursor-dot, #cursor-ring, .timecode-tracker { display: none !important; }
+
+            .hero h1 { font-size: 14vw; letter-spacing: -0.01em; filter: none; opacity: 1; }
+            .hero p { font-size: 0.85rem; margin-top: 1.2rem; padding: 0 4vw; }
+            
+            .marquee-track h2 { font-size: 1.4rem; padding-right: 2rem; }
+            .motto-deep-dive { font-size: 1.15rem; line-height: 1.5; }
+
+            .film-panel { height: auto; position: relative; padding: 8vh 0; }
+            .film-content, .film-content.reverse {
+                grid-template-columns: 1fr; gap: 2.5rem; text-align: center; width: 88%;
+            }
+            .film-content.reverse { display: flex; flex-direction: column-reverse; }
+            
+            .image-container { height: 50vh; }
+            .genre-tape { bottom: 15px; left: 10px; padding: 8px 18px; font-size: 0.7rem; }
+            .reverse .genre-tape { right: 10px; }
+
+            .film-info p { font-size: 0.95rem; margin: 0 auto 1.5rem auto; }
+            .film-title { font-size: 2.5rem; }
+
+            .insta-btn { font-size: 0.95rem; padding: 1.4rem 2.4rem; }
+            .huge-logo { font-size: 15vw; }
+        }
+
+    </style>
+</head>
+<body id="body-main">
+
+    <!-- OVERLAYS -->
+    <div class="film-grain"></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+
+    <!-- TIMECODE TRACKER -->
+    <div class="timecode-tracker">
+        <span class="tc-label">REC. TIME</span>
+        <div class="tc-display" id="tc-output">[00:00:00:00]</div>
+    </div>
+
+    <!-- INTRO LOADER -->
+    <div id="loader">
+        <video id="intro-vid" src="visuarealm-shooting-star-4K.mp4" autoplay muted playsinline></video>
+    </div>
+
+    <!-- SMOOTH SCROLL SYSTEM -->
+    <div id="smooth-wrapper">
+        <div id="smooth-content">
+
+            <!-- HERO -->
+            <section class="hero" id="hero-sec">
+                <h1>VISUAREALM</h1>
+                <p>An Independent Film Production House.</p>
+            </section>
+
+            <!-- KINETIC PRODUCTION MARQUEE -->
+            <section class="motto-section">
+                <div class="marquee-container hover-target">
+                    <div class="marquee-track">
+                        <h2>YOUR VISION. <span>OUR PRODUCTION.</span> — </h2>
+                        <h2>WE DON'T JUST MAKE FILMS. <span>WE SUPPORT FILMMAKERS.</span> — </h2>
+                        <h2>A COMMUNITY FOR CRAFT. <span>A HOUSE FOR CINEMA.</span> — </h2>
+                        <h2>BRING YOUR STORY. <span>LET'S SHOOT IT.</span> — </h2>
+                        
+                        <!-- Loop duplicates -->
+                        <h2>YOUR VISION. <span>OUR PRODUCTION.</span> — </h2>
+                        <h2>WE DON'T JUST MAKE FILMS. <span>WE SUPPORT FILMMAKERS.</span> — </h2>
+                        <h2>A COMMUNITY FOR CRAFT. <span>A HOUSE FOR CINEMA.</span> — </h2>
+                        <h2>BRING YOUR STORY. <span>LET'S SHOOT IT.</span> — </h2>
+                    </div>
+                </div>
+                
+                <p class="motto-deep-dive">
+                    VISUAREALM is an independent production house built on collaboration and craft. <span>We exist to support filmmakers, providing the creative backing and physical production resources needed to bring bold visions to life. If you have a story, we are your home.</span>
+                </p>
+            </section>
+
+            <!-- FILMS SHOWCASE -->
+            <section class="film-section">
+                <h2 class="section-header">OUR PRODUCTIONS</h2>
+                
+                <div class="sticky-stack">
+                    
+                    <!-- FILM 1: In Case We Forget -->
+                    <div class="film-panel panel-1 hover-target">
+                        <div class="film-content">
+                            <div class="image-container tilt-container">
+                                <div class="poster-inner">
+                                    <div class="cinematic-frame"></div>
+                                    <div class="genre-tape">Family / Drama</div>
+                                    <img src="IncaseWeForgetThumbnail.png" alt="In Case We Forget">
+                                </div>
+                            </div>
+                            <div class="film-info">
+                                <h3 class="film-title">In Case<br>We Forget</h3>
+                                <p>Elaine, a 54-year-old widow in the early stages of cognitive decline, packs up her family home with her daughter, Brooke. As familiar details slip away, how many sugars her husband took, why a photo is missing-she faces the terrifying "in-between" of leaving her past and not yet recognizing her future. In Case You Forget is a quiet look at dementia from the Inside. A Mother Losing Her Memories but Still Fighting to Hold on to Who She Is.</p>
+                                <a href="https://www.imdb.com/title/tt42243210/?ref_=ttpl_ov_bk" target="_blank" class="imdb-btn">Explore on IMDb</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FILM 2: The Key Left Behind -->
+                    <div class="film-panel panel-2 hover-target">
+                        <div class="film-content reverse">
+                            <div class="film-info">
+                                <h3 class="film-title">The Key<br>Left Behind</h3>
+                                <p>To move on from her past, a woman must play one final, ghostly childhood game with her sister-a game that holds the key to a dark family secret.</p>
+                                <a href="https://www.imdb.com/title/tt39165447/?ref_=nv_sr_srsg_0_tt_7_nm_1_in_0_q_the%20key%20lef" target="_blank" class="imdb-btn">Explore on IMDb</a>
+                            </div>
+                            <div class="image-container tilt-container">
+                                <div class="poster-inner">
+                                    <div class="cinematic-frame"></div>
+                                    <div class="genre-tape">Short / Thriller</div>
+                                    <img src="Screenshot 2026-01-04 125841.png" alt="The Key Left Behind">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FILM 3: The Frequency of Silence -->
+                    <div class="film-panel panel-3 hover-target">
+                        <div class="film-content">
+                            <div class="image-container tilt-container">
+                                <div class="poster-inner">
+                                    <div class="cinematic-frame"></div>
+                                    <div class="genre-tape">Drama / Family</div>
+                                    <img src="Screenshot 2026-07-02 185436.png" alt="The Frequency of Silence">
+                                </div>
+                            </div>
+                            <div class="film-info">
+                                <h3 class="film-title">The Frequency<br>of Silence</h3>
+                                <p>A deep exploration into the unspoken bonds of family and the weight of silence in a house that no longer rings with laughter. Some frequencies are felt long before they are heard.</p>
+                                <a href="https://www.imdb.com/title/tt38812323/?ref_=nv_sr_srsg_7_tt_4_nm_4_in_0_q_the%20frequency%20of%20silence" target="_blank" class="imdb-btn">Explore on IMDb</a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- FOOTER ENGINE -->
+            <footer class="creative-footer">
+                <div class="footer-bg-orb"></div>
+                <div class="footer-top">
+                    <p>A production house built for filmmakers. Let's make a movie.</p>
+                    
+                    <div class="magnetic-wrap hover-target" id="mag-wrap">
+                        <a href="https://instagram.com/visuarealmstudios" target="_blank" class="insta-btn" id="mag-btn">@VISUAREALMSTUDIOS</a>
+                    </div>
+                </div>
+
+                <div class="footer-bottom">
+                    <h2 class="huge-logo">VISUAREALM</h2>
+                    <span class="legal">© 2026 VISUAREALM. ALL RIGHTS RESERVED.</span>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <!-- RUNTIME SCRIPTS -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const body = document.body;
+            const mainBody = document.getElementById('body-main');
+            const isMobile = window.innerWidth <= 768;
+            
+            // 1. INTRO ENGINE
+            const loader = document.getElementById('loader');
+            const hero = document.getElementById('hero-sec');
+
+            setTimeout(() => {
+                loader.classList.add('fade-out');
+                mainBody.classList.add('body-ready');
+                
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    hero.classList.add('active');
+                }, 1500); 
+            }, 3500); 
+
+            // 2. COORDINATE STREAMING
+            if (!isMobile) {
+                document.addEventListener('mousemove', (e) => {
+                    body.style.setProperty('--cursor-x', `${e.clientX}px`);
+                    body.style.setProperty('--cursor-y', `${e.clientY}px`);
+                });
+            }
+
+            // 3. CORE SMOOTH DISPLAY ENGINE
+            const content = document.getElementById('smooth-content');
+            const tcOutput = document.getElementById('tc-output');
+            let currentY = 0;
+            let targetY = 0;
+            const ease = 0.08; 
+            let docHeight = 0;
+
+            function setBodyHeight() {
+                docHeight = content.getBoundingClientRect().height;
+                if (!isMobile) body.style.height = `${docHeight}px`;
+            }
+            window.addEventListener('resize', setBodyHeight);
+            window.addEventListener('load', setBodyHeight);
+            setTimeout(setBodyHeight, 4000); 
+            
+            function formatTimecode(percent) {
+                const totalSeconds = (percent / 100) * 86400; 
+                const h = Math.floor(totalSeconds / 3600);
+                const m = Math.floor((totalSeconds % 3600) / 60);
+                const s = Math.floor(totalSeconds % 60);
+                const f = Math.floor((totalSeconds - Math.floor(totalSeconds)) * 24); 
+                const pad = (num) => num.toString().padStart(2, '0');
+                return `[${pad(h)}:${pad(m)}:${pad(s)}:${pad(f)}]`;
+            }
+
+            function smoothScroll() {
+                targetY = window.scrollY;
+                currentY += (targetY - currentY) * ease;
+                
+                if (!isMobile) {
+                    content.style.transform = `translate3d(0, -${currentY}px, 0)`;
+                    
+                    if(docHeight > window.innerHeight) {
+                        let scrollPercent = (currentY / (docHeight - window.innerHeight)) * 100;
+                        scrollPercent = Math.max(0, Math.min(100, scrollPercent));
+                        if(tcOutput) tcOutput.innerText = formatTimecode(scrollPercent);
+                    }
+                }
+                requestAnimationFrame(smoothScroll);
+            }
+            smoothScroll();
+
+            // 4. INDUSTRIAL FOOTER POSITIONING
+            const magWrap = document.getElementById('mag-wrap');
+            const magBtn = document.getElementById('mag-btn');
+
+            if (!isMobile && magWrap) {
+                magWrap.addEventListener('mousemove', (e) => {
+                    const rect = magWrap.getBoundingClientRect();
+                    const x = e.clientX - rect.left - rect.width / 2;
+                    const y = e.clientY - rect.top - rect.height / 2;
+                    magBtn.style.transform = `translate(${x * 0.35}px, ${y * 0.35}px)`;
+                });
+                magWrap.addEventListener('mouseleave', () => {
+                    magBtn.style.transform = `translate(0px, 0px)`;
+                });
+            }
+
+            // 5. POSTER TILT SYSTEMS
+            const tiltContainers = document.querySelectorAll('.tilt-container');
+            
+            if (!isMobile) {
+                tiltContainers.forEach(container => {
+                    const inner = container.querySelector('.poster-inner');
+                    
+                    container.addEventListener('mousemove', (e) => {
+                        const rect = container.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+                        
+                        const centerX = rect.width / 2;
+                        const centerY = rect.height / 2;
+                        
+                        const rotateX = ((y - centerY) / centerY) * -8; 
+                        const rotateY = ((x - centerX) / centerX) * 8;
+                        
+                        inner.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                    });
+                    
+                    container.addEventListener('mouseleave', () => {
+                        inner.style.transform = `rotateX(0deg) rotateY(0deg)`;
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>
