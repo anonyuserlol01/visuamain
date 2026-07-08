@@ -10,7 +10,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 
     <!-- SEO: Core Meta Tags -->
-    <meta name="description" content="VISUAREALM is an independent film production house built on collaboration and craft. We support filmmakers with creative backing and production resources. Your vision, our production.">
+    <meta name="description" content="VISUAREALM is an independent studio built on collaboration and craft — backing filmmakers with development, crew, and post. We build people, not just projects.">
     <meta name="keywords" content="independent film, film production, production house, filmmaker support, indie cinema, VISUAREALM, film studio, short films, feature films">
     <meta name="author" content="VISUAREALM">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -20,7 +20,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://visuarealmstudios.com/">
     <meta property="og:title" content="VISUAREALM | Independent Film Production House">
-    <meta property="og:description" content="An independent production house built on collaboration and craft. We exist to support filmmakers, providing the creative backing and physical production resources needed to bring bold visions to life.">
+    <meta property="og:description" content="An independent studio built on collaboration and craft. We back filmmakers with development, crew, and post — investing in people before projects, because projects end and creators keep creating.">
     <meta property="og:image" content="https://visuarealmstudios.com/og-banner.png">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
@@ -32,7 +32,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://visuarealmstudios.com/">
     <meta name="twitter:title" content="VISUAREALM | Independent Film Production House">
-    <meta name="twitter:description" content="An independent production house built on collaboration and craft. We exist to support filmmakers, providing the creative backing and physical production resources needed to bring bold visions to life.">
+    <meta name="twitter:description" content="An independent studio built on collaboration and craft. We back filmmakers with development, crew, and post — investing in people before projects, because projects end and creators keep creating.">
     <meta name="twitter:image" content="https://visuarealmstudios.com/og-banner.png">
     <meta name="twitter:image:alt" content="VISUAREALM - Independent Film Production House">
     <meta name="twitter:site" content="@visuarealmstudios">
@@ -50,7 +50,7 @@
         "url": "https://visuarealmstudios.com/",
         "logo": "https://visuarealmstudios.com/logo.png",
         "image": "https://visuarealmstudios.com/og-banner.png",
-        "description": "An independent film production house built on collaboration and craft. We support filmmakers with creative backing and production resources.",
+        "description": "An independent studio that backs filmmakers with development, crew, and post — investing in people before projects.",
         "sameAs": [
             "https://instagram.com/visuarealmstudios",
             "https://www.imdb.com/search/title/?companies=co1181231"
@@ -182,6 +182,73 @@
         }
 
         ::-webkit-scrollbar { display: none; }
+
+        /* =======================================================
+           1.5 TOP NAVIGATION — cinematic floating bar
+           ======================================================= */
+        .site-nav {
+            position: fixed; top: 0; left: 0; width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1.4rem clamp(1.2rem, 4vw, 3rem);
+            z-index: 9995; border-bottom: 1px solid transparent;
+            opacity: 0; transform: translateY(-14px); pointer-events: none;
+            transition: opacity 1s ease 0.2s, transform 1s cubic-bezier(0.16,1,0.3,1) 0.2s,
+                        background 0.5s ease, border-color 0.5s ease, padding 0.5s ease;
+        }
+        .body-ready .site-nav { opacity: 1; transform: translateY(0); pointer-events: auto; }
+        .site-nav.scrolled {
+            background: rgba(5,5,5,0.72);
+            backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(232,227,221,0.1);
+            padding-top: 0.95rem; padding-bottom: 0.95rem;
+        }
+
+        /* Brand mark (left) */
+        .nav-brand {
+            display: flex; align-items: center; gap: 0.65rem; text-decoration: none;
+            color: var(--bone); font-family: var(--font-impact);
+            font-size: 1.05rem; letter-spacing: 0.18em; text-transform: uppercase;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-brand .nav-star { color: var(--ember); font-size: 0.82rem; transition: transform 0.7s cubic-bezier(0.16,1,0.3,1); }
+        .nav-brand:hover .nav-star { transform: rotate(135deg); }
+
+        /* Pitchdeck button (right) */
+        .nav-deck {
+            display: inline-flex; align-items: center; gap: 0.7rem; text-decoration: none;
+            color: var(--bone); padding: 0.7rem 1.25rem; border-radius: 50px;
+            border: 1px solid rgba(232,227,221,0.35); position: relative; overflow: hidden;
+            transition: color 0.4s ease, border-color 0.4s ease;
+            -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer;
+        }
+        .nav-deck::before {
+            content: ''; position: absolute; inset: 0; background: var(--ember);
+            transform: scaleX(0); transform-origin: right; z-index: -1;
+            transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
+        }
+        .nav-deck:hover { color: var(--obsidian); border-color: var(--ember); }
+        .nav-deck:hover::before { transform: scaleX(1); transform-origin: left; }
+        .nav-deck:active { transform: scale(0.97); }
+        .nav-deck-tag {
+            font-family: var(--font-mono); font-size: 0.55rem; letter-spacing: 0.28em;
+            text-transform: uppercase; color: var(--ember); transition: color 0.4s ease;
+        }
+        .nav-deck:hover .nav-deck-tag { color: var(--obsidian); }
+        .nav-deck-label { font-family: var(--font-impact); font-size: 0.95rem; letter-spacing: 0.14em; text-transform: uppercase; }
+        .nav-deck-arrow { font-family: var(--font-mono); font-size: 1rem; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
+        .nav-deck:hover .nav-deck-arrow { transform: translate(3px, -3px); }
+
+        @media (max-width: 768px) {
+            .site-nav { padding: 1rem 5vw; }
+            .site-nav.scrolled { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+            .nav-brand { font-size: 0.88rem; letter-spacing: 0.12em; }
+            .nav-deck { padding: 0.55rem 1rem; gap: 0.5rem; }
+            .nav-deck-tag { display: none; }
+            .nav-deck-label { font-size: 0.8rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .site-nav { opacity: 1; transform: none; }
+        }
 
         /* =======================================================
            2. CINEMATIC OVERLAYS
@@ -806,9 +873,189 @@
             #strobe { display: none; }
             .film-panel:hover .film-title { text-shadow: none; }
         }
+
+        /* =======================================================
+           13. MANIFESTO — WHO WE ARE
+           ======================================================= */
+        .manifesto { max-width: 1500px; margin: 0 auto; padding: 16vh 5vw 10vh; text-align: center; }
+        .manifesto .idx {
+            display: block; font-family: var(--font-mono); font-size: 0.75rem;
+            letter-spacing: 0.4em; color: var(--ember); margin-bottom: 3.5vh; text-transform: uppercase;
+        }
+        .manifesto-statement {
+            font-family: var(--font-serif); font-weight: 400;
+            font-size: clamp(2rem, 5.4vw, 4.6rem); line-height: 1.12;
+            max-width: 18ch; margin: 0 auto; letter-spacing: -0.01em;
+        }
+        .manifesto-statement em { font-style: italic; color: var(--ember); }
+        .manifesto-sub {
+            font-family: var(--font-serif); font-size: clamp(1.05rem, 1.9vw, 1.5rem);
+            line-height: 1.55; color: #8a8a8a; max-width: 660px; margin: 6.5vh auto 0;
+        }
+        .manifesto-sub span { color: var(--bone); }
+
+        /* =======================================================
+           14. THE DIFFERENCE — MOST / WE
+           ======================================================= */
+        .difference { max-width: 1300px; margin: 0 auto; padding: 4vh 5vw 14vh; }
+        .diff-row {
+            display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+            gap: clamp(1rem, 4vw, 4rem); padding: clamp(1.6rem, 3.4vw, 2.9rem) 0;
+            border-top: 1px solid rgba(232,227,221,0.12);
+        }
+        .diff-row:last-child { border-bottom: 1px solid rgba(232,227,221,0.12); }
+        .diff-most {
+            font-family: var(--font-serif); font-size: clamp(1.02rem, 1.9vw, 1.6rem);
+            line-height: 1.3; color: #6d6d6d; text-align: right;
+        }
+        .diff-arrow { font-family: var(--font-mono); color: var(--ember); font-size: 1.2rem; }
+        .diff-we {
+            font-family: var(--font-serif); font-size: clamp(1.15rem, 2.2vw, 1.95rem);
+            line-height: 1.25; color: var(--bone); text-align: left; font-weight: 600;
+        }
+        .diff-we strong { color: var(--ember); font-weight: 600; }
+
+        /* =======================================================
+           15. WHAT WE BELIEVE — THE CREDO
+           ======================================================= */
+        .believe { max-width: 1500px; margin: 0 auto; padding: 12vh 5vw; }
+        .believe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 clamp(3rem, 6vw, 7rem); }
+        .believe-item {
+            display: flex; gap: 1.2rem; align-items: baseline;
+            padding: clamp(1.3rem, 2.5vw, 1.9rem) 0;
+            border-bottom: 1px solid rgba(232,227,221,0.1);
+        }
+        .believe-item .b-num {
+            font-family: var(--font-mono); font-size: 0.7rem; color: var(--ember);
+            letter-spacing: 0.2em; flex-shrink: 0;
+        }
+        .believe-item p {
+            font-family: var(--font-serif); font-size: clamp(1.08rem, 1.8vw, 1.5rem);
+            line-height: 1.3; color: var(--bone);
+        }
+
+        /* =======================================================
+           16. OUR STANDARDS
+           ======================================================= */
+        .standards { max-width: 1500px; margin: 0 auto; padding: 2vh 5vw 14vh; }
+        .standards-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px;
+            background: rgba(232,227,221,0.08); border: 1px solid rgba(232,227,221,0.08);
+        }
+        .standard {
+            background: var(--obsidian); padding: clamp(2rem, 3.4vw, 3.1rem);
+            position: relative; overflow: hidden; transition: background 0.5s ease;
+        }
+        .standard:hover { background: var(--ash); }
+        .standard .s-idx { font-family: var(--font-mono); font-size: 0.68rem; letter-spacing: 0.3em; color: var(--ember); }
+        .standard h3 {
+            font-family: var(--font-impact); font-size: clamp(1.7rem, 3vw, 2.6rem);
+            text-transform: uppercase; letter-spacing: 0.01em; margin: 1.2rem 0 0.9rem; line-height: 0.95;
+        }
+        .standard p { font-size: 0.95rem; line-height: 1.6; color: #999; max-width: 34ch; }
+        .standard::after {
+            content: ''; position: absolute; left: 0; bottom: 0; height: 3px; width: 0;
+            background: var(--ember); transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+        }
+        .standard:hover::after { width: 100%; }
+
+        /* =======================================================
+           17. THE CREATIVE NETWORK — ROLES
+           ======================================================= */
+        .network { max-width: 1400px; margin: 0 auto; padding: 2vh 5vw 8vh; }
+        .network-lead {
+            font-family: var(--font-serif); font-size: clamp(1.3rem, 2.6vw, 2.1rem);
+            line-height: 1.4; color: #8a8a8a; max-width: 800px; margin-bottom: 8vh;
+        }
+        .network-lead span { color: var(--bone); }
+        .role {
+            display: grid; grid-template-columns: 4rem 1fr; gap: clamp(1.2rem, 4vw, 3rem);
+            align-items: baseline; padding: clamp(1.7rem, 3.1vw, 2.7rem) 0;
+            border-top: 1px solid rgba(232,227,221,0.12);
+            transition: padding-left 0.5s cubic-bezier(0.16,1,0.3,1);
+        }
+        .role:last-child { border-bottom: 1px solid rgba(232,227,221,0.12); }
+        .role:hover { padding-left: clamp(0.5rem, 2vw, 2rem); }
+        .role .r-num { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ember); letter-spacing: 0.2em; }
+        .role-body { display: flex; flex-direction: column; gap: 0.7rem; }
+        .role h3 {
+            font-family: var(--font-impact); font-size: clamp(2rem, 4vw, 3.4rem);
+            text-transform: uppercase; line-height: 0.9; letter-spacing: 0.01em; transition: color 0.4s ease;
+        }
+        .role:hover h3 { color: var(--ember); }
+        .role-body p { font-family: var(--font-serif); font-size: clamp(1rem, 1.6vw, 1.3rem); color: #999; line-height: 1.4; max-width: 62ch; }
+
+        /* =======================================================
+           18. THE LONG VISION — ROADMAP LADDER
+           ======================================================= */
+        .roadmap { max-width: 1100px; margin: 0 auto; padding: 4vh 5vw 14vh; }
+        .roadmap-lead {
+            font-family: var(--font-serif); font-size: clamp(1.2rem, 2.4vw, 1.9rem);
+            line-height: 1.45; color: #8a8a8a; max-width: 740px; margin-bottom: 9vh;
+        }
+        .roadmap-lead span { color: var(--bone); }
+        .ladder { position: relative; padding-left: clamp(2.2rem, 5vw, 2.8rem); border-left: 1px solid rgba(217,90,43,0.35); margin-left: 0.5rem; }
+        .stage {
+            position: relative; padding: clamp(1.1rem, 2.3vw, 1.6rem) 0;
+            display: flex; align-items: baseline; gap: clamp(1rem, 3vw, 2rem);
+        }
+        .stage::before {
+            content: ''; position: absolute; left: calc(-1 * clamp(2.2rem, 5vw, 2.8rem) - 6px);
+            top: 50%; transform: translateY(-50%);
+            width: 10px; height: 10px; border-radius: 50%; background: var(--obsidian); border: 2px solid var(--ember);
+        }
+        .stage .st-num { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ember); letter-spacing: 0.2em; flex-shrink: 0; }
+        .stage h3 { font-family: var(--font-impact); font-size: clamp(1.5rem, 3.4vw, 2.8rem); text-transform: uppercase; line-height: 1; letter-spacing: 0.01em; }
+        .stage.final::before { background: var(--ember); box-shadow: 0 0 0 4px rgba(217,90,43,0.2); }
+        .stage.final h3 { color: var(--ember); }
+
+        /* Footer brand kicker */
+        .footer-kicker {
+            display: block; font-family: var(--font-mono); font-size: clamp(0.55rem, 1vw, 0.72rem);
+            letter-spacing: 0.3em; text-transform: uppercase; margin-bottom: 3vh; opacity: 0.7;
+        }
+
+        /* =======================================================
+           19. NEW SECTIONS — MOBILE ARCHITECTURE
+           ======================================================= */
+        @media (max-width: 768px) {
+            .manifesto { padding: 12vh 6vw 8vh; }
+            .manifesto-statement { max-width: 100%; }
+            .difference { padding: 4vh 6vw 10vh; }
+            .diff-row { grid-template-columns: 1fr; gap: 0.55rem; padding: 1.9rem 0; }
+            .diff-most, .diff-we { text-align: left; }
+            .diff-most { font-size: 0.95rem; }
+            .diff-we { font-size: 1.28rem; }
+            .diff-arrow { display: none; }
+            .diff-we::before { content: '\2192\00a0'; color: var(--ember); }
+            .believe { padding: 10vh 6vw; }
+            .believe-grid { grid-template-columns: 1fr; gap: 0; }
+            .standards { padding: 2vh 6vw 10vh; }
+            .standards-grid { grid-template-columns: 1fr; }
+            .network { padding: 2vh 6vw 6vh; }
+            .role { grid-template-columns: 2.4rem 1fr; gap: 1rem; }
+            .role:hover { padding-left: 0; }
+            .roadmap { padding: 4vh 6vw 10vh; }
+        }
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .standards-grid { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body id="body-main">
+
+    <!-- TOP NAVIGATION -->
+    <header class="site-nav" id="site-nav">
+        <a href="index.html" class="nav-brand" aria-label="VISUAREALM home">
+            <span class="nav-star" aria-hidden="true">&#10022;</span>
+            <span class="nav-word">VISUAREALM</span>
+        </a>
+        <a href="pitchdeck.html" class="nav-deck" aria-label="Open the VISUAREALM pitch deck">
+            <span class="nav-deck-tag">[ The Deck ]</span>
+            <span class="nav-deck-label">Pitchdeck</span>
+            <span class="nav-deck-arrow" aria-hidden="true">&#8599;</span>
+        </a>
+    </header>
 
     <!-- OVERLAYS -->
     <div class="film-grain" aria-hidden="true"></div>
@@ -845,30 +1092,37 @@
             <div class="marquee-container hover-target" aria-hidden="true">
                 <div class="marquee-track">
                     <h2>YOUR VISION. <span>OUR PRODUCTION.</span> — </h2>
-                    <h2>WE DON'T JUST MAKE FILMS. <span>WE SUPPORT FILMMAKERS.</span> — </h2>
-                    <h2>A COMMUNITY FOR CRAFT. <span>A HOUSE FOR CINEMA.</span> — </h2>
-                    <h2>BRING YOUR STORY. <span>LET'S SHOOT IT.</span> — </h2>
-                    
+                    <h2>WE DON'T BUILD PROJECTS. <span>WE BUILD PEOPLE.</span> — </h2>
+                    <h2>CREATING STORIES. <span>BUILDING CREATORS.</span> — </h2>
+                    <h2>BRING THE STORY. <span>WE BUILD THE REST.</span> — </h2>
+
                     <!-- Loop duplicates -->
                     <h2>YOUR VISION. <span>OUR PRODUCTION.</span> — </h2>
-                    <h2>WE DON'T JUST MAKE FILMS. <span>WE SUPPORT FILMMAKERS.</span> — </h2>
-                    <h2>A COMMUNITY FOR CRAFT. <span>A HOUSE FOR CINEMA.</span> — </h2>
-                    <h2>BRING YOUR STORY. <span>LET'S SHOOT IT.</span> — </h2>
+                    <h2>WE DON'T BUILD PROJECTS. <span>WE BUILD PEOPLE.</span> — </h2>
+                    <h2>CREATING STORIES. <span>BUILDING CREATORS.</span> — </h2>
+                    <h2>BRING THE STORY. <span>WE BUILD THE REST.</span> — </h2>
                 </div>
             </div>
             
             <div class="marquee-container invert hover-target" aria-hidden="true">
                 <div class="marquee-track">
-                    <h2>DEVELOP <span>·</span> PRODUCE <span>·</span> POST <span>·</span> RELEASE <span>·</span></h2>
-                    <h2>DEVELOP <span>·</span> PRODUCE <span>·</span> POST <span>·</span> RELEASE <span>·</span></h2>
-                    <h2>DEVELOP <span>·</span> PRODUCE <span>·</span> POST <span>·</span> RELEASE <span>·</span></h2>
-                    <h2>DEVELOP <span>·</span> PRODUCE <span>·</span> POST <span>·</span> RELEASE <span>·</span></h2>
+                    <h2>STORY <span>·</span> CRAFT <span>·</span> INTEGRITY <span>·</span> RESPECT <span>·</span> INNOVATION <span>·</span> LEGACY <span>·</span></h2>
+                    <h2>STORY <span>·</span> CRAFT <span>·</span> INTEGRITY <span>·</span> RESPECT <span>·</span> INNOVATION <span>·</span> LEGACY <span>·</span></h2>
+                    <h2>STORY <span>·</span> CRAFT <span>·</span> INTEGRITY <span>·</span> RESPECT <span>·</span> INNOVATION <span>·</span> LEGACY <span>·</span></h2>
+                    <h2>STORY <span>·</span> CRAFT <span>·</span> INTEGRITY <span>·</span> RESPECT <span>·</span> INNOVATION <span>·</span> LEGACY <span>·</span></h2>
                 </div>
             </div>
 
             <p class="motto-deep-dive">
-                VISUAREALM is an independent production house built on collaboration and craft. <span>We exist to support filmmakers, providing the creative backing and physical production resources needed to bring bold visions to life. If you have a story, we are your home.</span>
+                VISUAREALM is an independent studio built on collaboration and craft — a house that backs filmmakers with real development, crew, and post, then keeps building long after the credits roll. <span>We invest in people before projects, because projects end and creators keep creating. Bring the story — we build the rest around you.</span>
             </p>
+        </section>
+
+        <!-- MANIFESTO -->
+        <section class="manifesto" aria-label="Who We Are">
+            <span class="idx">The Brand · Who We Are</span>
+            <p class="manifesto-statement">We are building more than projects. We are building a <em>creative legacy</em>.</p>
+            <p class="manifesto-sub">Most creative companies exist to complete projects. <span>We exist to build people.</span> Projects end — people keep creating. If we help exceptional people become exceptional creators, the work will always follow.</p>
         </section>
 
         <!-- CAPABILITIES -->
@@ -906,9 +1160,56 @@
             <div class="stat"><div class="num">∞</div><div class="lbl">Stories Wanted</div></div>
         </section>
 
+        <!-- THE DIFFERENCE -->
+        <section class="difference" aria-label="What Makes Us Different">
+            <h2 class="section-header"><span class="idx">What Sets Us Apart</span>The Difference</h2>
+            <div class="diff-row">
+                <p class="diff-most">Most studios are project-focused.</p>
+                <span class="diff-arrow" aria-hidden="true">&#8594;</span>
+                <p class="diff-we">We are <strong>people-focused.</strong></p>
+            </div>
+            <div class="diff-row">
+                <p class="diff-most">Most companies measure success by finished productions.</p>
+                <span class="diff-arrow" aria-hidden="true">&#8594;</span>
+                <p class="diff-we">We measure it by the <strong>careers we help build.</strong></p>
+            </div>
+            <div class="diff-row">
+                <p class="diff-most">Most crews are assembled for a single job.</p>
+                <span class="diff-arrow" aria-hidden="true">&#8594;</span>
+                <p class="diff-we">We cultivate <strong>long-term creative relationships.</strong></p>
+            </div>
+            <div class="diff-row">
+                <p class="diff-most">Most agencies represent talent.</p>
+                <span class="diff-arrow" aria-hidden="true">&#8594;</span>
+                <p class="diff-we">We help <strong>talent develop.</strong></p>
+            </div>
+            <div class="diff-row">
+                <p class="diff-most">Most companies sell services.</p>
+                <span class="diff-arrow" aria-hidden="true">&#8594;</span>
+                <p class="diff-we">We build <strong>IP, culture, and community.</strong></p>
+            </div>
+        </section>
+
+        <!-- WHAT WE BELIEVE -->
+        <section class="believe" aria-label="What We Believe">
+            <h2 class="section-header"><span class="idx">Our Ethos</span>What We Believe</h2>
+            <div class="believe-grid">
+                <div class="believe-item"><span class="b-num">01</span><p>Story is the most powerful form of communication.</p></div>
+                <div class="believe-item"><span class="b-num">02</span><p>People are always more valuable than equipment.</p></div>
+                <div class="believe-item"><span class="b-num">03</span><p>Creativity grows through collaboration.</p></div>
+                <div class="believe-item"><span class="b-num">04</span><p>Professionalism creates opportunity.</p></div>
+                <div class="believe-item"><span class="b-num">05</span><p>Consistency builds trust.</p></div>
+                <div class="believe-item"><span class="b-num">06</span><p>Craftsmanship matters.</p></div>
+                <div class="believe-item"><span class="b-num">07</span><p>Relationships outlast transactions.</p></div>
+                <div class="believe-item"><span class="b-num">08</span><p>Great work requires patience.</p></div>
+                <div class="believe-item"><span class="b-num">09</span><p>Culture is built intentionally.</p></div>
+                <div class="believe-item"><span class="b-num">10</span><p>Legacy is earned over time.</p></div>
+            </div>
+        </section>
+
         <!-- FILMS SHOWCASE -->
         <section class="film-section" aria-label="Our Productions">
-            <h2 class="section-header"><span class="idx">02 — THE SLATE</span>OUR PRODUCTIONS</h2>
+            <h2 class="section-header"><span class="idx">The Slate</span>Our Productions</h2>
             
             <div class="sticky-stack">
                 
@@ -969,10 +1270,107 @@
             </div>
         </section>
 
+        <!-- OUR STANDARDS -->
+        <section class="standards" aria-label="Our Standards">
+            <h2 class="section-header"><span class="idx">How We Work</span>Our Standards</h2>
+            <div class="standards-grid">
+                <div class="standard">
+                    <span class="s-idx">STORY</span>
+                    <h3>Narrative First</h3>
+                    <p>Every decision should serve the story. If it doesn't move the picture, it doesn't make the cut.</p>
+                </div>
+                <div class="standard">
+                    <span class="s-idx">CRAFT</span>
+                    <h3>Technical Excellence</h3>
+                    <p>Craftsmanship is expected, not optional. We hold every frame to a professional standard.</p>
+                </div>
+                <div class="standard">
+                    <span class="s-idx">INTEGRITY</span>
+                    <h3>We Keep Our Word</h3>
+                    <p>We communicate honestly, deliver what we promise, and own our mistakes when we make them.</p>
+                </div>
+                <div class="standard">
+                    <span class="s-idx">RESPECT</span>
+                    <h3>People Before Ego</h3>
+                    <p>Every collaborator deserves dignity. There is no room here for gatekeeping or ego-driven culture.</p>
+                </div>
+                <div class="standard">
+                    <span class="s-idx">INNOVATION</span>
+                    <h3>Never Complacent</h3>
+                    <p>Experimentation is encouraged; complacency is not. We chase the idea, not the trend.</p>
+                </div>
+                <div class="standard">
+                    <span class="s-idx">LEGACY</span>
+                    <h3>Built To Last</h3>
+                    <p>We create work that matters tomorrow — not just work that performs today.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- THE CREATIVE NETWORK -->
+        <section class="network" aria-label="The Creative Network">
+            <h2 class="section-header"><span class="idx">The People</span>The Creative Network</h2>
+            <p class="network-lead">We don't call our people "talent." Everyone belongs to <span>The Creative Network</span> — language built around contribution and growth rather than hierarchy. Within it are five distinct roles.</p>
+
+            <div class="role">
+                <span class="r-num">01</span>
+                <div class="role-body">
+                    <h3>Network</h3>
+                    <p>Collaborators who have worked with the studio.</p>
+                </div>
+            </div>
+            <div class="role">
+                <span class="r-num">02</span>
+                <div class="role-body">
+                    <h3>Residents</h3>
+                    <p>Creatives who actively build alongside VISUAREALM.</p>
+                </div>
+            </div>
+            <div class="role">
+                <span class="r-num">03</span>
+                <div class="role-body">
+                    <h3>Fellows</h3>
+                    <p>Experienced contributors who mentor and shape the culture.</p>
+                </div>
+            </div>
+            <div class="role">
+                <span class="r-num">04</span>
+                <div class="role-body">
+                    <h3>Directors</h3>
+                    <p>Department leaders responsible for creative excellence.</p>
+                </div>
+            </div>
+            <div class="role">
+                <span class="r-num">05</span>
+                <div class="role-body">
+                    <h3>Partners</h3>
+                    <p>Organizations and businesses aligned with our mission.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- THE LONG VISION -->
+        <section class="roadmap" aria-label="Where We Are Going">
+            <h2 class="section-header"><span class="idx">The Long View</span>Where We're Going</h2>
+            <p class="roadmap-lead">VISUAREALM begins as a creative studio. <span>Over time, it becomes a complete creative ecosystem</span> — each stage strengthening the same mission: empowering creators and producing meaningful work.</p>
+            <div class="ladder">
+                <div class="stage"><span class="st-num">01</span><h3>Creative Studio</h3></div>
+                <div class="stage"><span class="st-num">02</span><h3>Production House</h3></div>
+                <div class="stage"><span class="st-num">03</span><h3>Creative Network</h3></div>
+                <div class="stage"><span class="st-num">04</span><h3>Education</h3></div>
+                <div class="stage"><span class="st-num">05</span><h3>Equipment Division</h3></div>
+                <div class="stage"><span class="st-num">06</span><h3>Publishing</h3></div>
+                <div class="stage"><span class="st-num">07</span><h3>Music</h3></div>
+                <div class="stage"><span class="st-num">08</span><h3>Creative Campus</h3></div>
+                <div class="stage final"><span class="st-num">09</span><h3>Global Institution</h3></div>
+            </div>
+        </section>
+
         <!-- FOOTER ENGINE -->
         <footer class="creative-footer" role="contentinfo">
             <div class="footer-bg-orb" aria-hidden="true"></div>
             <div class="footer-top">
+                <span class="footer-kicker">Creating Stories · Building Creators · Shaping Culture</span>
                 <p>A production house built for filmmakers. Let's make a movie.</p>
                 
                 <div class="magnetic-wrap hover-target" id="mag-wrap">
@@ -994,6 +1392,17 @@
             const body = document.body;
             const mainBody = document.getElementById('body-main');
             const isMobile = window.matchMedia('(max-width: 768px)').matches || 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+            // TOP NAV — solidify on scroll
+            const siteNav = document.getElementById('site-nav');
+            if (siteNav) {
+                const onNavScroll = () => {
+                    if (window.scrollY > 60) siteNav.classList.add('scrolled');
+                    else siteNav.classList.remove('scrolled');
+                };
+                window.addEventListener('scroll', onNavScroll, { passive: true });
+                onNavScroll();
+            }
             
             // 1. STROBE INTRO ENGINE — the signature flashing-text load-in
             const strobe = document.getElementById('strobe');
@@ -1024,6 +1433,7 @@
                 { t: 'THE FREQUENCY OF SILENCE',c: 'v-mono',           d: 140 },
                 { t: 'WE SUPPORT',              c: 'v-tall',           d: 120 },
                 { t: 'FILMMAKERS',              c: 'v-ember',          d: 160 },
+                { t: 'CREATIVE LEGACY',         c: 'v-serif',          d: 150 },
                 { t: 'VISUAREALM',              c: '',                 d: 650 }
             ];
 
