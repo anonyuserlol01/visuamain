@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visuarealm Studio.</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="./favicon-32.png">
+
+<style>
+  :root {
+    --vr-black: #0a0a0a;
+    --vr-cream: #f5f0e8;
+    --vr-cream-dim: #c8c2b8;
+    --vr-gold: #c4a882;
+    --vr-gold-dim: #8a7a68;
+    --vr-gray: #4a4a4a;
+    --vr-gray-light: #6a6a6a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--vr-black);
+    color: var(--vr-cream);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  /* Film grain overlay */
+  .vr-grain {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Loader */
+  .vr-loader {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: var(--vr-black);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1), visibility 1.2s;
+  }
+  .vr-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+  .vr-loader-star {
+    width: 80px;
+    height: 80px;
+    animation: starPulse 2s ease-in-out infinite;
+  }
+  .vr-loader-star svg { width: 100%; height: 100%; }
+  .vr-loader-star svg path {
+    fill: var(--vr-cream);
+    animation: starGlow 2s ease-in-out infinite;
+  }
+
+  @keyframes starPulse {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    50% { transform: scale(1.15) rotate(5deg); }
+  }
+  @keyframes starGlow {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  .vr-loader-text {
+    margin-top: 32px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: var(--vr-cream-dim);
+    animation: textFade 2s ease-in-out infinite;
+  }
+  @keyframes textFade {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  .vr-loader-bar {
+    margin-top: 24px;
+    width: 120px;
+    height: 1px;
+    background: var(--vr-gray);
+    position: relative;
+    overflow: hidden;
+  }
+  .vr-loader-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: var(--vr-cream);
+    animation: loadSlide 2s ease-in-out infinite;
+  }
+  @keyframes loadSlide {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* Slides */
+  .vr-slides {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .vr-slide {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 40px;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .vr-slide.active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: all;
+  }
+
+  /* Hero Slide */
+  .vr-hero-star {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 40px;
+    animation: heroStarFloat 6s ease-in-out infinite;
+  }
+  .vr-hero-star svg { width: 100%; height: 100%; }
+  .vr-hero-star svg path { fill: var(--vr-cream); }
+  @keyframes heroStarFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-12px) rotate(3deg); }
+  }
+
+  .vr-hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(48px, 10vw, 120px);
+    font-weight: 300;
+    letter-spacing: 12px;
+    text-transform: uppercase;
+    color: var(--vr-cream);
+    line-height: 1;
+    text-align: center;
+  }
+  .vr-hero-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(16px, 2.5vw, 24px);
+    font-weight: 300;
+    font-style: italic;
+    color: var(--vr-cream-dim);
+    margin-top: 16px;
+    letter-spacing: 2px;
+  }
+  .vr-hero-line {
+    width: 60px;
+    height: 1px;
+    background: var(--vr-gold);
+    margin: 32px auto;
+    animation: lineExpand 1.5s ease-out 0.5s both;
+  }
+  @keyframes lineExpand {
+    from { width: 0; opacity: 0; }
+    to { width: 60px; opacity: 1; }
+  }
+  .vr-hero-desc {
+    font-size: 13px;
+    font-weight: 300;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--vr-gray-light);
+    text-align: center;
+    max-width: 500px;
+    line-height: 1.8;
+  }
+
+  /* Content Slides */
+  .vr-slide-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--vr-gold);
+    margin-bottom: 24px;
+  }
+  .vr-slide-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 6vw, 64px);
+    font-weight: 300;
+    color: var(--vr-cream);
+    line-height: 1.1;
+    text-align: center;
+    max-width: 800px;
+  }
+  .vr-slide-body {
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    line-height: 1.8;
+    text-align: center;
+    max-width: 600px;
+    margin-top: 24px;
+  }
+
+  /* Three Pillars */
+  .vr-pillars {
+    display: flex;
+    gap: 40px;
+    margin-top: 48px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vr-pillar {
+    width: 220px;
+    text-align: center;
+    padding: 32px 24px;
+    border: 1px solid var(--vr-gray);
+    position: relative;
+    transition: border-color 0.4s ease, transform 0.4s ease;
+  }
+  .vr-pillar:hover {
+    border-color: var(--vr-gold-dim);
+    transform: translateY(-4px);
+  }
+  .vr-pillar-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--vr-gold);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .vr-pillar-title {
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--vr-cream);
+    margin-bottom: 12px;
+  }
+  .vr-pillar-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    line-height: 1.6;
+  }
+
+  /* Three Tiers */
+  .vr-tiers {
+    display: flex;
+    gap: 24px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vr-tier {
+    width: 260px;
+    padding: 32px;
+    background: rgba(245, 240, 232, 0.03);
+    border: 1px solid var(--vr-gray);
+    position: relative;
+    transition: all 0.4s ease;
+  }
+  .vr-tier:hover {
+    background: rgba(245, 240, 232, 0.06);
+    border-color: var(--vr-gold-dim);
+  }
+  .vr-tier-badge {
+    position: absolute;
+    top: -10px;
+    left: 24px;
+    background: var(--vr-black);
+    border: 1px solid var(--vr-gold);
+    padding: 4px 12px;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--vr-gold);
+  }
+  .vr-tier-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: var(--vr-cream);
+    margin-bottom: 8px;
+    margin-top: 8px;
+  }
+  .vr-tier-sub {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--vr-gold);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .vr-tier-desc {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    line-height: 1.7;
+  }
+
+  /* Film Cards */
+  .vr-films {
+    display: flex;
+    gap: 32px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vr-film {
+    width: 280px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .vr-film:hover { transform: translateY(-8px) scale(1.02); }
+  .vr-film-poster {
+    width: 100%;
+    aspect-ratio: 2/3;
+    background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+    border: 1px solid var(--vr-gray);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .vr-film-poster::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at 30% 30%, rgba(196, 168, 130, 0.08) 0%, transparent 70%);
+  }
+  .vr-film-poster-star {
+    width: 40px;
+    height: 40px;
+    opacity: 0.3;
+    margin-bottom: 16px;
+  }
+  .vr-film-poster-star svg { width: 100%; height: 100%; }
+  .vr-film-poster-star svg path { fill: var(--vr-cream); }
+  .vr-film-poster-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--vr-cream);
+    text-align: center;
+    padding: 0 20px;
+    line-height: 1.3;
+    z-index: 1;
+  }
+  .vr-film-poster-line {
+    width: 30px;
+    height: 1px;
+    background: var(--vr-gold);
+    margin: 12px auto;
+    z-index: 1;
+  }
+  .vr-film-poster-genre {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--vr-gold-dim);
+    z-index: 1;
+  }
+  .vr-film-info {
+    padding: 20px 0;
+  }
+  .vr-film-info-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--vr-cream);
+    margin-bottom: 4px;
+  }
+  .vr-film-info-meta {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    letter-spacing: 1px;
+  }
+
+  /* Path / Roadmap */
+  .vr-path {
+    display: flex;
+    gap: 16px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .vr-path-step {
+    width: 200px;
+    padding: 28px;
+    border: 1px solid var(--vr-gray);
+    position: relative;
+    transition: all 0.4s ease;
+  }
+  .vr-path-step:hover {
+    border-color: var(--vr-gold-dim);
+    background: rgba(245, 240, 232, 0.02);
+  }
+  .vr-path-step-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 300;
+    color: var(--vr-gold);
+    margin-bottom: 12px;
+  }
+  .vr-path-step-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--vr-cream);
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .vr-path-step-desc {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    line-height: 1.6;
+  }
+
+  /* Closing */
+  .vr-closing-star {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 32px;
+    opacity: 0.6;
+  }
+  .vr-closing-star svg { width: 100%; height: 100%; }
+  .vr-closing-star svg path { fill: var(--vr-cream); }
+  .vr-closing-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 300;
+    color: var(--vr-cream);
+    text-align: center;
+    line-height: 1.2;
+  }
+  .vr-closing-sub {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    margin-top: 16px;
+    letter-spacing: 2px;
+    text-align: center;
+  }
+
+  /* Progress Bar */
+  .vr-progress {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--vr-gray);
+    z-index: 1000;
+  }
+  .vr-progress-fill {
+    height: 100%;
+    background: var(--vr-gold);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  /* Slide Counter */
+  .vr-counter {
+    position: fixed;
+    bottom: 20px;
+    right: 40px;
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--vr-gray-light);
+    z-index: 1000;
+  }
+  .vr-counter span { color: var(--vr-cream); }
+
+  /* Navigation Hints */
+  .vr-nav-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 3px;
+    color: var(--vr-gray-light);
+    text-transform: uppercase;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vr-nav-hint-arrow {
+    animation: bounceDown 2s ease-in-out infinite;
+  }
+  @keyframes bounceDown {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
+  }
+
+  /* Side dots */
+  .vr-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 1000;
+  }
+  .vr-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--vr-gray);
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .vr-dot.active {
+    background: var(--vr-cream);
+    transform: scale(1.4);
+  }
+  .vr-dot:hover { background: var(--vr-cream-dim); }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .vr-slide { padding: 40px 20px; }
+    .vr-pillars, .vr-tiers, .vr-films, .vr-path {
+      flex-direction: column;
+      align-items: center;
+    }
+    .vr-pillar, .vr-tier, .vr-film, .vr-path-step { width: 100%; max-width: 320px; }
+    .vr-dots { display: none; }
+    .vr-nav-hint { display: none; }
+  }
+
+  /* Reveal animations */
+  .reveal {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .active .reveal {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .reveal-d1 { transition-delay: 0.1s; }
+  .reveal-d2 { transition-delay: 0.2s; }
+  .reveal-d3 { transition-delay: 0.3s; }
+  .reveal-d4 { transition-delay: 0.4s; }
+  .reveal-d5 { transition-delay: 0.5s; }
+
+  /* Comparison table */
+  .vr-compare {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin-top: 40px;
+    max-width: 600px;
+    width: 100%;
+  }
+  .vr-compare-col {
+    padding: 24px;
+    border: 1px solid var(--vr-gray);
+  }
+  .vr-compare-col:first-child { border-right: none; }
+  .vr-compare-title {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .vr-compare-col:first-child .vr-compare-title { color: var(--vr-gray-light); }
+  .vr-compare-col:last-child .vr-compare-title { color: var(--vr-gold); }
+  .vr-compare-item {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--vr-cream-dim);
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .vr-compare-item:last-child { border-bottom: none; }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div class="vr-grain"></div>
+
+<!-- Loader -->
+<div class="vr-loader" id="vrLoader">
+  <div class="vr-loader-star">
+    <svg viewBox="0 0 100 100">
+      <path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/>
+    </svg>
+  </div>
+  <div class="vr-loader-text">The realm builds its own</div>
+  <div class="vr-loader-bar"></div>
+</div>
+
+<!-- Slides -->
+<div class="vr-slides" id="vrSlides">
+
+  <!-- Slide 1: Hero -->
+  <div class="vr-slide active" data-index="0">
+    <div class="vr-hero-star reveal">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/>
+      </svg>
+    </div>
+    <h1 class="vr-hero-title reveal reveal-d1">Visuarealm</h1>
+    <p class="vr-hero-subtitle reveal reveal-d2">The realm builds its own</p>
+    <div class="vr-hero-line reveal reveal-d3"></div>
+    <p class="vr-hero-desc reveal reveal-d4">An independent production house. A point of view, not a volume of output.</p>
+  </div>
+
+  <!-- Slide 2: The Vision -->
+  <div class="vr-slide" data-index="1">
+    <div class="vr-slide-label reveal">The Vision</div>
+    <h2 class="vr-slide-title reveal reveal-d1">Taste over scale.<br>A studio built by hand.</h2>
+    <p class="vr-slide-body reveal reveal-d2">
+      In the spirit of A24 and Blumhouse, Visuarealm is defined by a point of view rather than a volume of output. 
+      We produce original films and champion a small, hand-picked group of artists — building a recognizable name that audiences learn to trust.
+    </p>
+    <div class="vr-hero-line reveal reveal-d3"></div>
+    <p class="vr-slide-body reveal reveal-d4" style="font-size: 13px; color: var(--vr-gray-light);">
+      Being part of Visuarealm means something — for the artists and the audience alike.
+    </p>
+  </div>
+
+  <!-- Slide 3: The Core Idea -->
+  <div class="vr-slide" data-index="2">
+    <div class="vr-slide-label reveal">The Core Idea</div>
+    <h2 class="vr-slide-title reveal reveal-d1">Not an agency.<br>A studio chosen by invitation.</h2>
+    <p class="vr-slide-body reveal reveal-d2">
+      Visuarealm is built on selection, not scale. A small core produces the films. A hand-picked few are represented and developed with real focus. A wider community forms around the work.
+    </p>
+    <div class="vr-pillars">
+      <div class="vr-pillar reveal reveal-d2">
+        <div class="vr-pillar-num">01</div>
+        <div class="vr-pillar-title">It makes films</div>
+        <div class="vr-pillar-desc">A genuine production house first — the creative engine of everything we do.</div>
+      </div>
+      <div class="vr-pillar reveal reveal-d3">
+        <div class="vr-pillar-num">02</div>
+        <div class="vr-pillar-title">It backs a select few</div>
+        <div class="vr-pillar-desc">A close-knit roster of artists, developed with focus — never a crowd.</div>
+      </div>
+      <div class="vr-pillar reveal reveal-d4">
+        <div class="vr-pillar-num">03</div>
+        <div class="vr-pillar-title">It gathers a community</div>
+        <div class="vr-pillar-desc">A network of collaborators and an audience that follows the work.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 4: The Three Tiers -->
+  <div class="vr-slide" data-index="3">
+    <div class="vr-slide-label reveal">The Structure</div>
+    <h2 class="vr-slide-title reveal reveal-d1">Three tiers,<br>one realm.</h2>
+    <p class="vr-slide-body reveal reveal-d2">Visuarealm is organized as three concentric tiers. Each has a distinct role and a distinct relationship to the studio.</p>
+    <div class="vr-tiers">
+      <div class="vr-tier reveal reveal-d2">
+        <div class="vr-tier-badge">Tier 01</div>
+        <div class="vr-tier-title">The Core</div>
+        <div class="vr-tier-sub">Founder & Co-founder</div>
+        <div class="vr-tier-desc">The two-person leadership that owns the studio and makes the films. Intentionally minimal. The center holds; productions scale around it.</div>
+      </div>
+      <div class="vr-tier reveal reveal-d3">
+        <div class="vr-tier-badge">Tier 02</div>
+        <div class="vr-tier-title">The Represented</div>
+        <div class="vr-tier-sub">Hand-picked roster</div>
+        <div class="vr-tier-desc">A select few artists the studio champions and develops with full focus. Closer to a label nurturing an artist than an agency managing a list.</div>
+      </div>
+      <div class="vr-tier reveal reveal-d4">
+        <div class="vr-tier-badge">Tier 03</div>
+        <div class="vr-tier-title">The Community</div>
+        <div class="vr-tier-sub">Collaborators & audience</div>
+        <div class="vr-tier-desc">A wider network that surrounds the work, with real access and opportunity. Skilled creatives hired per project, plus a wider circle with early access.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 5: The Difference -->
+  <div class="vr-slide" data-index="4">
+    <div class="vr-slide-label reveal">The Difference</div>
+    <h2 class="vr-slide-title reveal reveal-d1">Focus is the whole point.</h2>
+    <p class="vr-slide-body reveal reveal-d2">The value of representation by Visuarealm comes from its scale — deliberately small.</p>
+    <div class="vr-compare reveal reveal-d3">
+      <div class="vr-compare-col">
+        <div class="vr-compare-title">The Traditional Agency</div>
+        <div class="vr-compare-item">Volume — hundreds of names</div>
+        <div class="vr-compare-item">Attention spread thin</div>
+        <div class="vr-compare-item">A number in a roster</div>
+        <div class="vr-compare-item">Signed, then left to wait</div>
+      </div>
+      <div class="vr-compare-col">
+        <div class="vr-compare-title">The Visuarealm Way</div>
+        <div class="vr-compare-item">Focus — a handful chosen</div>
+        <div class="vr-compare-item">Real, sustained attention</div>
+        <div class="vr-compare-item">A close creative relationship</div>
+        <div class="vr-compare-item">Actively developed & championed</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 6: The Films -->
+  <div class="vr-slide" data-index="5">
+    <div class="vr-slide-label reveal">The Work</div>
+    <div class="vr-films">
+      <div class="vr-film reveal reveal-d1">
+        <div class="vr-film-poster">
+          <div class="vr-film-poster-star">
+            <svg viewBox="0 0 100 100"><path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/></svg>
+          </div>
+          <div class="vr-film-poster-title">The Frequency<br>of Silence</div>
+          <div class="vr-film-poster-line"></div>
+          <div class="vr-film-poster-genre">Drama</div>
+        </div>
+        <div class="vr-film-info">
+          <div class="vr-film-info-title">The Frequency of Silence</div>
+          <div class="vr-film-info-meta">Directed by Juan Shaju · Drama</div>
+        </div>
+      </div>
+      <div class="vr-film reveal reveal-d2">
+        <div class="vr-film-poster">
+          <div class="vr-film-poster-star">
+            <svg viewBox="0 0 100 100"><path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/></svg>
+          </div>
+          <div class="vr-film-poster-title">The Key<br>Left Behind</div>
+          <div class="vr-film-poster-line"></div>
+          <div class="vr-film-poster-genre">Thriller</div>
+        </div>
+        <div class="vr-film-info">
+          <div class="vr-film-info-title">The Key Left Behind</div>
+          <div class="vr-film-info-meta">Directed by Juan Shaju · Thriller</div>
+        </div>
+      </div>
+      <div class="vr-film reveal reveal-d3">
+        <div class="vr-film-poster">
+          <div class="vr-film-poster-star">
+            <svg viewBox="0 0 100 100"><path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/></svg>
+          </div>
+          <div class="vr-film-poster-title">In Case<br>We Forget</div>
+          <div class="vr-film-poster-line"></div>
+          <div class="vr-film-poster-genre">Drama</div>
+        </div>
+        <div class="vr-film-info">
+          <div class="vr-film-info-title">In Case We Forget</div>
+          <div class="vr-film-info-meta">Directed by Juan Shaju · Drama</div>
+        </div>
+      </div>
+    </div>
+    <p class="vr-slide-body reveal reveal-d4" style="margin-top: 32px; font-size: 13px;">Three films. Complete. Listed on IMDb. The foundation the studio and its roster are built upon.</p>
+  </div>
+
+  <!-- Slide 7: The Model -->
+  <div class="vr-slide" data-index="6">
+    <div class="vr-slide-label reveal">The Model</div>
+    <h2 class="vr-slide-title reveal reveal-d1">The work funds<br>the vision.</h2>
+    <p class="vr-slide-body reveal reveal-d2">Representation and community access carry no cost to the artist — an intentional investment in people, made affordable by keeping the circle small and selective.</p>
+    <div class="vr-pillars" style="margin-top: 40px;">
+      <div class="vr-pillar reveal reveal-d2">
+        <div class="vr-pillar-num" style="font-size: 32px;">Films & Commissions</div>
+        <div class="vr-pillar-title">The Core Engine</div>
+        <div class="vr-pillar-desc">Original productions alongside commissioned and client work the studio takes on.</div>
+      </div>
+      <div class="vr-pillar reveal reveal-d3">
+        <div class="vr-pillar-num" style="font-size: 32px;">People at No Cost</div>
+        <div class="vr-pillar-title">By Design</div>
+        <div class="vr-pillar-desc">The roster and community are an investment in talent — never a revenue line.</div>
+      </div>
+      <div class="vr-pillar reveal reveal-d4">
+        <div class="vr-pillar-num" style="font-size: 32px;">Membership Tier</div>
+        <div class="vr-pillar-title">A Future Avenue</div>
+        <div class="vr-pillar-desc">A potential paid community tier may support growth — to be defined as the studio matures.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 8: The Payoff -->
+  <div class="vr-slide" data-index="7">
+    <div class="vr-slide-label reveal">The Payoff</div>
+    <h2 class="vr-slide-title reveal reveal-d1">Every tier gains.</h2>
+    <p class="vr-slide-body reveal reveal-d2">The structure is designed so that involvement rewards everyone within it. Not a hierarchy of who serves whom, but a set of people whose successes compound together.</p>
+    <div class="vr-tiers" style="margin-top: 32px;">
+      <div class="vr-tier reveal reveal-d2">
+        <div class="vr-tier-title">The Core</div>
+        <div class="vr-tier-desc">Builds a distinctive body of work and a studio name that carries weight.</div>
+      </div>
+      <div class="vr-tier reveal reveal-d3">
+        <div class="vr-tier-title">The Represented</div>
+        <div class="vr-tier-desc">Receives focused development — casting, roles, and a studio behind them.</div>
+      </div>
+      <div class="vr-tier reveal reveal-d4">
+        <div class="vr-tier-title">The Collaborators</div>
+        <div class="vr-tier-desc">Earn real credits and real work on films actively in production.</div>
+      </div>
+      <div class="vr-tier reveal reveal-d5">
+        <div class="vr-tier-title">The Community</div>
+        <div class="vr-tier-desc">Gains access, networking, and early entry to a studio with a point of view.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 9: The Path -->
+  <div class="vr-slide" data-index="8">
+    <div class="vr-slide-label reveal">The Path</div>
+    <h2 class="vr-slide-title reveal reveal-d1">How the realm<br>is built.</h2>
+    <div class="vr-path">
+      <div class="vr-path-step reveal reveal-d1">
+        <div class="vr-path-step-num">01</div>
+        <div class="vr-path-step-title">Establish the Core</div>
+        <div class="vr-path-step-desc">Confirm the founder and co-founder. Keep producing original films.</div>
+      </div>
+      <div class="vr-path-step reveal reveal-d2">
+        <div class="vr-path-step-num">02</div>
+        <div class="vr-path-step-title">Form the Roster</div>
+        <div class="vr-path-step-desc">Formalize the first represented artists and the way they're developed.</div>
+      </div>
+      <div class="vr-path-step reveal reveal-d3">
+        <div class="vr-path-step-num">03</div>
+        <div class="vr-path-step-title">Open the Community</div>
+        <div class="vr-path-step-desc">Build the collaborator network and gather the audience around the work.</div>
+      </div>
+      <div class="vr-path-step reveal reveal-d4">
+        <div class="vr-path-step-num">04</div>
+        <div class="vr-path-step-title">Define Membership</div>
+        <div class="vr-path-step-desc">Shape a considered membership tier — introduced only when it adds real value.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Slide 10: Closing -->
+  <div class="vr-slide" data-index="9">
+    <div class="vr-closing-star reveal">
+      <svg viewBox="0 0 100 100">
+        <path d="M50 0 C52 38, 62 48, 100 50 C62 52, 52 62, 50 100 C48 62, 38 52, 0 50 C38 48, 48 38, 50 0Z"/>
+      </svg>
+    </div>
+    <h2 class="vr-closing-title reveal reveal-d1">The realm builds its own.</h2>
+    <p class="vr-closing-sub reveal reveal-d2">A small core. A chosen few. A community with a way in.</p>
+    <div class="vr-hero-line reveal reveal-d3" style="margin: 32px auto;"></div>
+    <p class="vr-hero-desc reveal reveal-d4" style="font-size: 11px; letter-spacing: 5px;">An Independent Production House</p>
+  </div>
+
+</div>
+
+<!-- Progress Bar -->
+<div class="vr-progress">
+  <div class="vr-progress-fill" id="vrProgressFill"></div>
+</div>
+
+<!-- Counter -->
+<div class="vr-counter" id="vrCounter"><span>01</span> / 10</div>
+
+<!-- Nav Hint -->
+<div class="vr-nav-hint" id="vrNavHint">
+  <span>Scroll or use arrows</span>
+  <span class="vr-nav-hint-arrow">↓</span>
+</div>
+
+<!-- Side Dots -->
+<div class="vr-dots" id="vrDots"></div>
+
+<script>
+(function() {
+  const loader = document.getElementById('vrLoader');
+  const slides = document.querySelectorAll('.vr-slide');
+  const progressFill = document.getElementById('vrProgressFill');
+  const counter = document.getElementById('vrCounter');
+  const dotsContainer = document.getElementById('vrDots');
+  const navHint = document.getElementById('vrNavHint');
+
+  let currentSlide = 0;
+  const totalSlides = slides.length;
+  let isAnimating = false;
+  let touchStartY = 0;
+
+  // Create dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'vr-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goToSlide(i));
+    dotsContainer.appendChild(dot);
+  });
+  const dots = document.querySelectorAll('.vr-dot');
+
+  // Loader
+  setTimeout(() => {
+    loader.classList.add('hidden');
+  }, 2500);
+
+  function updateUI() {
+    slides.forEach((slide, i) => {
+      slide.classList.toggle('active', i === currentSlide);
+    });
+
+    const progress = ((currentSlide + 1) / totalSlides) * 100;
+    progressFill.style.width = progress + '%';
+
+    counter.innerHTML = '<span>' + String(currentSlide + 1).padStart(2, '0') + '</span> / ' + totalSlides;
+
+    dots.forEach((dot, i) => {
+      dot.classList.toggle('active', i === currentSlide);
+    });
+
+    if (currentSlide === totalSlides - 1) {
+      navHint.style.opacity = '0';
+    } else {
+      navHint.style.opacity = '1';
+    }
+  }
+
+  function goToSlide(index) {
+    if (isAnimating || index === currentSlide || index < 0 || index >= totalSlides) return;
+    isAnimating = true;
+    currentSlide = index;
+    updateUI();
+    setTimeout(() => { isAnimating = false; }, 800);
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) goToSlide(currentSlide + 1);
+  }
+
+  function prevSlide() {
+    if (currentSlide > 0) goToSlide(currentSlide - 1);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === ' ') {
+      e.preventDefault();
+      nextSlide();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevSlide();
+    }
+  });
+
+  let wheelTimeout;
+  document.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    clearTimeout(wheelTimeout);
+    wheelTimeout = setTimeout(() => {
+      if (e.deltaY > 0) nextSlide();
+      else prevSlide();
+    }, 50);
+  }, { passive: false });
+
+  document.addEventListener('touchstart', (e) => {
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    const touchEndY = e.changedTouches[0].clientY;
+    const diff = touchStartY - touchEndY;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) nextSlide();
+      else prevSlide();
+    }
+  }, { passive: true });
+
+  updateUI();
+})();
+</script>
+
+</body>
+</html>
