@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin · Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+<header class="appbar">
+  <div class="brand-wrap"><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Admin · Creative House</span></div>
+  <nav><a href="/dashboard/" class="navlink">My Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
+</header>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="alert" id="alert"></div>
+  <div class="hero-band"><div><span class="eyebrow">Control Room</span><h1 class="page">The House, Managed</h1></div>
+    <button class="btn solid sm" id="new-top">+ New Listing</button></div>
+
+  <div class="kpis section-gap">
+    <div class="kpi"><div class="n" id="k-members">0</div><div class="l">Members</div></div>
+    <div class="kpi"><div class="n" id="k-open">0</div><div class="l">Live Listings</div></div>
+    <div class="kpi"><div class="n" id="k-apps">0</div><div class="l">Applications</div></div>
+    <div class="kpi"><div class="n" id="k-reports">0</div><div class="l">New Reports</div></div>
+  </div>
+
+  <div class="tabs section-gap" id="tabs">
+    <button class="tab active" data-t="listings">Listings</button>
+    <button class="tab" data-t="applications">Applications</button>
+    <button class="tab" data-t="members">Members</button>
+    <button class="tab" data-t="reports">Reports</button>
+    <button class="tab" data-t="peer">Peer Feedback</button>
+  </div>
+  <div id="view"></div>
+</div>
+
+<div class="wrap center" id="denied" style="display:none;">
+  <span class="eyebrow">Restricted</span><h1 class="page">Admins Only</h1>
+  <p class="lead" style="margin:16px auto;">Run the admin line from schema.sql with your email, then reload.</p>
+  <a class="btn ghost" href="/dashboard/">Back to Dashboard</a>
+</div>
+
+<!-- LISTING MODAL -->
+<div class="modal-bg" id="list-modal"><div class="modal">
+  <button class="modal-close" id="list-x">&times;</button><h3 id="list-title">New Listing</h3>
+  <div class="alert" id="list-alert"></div>
+  <form id="list-form"><input type="hidden" id="l-id">
+    <label class="f"><span class="lab">Title</span><input id="l-title" required></label>
+    <div class="grid two"><label class="f"><span class="lab">Role / category</span><select id="l-dept"></select></label>
+      <label class="f"><span class="lab">Audience</span><select id="l-disc"></select></label></div>
+    <div class="grid two"><label class="f"><span class="lab">Production</span><input id="l-prod"></label>
+      <label class="f"><span class="lab">City</span><select id="l-city"></select></label></div>
+    <div class="grid two"><label class="f"><span class="lab">Commitment</span><input id="l-commit"></label>
+      <label class="f"><span class="lab">Location</span><input id="l-loc"></label></div>
+    <label class="f"><span class="lab">Description</span><textarea id="l-desc"></textarea></label>
+    <label class="f"><span class="lab">Requirements</span><textarea id="l-req"></textarea></label>
+    <label class="f"><span class="lab">Status</span><select id="l-status"><option value="open">Open</option><option value="soon">Opening soon</option><option value="closed">Closed</option></select></label>
+    <div class="spread"><button type="button" class="btn ghost sm" id="l-delete" style="display:none;">Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto;"><button type="button" class="btn ghost sm" id="list-cancel">Cancel</button><button type="submit" class="btn solid" id="list-save">Save</button></div></div>
+  </form>
+</div></div>
+
+<!-- APPLICATION MODAL -->
+<div class="modal-bg" id="app-modal"><div class="modal">
+  <button class="modal-close" id="app-x">&times;</button><h3>Review Application</h3>
+  <p class="mono muted" id="app-meta" style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;"></p>
+  <div class="alert" id="appm-alert"></div><div id="app-body"></div><div class="split"></div>
+  <input type="hidden" id="app-id">
+  <label class="f"><span class="lab">Status</span><select id="app-status"></select></label>
+  <label class="f"><span class="lab">Private notes</span><textarea id="app-notes"></textarea></label>
+  <div class="spread"><button type="button" class="btn ghost sm" id="appm-cancel">Close</button><button type="button" class="btn solid" id="appm-save">Save</button></div>
+</div></div>
+
+<!-- MEMBER MODAL -->
+<div class="modal-bg" id="mem-modal"><div class="modal">
+  <button class="modal-close" id="mem-x">&times;</button><h3 id="mem-name">Member</h3>
+  <p class="mono muted" id="mem-meta" style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:14px;"></p>
+  <div class="alert" id="memm-alert"></div><div id="mem-body"></div><div class="split"></div>
+  <input type="hidden" id="mem-id">
+  <div class="grid two">
+    <label class="f"><span class="lab">Discipline</span><select id="mem-disc"></select></label>
+    <label class="f"><span class="lab">Account status</span><select id="mem-status"><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
+  </div>
+  <div class="grid two">
+    <label class="f"><span class="lab">Can hire (post listings)</span><select id="mem-hire"><option value="false">No</option><option value="true">Yes</option></select></label>
+    <label class="f"><span class="lab">Administrator</span><select id="mem-admin"><option value="false">No</option><option value="true">Yes</option></select></label>
+  </div>
+  <div class="split"></div><p class="fieldset-title">Award a badge</p>
+  <div id="mem-badges" class="badge-grid" style="margin-bottom:14px;"></div>
+  <div class="grid two"><label class="f"><span class="lab">Badge</span><select id="mem-badgesel"></select></label>
+    <label class="f"><span class="lab">Note (optional)</span><input id="mem-badgenote"></label></div>
+  <button type="button" class="btn ghost sm" id="mem-award" style="margin-bottom:16px;">Award badge</button>
+  <div class="spread"><button type="button" class="btn ghost sm" id="memm-cancel">Close</button><button type="button" class="btn solid" id="memm-save">Save changes</button></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+<script>
+(async function(){
+  const alertEl=document.getElementById('alert');
+  if(!CH.guardConfig('body')) return;
+  const session=await CH.requireAuth(); if(!session) return;
+  const uid=session.user.id;
+  document.getElementById('logout').addEventListener('click',()=>CH.signOut());
+  const me=await CH.profile();
+  if(!me||!me.is_admin){document.getElementById('denied').style.display='block';return;}
+  document.getElementById('app').style.display='block';
+
+  let profiles=[],openings=[],apps=[],badges=[],reports=[],peer=[],pMap={},oMap={};
+  document.getElementById('l-dept').innerHTML=Object.entries(CH.ROLES_BY_DISCIPLINE).map(([g,rs])=>`<optgroup label="${g}">${rs.map(r=>`<option>${r}</option>`).join('')}</optgroup>`).join('');
+  document.getElementById('l-disc').innerHTML=['Any',...CH.DISCIPLINES].map(d=>`<option>${d}</option>`).join('');
+  document.getElementById('l-city').innerHTML=CH.CITIES.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('mem-disc').innerHTML=CH.DISCIPLINES.map(d=>`<option>${d}</option>`).join('');
+  document.getElementById('app-status').innerHTML=['submitted','reviewing','interview','accepted','waitlisted','declined'].map(s=>`<option>${s}</option>`).join('');
+
+  let tab='listings';
+  document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');tab=t.dataset.t;render();}));
+
+  async function loadAll(){
+    const [p,o,a,b,f,pf]=await Promise.all([
+      CH.sb.from('profiles').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('openings').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('applications').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('badges').select('*'),
+      CH.sb.from('feedback').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('peer_feedback').select('*').order('created_at',{ascending:false})
+    ]);
+    profiles=p.data||[];openings=o.data||[];apps=a.data||[];badges=b.data||[];reports=f.data||[];peer=pf.data||[];
+    pMap={};profiles.forEach(x=>pMap[x.id]=x);oMap={};openings.forEach(x=>oMap[x.id]=x);
+    document.getElementById('k-members').textContent=profiles.length;
+    document.getElementById('k-open').textContent=openings.filter(x=>x.status==='open'&&(!x.expires_at||new Date(x.expires_at)>new Date())).length;
+    document.getElementById('k-apps').textContent=apps.length;
+    document.getElementById('k-reports').textContent=reports.filter(r=>r.status==='new').length;
+    document.getElementById('mem-badgesel').innerHTML=badges.map(b=>`<option value="${b.code}">${b.emoji} ${b.label}</option>`).join('');
+    render();
+  }
+  function render(){document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('active',x.dataset.t===tab));
+    ({listings:rListings,applications:rApps,members:rMembers,reports:rReports,peer:rPeer}[tab])();}
+
+  // LISTINGS
+  function rListings(){
+    const v=document.getElementById('view');
+    if(!openings.length){v.innerHTML='<div class="empty">No listings yet.</div>';return;}
+    v.innerHTML=openings.map(o=>{const tl=CH.timeLeft(o.expires_at);const n=apps.filter(a=>a.opening_id===o.id).length;
+      return `<div class="panel listing" style="margin-bottom:16px;"><div class="lc-top"><div>
+        <div class="lc-cat">${CH.esc(o.department||'Role')} · ${CH.esc(o.city||'Toronto')} · ${CH.esc(o.discipline||'Any')}</div>
+        <div class="lc-title">${CH.esc(o.title)}</div>
+        <div class="tags" style="margin-top:10px;">${CH.pill(o.status)}<span class="tag">${n} applicant${n===1?'':'s'}</span><span class="expiry ${tl.cls}">${tl.text}</span>${o.renew_count?`<span class="tag">renewed ${o.renew_count}x</span>`:''}</div></div></div>
+        <div class="spread" style="margin-top:16px;gap:8px;flex-wrap:wrap;">
+          <button class="share-btn" data-slug="${CH.esc(o.share_slug||'')}">Share</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            ${o.status!=='open'?`<button class="btn solid sm q" data-id="${o.id}" data-s="open">Open</button>`:`<button class="btn ghost sm q" data-id="${o.id}" data-s="closed">Close</button>`}
+            <button class="btn ghost sm rn" data-id="${o.id}">Renew</button>
+            <button class="btn ghost sm ed" data-id="${o.id}">Edit</button>
+          </div></div></div>`;}).join('');
+    v.querySelectorAll('.share-btn').forEach(b=>b.addEventListener('click',()=>CH.copyShare(b.dataset.slug,b)));
+    v.querySelectorAll('.q').forEach(b=>b.addEventListener('click',()=>quick(b.dataset.id,b.dataset.s)));
+    v.querySelectorAll('.rn').forEach(b=>b.addEventListener('click',()=>renew(b.dataset.id)));
+    v.querySelectorAll('.ed').forEach(b=>b.addEventListener('click',()=>openListing(oMap[b.dataset.id])));
+  }
+  async function quick(id,s){const {error}=await CH.sb.from('openings').update({status:s}).eq('id',id);if(error){CH.toast(alertEl,error.message,'err');return;}loadAll();}
+  async function renew(id){const o=oMap[id];const {error}=await CH.sb.from('openings').update({expires_at:new Date(Date.now()+42*864e5).toISOString(),renewed_at:new Date().toISOString(),renew_count:(o.renew_count||0)+1,status:'open'}).eq('id',id);if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Renewed.','ok');loadAll();}
+
+  const listModal=document.getElementById('list-modal');
+  function openListing(o){document.getElementById('list-form').reset();document.getElementById('list-title').textContent=o?'Edit Listing':'New Listing';document.getElementById('l-id').value=o?o.id:'';document.getElementById('l-delete').style.display=o?'inline-flex':'none';
+    if(o){[['l-title','title'],['l-prod','production_title'],['l-loc','location'],['l-commit','commitment'],['l-desc','description'],['l-req','requirements']].forEach(([a,b])=>document.getElementById(a).value=o[b]||'');document.getElementById('l-dept').value=o.department||'';document.getElementById('l-disc').value=o.discipline||'Any';document.getElementById('l-city').value=o.city||'Toronto';document.getElementById('l-status').value=o.status||'open';}
+    CH.clearToast(document.getElementById('list-alert'));listModal.classList.add('show');}
+  document.getElementById('new-top').addEventListener('click',()=>openListing(null));
+  document.getElementById('list-cancel').addEventListener('click',()=>listModal.classList.remove('show'));
+  document.getElementById('list-x').addEventListener('click',()=>listModal.classList.remove('show'));
+  listModal.addEventListener('click',e=>{if(e.target===listModal)listModal.classList.remove('show');});
+  document.getElementById('list-form').addEventListener('submit',async(e)=>{e.preventDefault();const btn=document.getElementById('list-save');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    const id=document.getElementById('l-id').value;const g=i=>document.getElementById(i).value.trim();
+    const payload={title:g('l-title'),department:document.getElementById('l-dept').value,discipline:document.getElementById('l-disc').value,city:document.getElementById('l-city').value,production_title:g('l-prod')||null,location:g('l-loc')||null,commitment:g('l-commit')||null,description:g('l-desc')||null,requirements:g('l-req')||null,status:document.getElementById('l-status').value};
+    let error;if(id){({error}=await CH.sb.from('openings').update(payload).eq('id',id));}else{payload.created_by=uid;({error}=await CH.sb.from('openings').insert(payload));}
+    btn.disabled=false;btn.textContent='Save';if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}listModal.classList.remove('show');CH.toast(alertEl,'Saved.','ok');loadAll();});
+  document.getElementById('l-delete').addEventListener('click',async()=>{const id=document.getElementById('l-id').value;if(!confirm('Delete this listing and its applications?'))return;const {error}=await CH.sb.from('openings').delete().eq('id',id);if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}listModal.classList.remove('show');CH.toast(alertEl,'Deleted.','ok');loadAll();});
+
+  // APPLICATIONS
+  function rApps(){const v=document.getElementById('view');if(!apps.length){v.innerHTML='<div class="empty">No applications.</div>';return;}
+    v.innerHTML='<div class="list">'+apps.map(a=>{const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Applicant')}</div><div class="m">${CH.esc(o.title||'')} · ${CH.esc(p.discipline||'')} · ${CH.fmtDate(a.created_at)}</div></div><div class="row-right">${CH.pill(a.status)}<button class="btn ghost sm rv" data-id="${a.id}">Review</button></div></div>`;}).join('')+'</div>';
+    v.querySelectorAll('.rv').forEach(b=>b.addEventListener('click',()=>review(b.dataset.id)));}
+  const appModal=document.getElementById('app-modal');
+  function review(id){const a=apps.find(x=>x.id===id);const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{},L=p.links||{};
+    document.getElementById('app-id').value=id;document.getElementById('app-meta').textContent=(o.title||'')+' · '+CH.fmtDate(a.created_at);
+    document.getElementById('app-body').innerHTML=`<div class="row" style="padding-top:0;"><div><div class="t">${CH.esc(p.full_name||'')}</div><div class="m">${CH.esc(p.email||'')} · ${CH.esc(p.discipline||'')} · ${CH.esc(p.experience_level||'')}</div></div></div>${a.cover_note?`<p style="margin-top:12px;line-height:1.7;">${CH.esc(a.cover_note)}</p>`:''}<div class="tags" style="margin-top:12px;">${a.portfolio_link?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(a.portfolio_link)}">Portfolio</a>`:''}${L.imdb?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.imdb)}">IMDb</a>`:''}${L.reel?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.reel)}">Reel</a>`:''}${L.website?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.website)}">Website</a>`:''}</div>`;
+    document.getElementById('app-status').value=a.status;document.getElementById('app-notes').value=a.admin_notes||'';CH.clearToast(document.getElementById('appm-alert'));appModal.classList.add('show');}
+  document.getElementById('appm-cancel').addEventListener('click',()=>appModal.classList.remove('show'));
+  document.getElementById('app-x').addEventListener('click',()=>appModal.classList.remove('show'));
+  appModal.addEventListener('click',e=>{if(e.target===appModal)appModal.classList.remove('show');});
+  document.getElementById('appm-save').addEventListener('click',async()=>{const id=document.getElementById('app-id').value;const {error}=await CH.sb.from('applications').update({status:document.getElementById('app-status').value,admin_notes:document.getElementById('app-notes').value.trim()}).eq('id',id);if(error){CH.toast(document.getElementById('appm-alert'),error.message,'err');return;}appModal.classList.remove('show');CH.toast(alertEl,'Updated.','ok');loadAll();});
+
+  // MEMBERS
+  function rMembers(){const v=document.getElementById('view');if(!profiles.length){v.innerHTML='<div class="empty">No members.</div>';return;}
+    v.innerHTML='<div class="list">'+profiles.map(p=>`<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Member')} ${p.is_admin?'<span class="pill open" style="margin-left:6px;">Admin</span>':''} ${p.can_hire?'<span class="pill reviewing" style="margin-left:6px;">Hiring</span>':''}</div><div class="m">${CH.esc([p.discipline,p.primary_department,p.city].filter(Boolean).join(' · '))||CH.esc(p.email||'')}</div></div><div class="row-right">${CH.pill(p.status||'active')}<button class="btn ghost sm vm" data-id="${p.id}">Manage</button></div></div>`).join('')+'</div>';
+    v.querySelectorAll('.vm').forEach(b=>b.addEventListener('click',()=>openMember(b.dataset.id)));}
+  const memModal=document.getElementById('mem-modal');let memBadges=[];
+  async function openMember(id){const p=pMap[id],L=p.links||{};document.getElementById('mem-id').value=id;document.getElementById('mem-name').textContent=p.full_name||'Member';document.getElementById('mem-meta').textContent=[p.email,p.city].filter(Boolean).join(' · ');
+    document.getElementById('mem-body').innerHTML=`${p.headline?`<p class="lead" style="margin-top:0;">${CH.esc(p.headline)}</p>`:''}${p.bio?`<p style="margin-top:8px;">${CH.esc(p.bio)}</p>`:''}<div class="tags" style="margin-top:10px;">${(p.skills||[]).map(s=>`<span class="tag">${CH.esc(s)}</span>`).join('')}</div>`;
+    document.getElementById('mem-disc').value=p.discipline||'Crew';document.getElementById('mem-status').value=p.status||'active';document.getElementById('mem-hire').value=p.can_hire?'true':'false';document.getElementById('mem-admin').value=p.is_admin?'true':'false';
+    memBadges=await CH.badgesFor(id);drawMemBadges();CH.clearToast(document.getElementById('memm-alert'));memModal.classList.add('show');}
+  function drawMemBadges(){document.getElementById('mem-badges').innerHTML=memBadges.length?memBadges.map(b=>{const m=b.badges||{};return `<span class="badge-chip ${m.kind==='special'?'special':''}"><span class="bx">${CH.esc(m.emoji||'+')}</span>${CH.esc(m.label||b.badge_code)} <button data-code="${b.badge_code}" class="rmb" style="background:none;border:none;color:var(--muted);cursor:pointer;">×</button></span>`;}).join(''):'<span class="muted mono" style="font-size:.66rem;">No badges yet.</span>';
+    document.querySelectorAll('#mem-badges .rmb').forEach(x=>x.addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;await CH.sb.from('user_badges').delete().eq('user_id',id).eq('badge_code',x.dataset.code);memBadges=await CH.badgesFor(id);drawMemBadges();}));}
+  document.getElementById('mem-award').addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;const code=document.getElementById('mem-badgesel').value;const note=document.getElementById('mem-badgenote').value.trim()||null;const {error}=await CH.sb.from('user_badges').insert({user_id:id,badge_code:code,awarded_by:uid,note});if(error&&error.code!=='23505'){CH.toast(document.getElementById('memm-alert'),error.message,'err');return;}document.getElementById('mem-badgenote').value='';memBadges=await CH.badgesFor(id);drawMemBadges();});
+  document.getElementById('memm-cancel').addEventListener('click',()=>memModal.classList.remove('show'));
+  document.getElementById('mem-x').addEventListener('click',()=>memModal.classList.remove('show'));
+  memModal.addEventListener('click',e=>{if(e.target===memModal)memModal.classList.remove('show');});
+  document.getElementById('memm-save').addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;const {error}=await CH.sb.from('profiles').update({discipline:document.getElementById('mem-disc').value,status:document.getElementById('mem-status').value,can_hire:document.getElementById('mem-hire').value==='true',is_admin:document.getElementById('mem-admin').value==='true'}).eq('id',id);if(error){CH.toast(document.getElementById('memm-alert'),error.message,'err');return;}memModal.classList.remove('show');CH.toast(alertEl,'Member updated.','ok');loadAll();});
+
+  // REPORTS
+  function rReports(){const v=document.getElementById('view');if(!reports.length){v.innerHTML='<div class="empty">No reports or feedback yet.</div>';return;}
+    v.innerHTML='<div class="list">'+reports.map(r=>{const p=r.user_id?pMap[r.user_id]:null;return `<div class="row"><div><div class="t">${CH.esc(r.kind)} ${CH.pill(r.status)}</div><div class="m">${CH.esc(p?p.full_name||p.email:(r.email||'anonymous'))} · ${CH.fmtDate(r.created_at)} · ${CH.esc(r.page||'')}</div><p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(r.message)}</p></div><div class="row-right"><select class="rs" data-id="${r.id}" style="width:auto;padding:8px 30px 8px 12px;font-size:.8rem;">${['new','seen','resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div></div>`;}).join('')+'</div>';
+    v.querySelectorAll('.rs').forEach(s=>s.addEventListener('change',async()=>{await CH.sb.from('feedback').update({status:s.value}).eq('id',s.dataset.id);CH.toast(alertEl,'Updated.','ok');}));}
+
+  // PEER FEEDBACK (private)
+  function rPeer(){const v=document.getElementById('view');if(!peer.length){v.innerHTML='<div class="empty">No peer feedback yet. It appears here privately after projects.</div>';return;}
+    v.innerHTML='<div class="list">'+peer.map(f=>{const fr=pMap[f.from_user]||{},to=pMap[f.to_user]||{},o=oMap[f.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(to.full_name||'Member')} <span class="muted mono" style="font-size:.62rem;">from ${CH.esc(fr.full_name||'someone')}</span></div><div class="m">${CH.esc(o.title||'Project')}${f.rating?' · '+f.rating+'/5':''} · ${CH.fmtDate(f.created_at)}</div>${f.message?`<p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(f.message)}</p>`:''}</div></div>`;}).join('')+'</div>';}
+
+  await loadAll();
+})();
+</script>
+</body>
+</html>

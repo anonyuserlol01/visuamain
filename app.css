@@ -233,3 +233,80 @@ a.tag:hover{border-color:var(--ember);color:var(--ember)}
   .grain{display:none}
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* ====================================================================
+   v3 PLATFORM COMPONENTS
+   ==================================================================== */
+/* mode switch (Applicant / Hiring) */
+.modeswitch{display:inline-flex;background:var(--panel);border:1px solid var(--line-2);border-radius:50px;padding:5px;gap:4px}
+.modeswitch button{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  background:none;border:none;padding:10px 18px;border-radius:40px;cursor:pointer;transition:.25s;white-space:nowrap}
+.modeswitch button.active{background:var(--ember);color:var(--obsidian)}
+.modeswitch button:disabled{opacity:.35;cursor:not-allowed}
+
+/* reward badges */
+.badge-chip{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;
+  text-transform:uppercase;border:1px solid var(--line-2);border-radius:40px;padding:6px 12px;color:var(--bone);background:rgba(217,90,43,.06)}
+.badge-chip .bx{color:var(--ember);font-size:.85rem;line-height:1}
+.badge-chip.special{border-color:rgba(217,90,43,.5)}
+.badge-grid{display:flex;flex-wrap:wrap;gap:8px}
+.badge-locked{opacity:.35}
+
+/* discipline pill row / filter bar */
+.filterbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:26px;padding:16px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.filterbar .fb-label{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.chip{font-family:var(--font-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line-2);background:none;border-radius:40px;padding:8px 14px;cursor:pointer;transition:.2s;white-space:nowrap}
+.chip:hover{border-color:var(--ember);color:var(--bone)}
+.chip.on{background:var(--ember);border-color:var(--ember);color:var(--obsidian)}
+.filterbar select{width:auto;min-width:150px;padding:9px 34px 9px 13px;font-size:.85rem}
+
+/* listing cards */
+.listing{position:relative;overflow:hidden}
+.listing::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--ember);opacity:.9}
+.listing .lc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.listing .lc-cat{font-family:var(--font-mono);font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ember)}
+.listing .lc-title{font-family:var(--font-impact);font-size:clamp(1.3rem,2.6vw,1.9rem);text-transform:uppercase;letter-spacing:.01em;line-height:1;margin:8px 0 6px}
+.listing .lc-meta{font-family:var(--font-mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.expiry{font-family:var(--font-mono);font-size:.55rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 10px;border-radius:40px;border:1px solid var(--line-2);color:var(--muted)}
+.expiry.warn{border-color:var(--warn);color:var(--warn)}
+.expiry.dead{border-color:var(--bad);color:var(--bad)}
+
+/* share button */
+.share-btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.6rem;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);border:1px solid var(--line-2);background:none;border-radius:40px;padding:8px 14px;cursor:pointer;transition:.2s}
+.share-btn:hover{border-color:var(--ember);color:var(--ember)}
+
+/* role/discipline selectable cards (signup) */
+.rolecards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:8px}
+.rolecard{border:1px solid var(--line-2);border-radius:var(--r-sm);padding:18px;cursor:pointer;transition:.2s;background:var(--obsidian);text-align:left}
+.rolecard:hover{border-color:rgba(217,90,43,.5)}
+.rolecard.sel{border-color:var(--ember);background:rgba(217,90,43,.08)}
+.rolecard .rc-t{font-family:var(--font-impact);font-size:1.15rem;text-transform:uppercase;letter-spacing:.02em}
+.rolecard .rc-d{font-size:.8rem;color:var(--muted);margin-top:4px;line-height:1.4}
+
+/* two-option mode picker */
+.modepick{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modepick .rolecard{text-align:center}
+
+/* floating report / feedback widget */
+.fab{position:fixed;right:20px;bottom:20px;z-index:70;width:auto;height:48px;padding:0 18px;border-radius:50px;
+  background:var(--ember);color:var(--obsidian);border:none;cursor:pointer;display:flex;align-items:center;gap:8px;
+  font-family:var(--font-mono);font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  box-shadow:0 12px 30px -8px rgba(217,90,43,.6);transition:transform .2s}
+.fab:hover{transform:translateY(-2px)}
+.fab .dot{width:7px;height:7px;border-radius:50%;background:var(--obsidian)}
+.fab-panel{position:fixed;right:20px;bottom:80px;z-index:71;width:min(340px,88vw);background:linear-gradient(180deg,var(--raise),var(--panel2));
+  border:1px solid var(--line-2);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:none;animation:boot .2s ease}
+.fab-panel.show{display:block}
+.fab-panel h4{font-family:var(--font-impact);font-size:1.1rem;text-transform:uppercase;letter-spacing:.02em;margin-bottom:12px}
+.fab-panel .seg{display:flex;gap:6px;margin-bottom:12px}
+.fab-panel .seg button{flex:1;font-family:var(--font-mono);font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);background:none;border:1px solid var(--line-2);border-radius:40px;padding:8px;cursor:pointer;transition:.2s}
+.fab-panel .seg button.on{background:var(--ember);border-color:var(--ember);color:var(--obsidian)}
+.fab-panel textarea{min-height:90px;margin-bottom:10px}
+
+@media (max-width:520px){
+  .rolecards{grid-template-columns:1fr}
+  .fab{right:14px;bottom:14px}
+}

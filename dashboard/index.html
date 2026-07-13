@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard · Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="appbar">
+  <div class="brand-wrap"><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
+  <nav>
+    <div class="modeswitch" id="modeswitch">
+      <button data-mode="applicant" class="active">Apply</button>
+      <button data-mode="hiring" id="hire-btn">Hire</button>
+    </div>
+    <a href="/admin/" id="admin-link" class="navlink" style="display:none;">Admin</a>
+    <span class="avatar" id="nav-avatar">·</span>
+    <button id="logout" class="navlink">Log out</button>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="alert" id="alert"></div>
+  <div class="hero-band">
+    <div><span class="eyebrow" id="hello">Welcome</span><h1 class="page" id="member-name">Your Studio</h1></div>
+    <div id="mode-badge"></div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+</div>
+
+<!-- APPLY MODAL -->
+<div class="modal-bg" id="apply-modal"><div class="modal">
+  <button class="modal-close" id="apply-x">&times;</button>
+  <h3 id="apply-title">Apply</h3>
+  <p class="mono muted" id="apply-meta" style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px;"></p>
+  <div class="alert" id="apply-alert"></div>
+  <form id="apply-form">
+    <label class="f"><span class="lab">Why you? (cover note)</span><textarea id="a-note" placeholder="A few honest lines about why this role." required></textarea></label>
+    <label class="f"><span class="lab">Portfolio link (optional)</span><input id="a-link" type="url" placeholder="Best relevant work"></label>
+    <div class="spread"><button type="button" class="btn ghost sm" id="apply-cancel">Cancel</button><button type="submit" class="btn solid" id="apply-submit">Submit Application</button></div>
+  </form>
+</div></div>
+
+<!-- LISTING MODAL (hiring) -->
+<div class="modal-bg" id="list-modal"><div class="modal">
+  <button class="modal-close" id="list-x">&times;</button>
+  <h3 id="list-modal-title">New Listing</h3>
+  <div class="alert" id="list-alert"></div>
+  <form id="list-form">
+    <input type="hidden" id="l-id">
+    <label class="f"><span class="lab">Title</span><input id="l-title" required placeholder="1st Assistant Camera"></label>
+    <div class="grid two">
+      <label class="f"><span class="lab">Role / category</span><select id="l-dept"></select></label>
+      <label class="f"><span class="lab">Who should see this?</span><select id="l-disc"></select></label>
+    </div>
+    <div class="grid two">
+      <label class="f"><span class="lab">Production</span><input id="l-prod" placeholder="Untitled Short No.4"></label>
+      <label class="f"><span class="lab">City</span><select id="l-city"></select></label>
+    </div>
+    <div class="grid two">
+      <label class="f"><span class="lab">Commitment</span><input id="l-commit" placeholder="2 weekends"></label>
+      <label class="f"><span class="lab">Location detail</span><input id="l-loc" placeholder="Downtown Toronto"></label>
+    </div>
+    <label class="f"><span class="lab">Description</span><textarea id="l-desc" placeholder="What the role involves."></textarea></label>
+    <label class="f"><span class="lab">Requirements (optional)</span><textarea id="l-req"></textarea></label>
+    <label class="f"><span class="lab">Status</span><select id="l-status"><option value="open">Open (live for 6 weeks)</option><option value="soon">Opening soon</option><option value="closed">Closed</option></select></label>
+    <div class="spread"><button type="button" class="btn ghost sm" id="list-cancel">Cancel</button><button type="submit" class="btn solid" id="list-save">Publish</button></div>
+  </form>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+<script>
+(async function(){
+  const alertEl=document.getElementById('alert');
+  if(!CH.guardConfig('.wrap')) return;
+  const session=await CH.requireAuth(); if(!session) return;
+  const uid=session.user.id;
+  document.getElementById('logout').addEventListener('click',()=>CH.signOut());
+
+  let profile=await CH.profile();
+  const myDisc=profile.discipline||'Crew';
+  if(profile.is_admin) document.getElementById('admin-link').style.display='inline-block';
+  document.getElementById('member-name').textContent=profile.full_name||'Your Studio';
+  document.getElementById('hello').textContent='Welcome'+(profile.full_name?', '+profile.full_name.split(' ')[0]:'');
+  (function(){var n=(profile.full_name||'').trim();var i=n?n.split(/\s+/).map(w=>w[0]).slice(0,2).join(''):'?';document.getElementById('nav-avatar').textContent=i.toUpperCase();})();
+
+  const canHire=!!(profile.can_hire||profile.is_admin);
+  const hireBtn=document.getElementById('hire-btn');
+  if(!canHire){ hireBtn.disabled=true; hireBtn.title='Ask an admin to enable hiring for your account.'; }
+
+  let mode=(profile.primary_mode==='hiring'&&canHire)?'hiring':'applicant';
+  const myApps={};
+  document.querySelectorAll('#modeswitch button').forEach(b=>b.addEventListener('click',()=>{
+    if(b.dataset.mode==='hiring'&&!canHire) return;
+    mode=b.dataset.mode; syncMode(); renderView();
+  }));
+  function syncMode(){
+    document.querySelectorAll('#modeswitch button').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+    document.getElementById('mode-badge').innerHTML=`<span class="badge-chip special"><span class="bx">${mode==='hiring'?'=':'>'}</span>${mode==='hiring'?'Hiring':'Applicant'} · ${CH.esc(myDisc)}</span>`;
+  }
+
+  // ---------- TABS ----------
+  let activeTab='';
+  function tabsFor(){ return mode==='hiring'?['My Listings','Applicants','Profile']:['Job Board','My Applications','Profile']; }
+  function renderTabs(){
+    const t=tabsFor(); if(!t.includes(activeTab)) activeTab=t[0];
+    document.getElementById('tabs').innerHTML=t.map(x=>`<button class="tab ${x===activeTab?'active':''}" data-t="${x}">${x}</button>`).join('');
+    document.querySelectorAll('#tabs .tab').forEach(b=>b.addEventListener('click',()=>{activeTab=b.dataset.t;renderTabs();renderView();}));
+  }
+  function renderView(){ syncMode(); renderTabs();
+    if(mode==='applicant'){ if(activeTab==='Job Board') board(); else if(activeTab==='My Applications') myApplications(); else profileTab(); }
+    else { if(activeTab==='My Listings') myListings(); else if(activeTab==='Applicants') applicantsInbox(); else profileTab(); }
+  }
+
+  // ---------- APPLICANT: JOB BOARD ----------
+  let boardFilter={cat:'All',q:''};
+  async function loadMyApps(){ const {data}=await CH.sb.from('applications').select('opening_id,status').eq('applicant_id',uid); (data||[]).forEach(a=>myApps[a.opening_id]=a.status); }
+  async function board(){
+    const v=document.getElementById('view');
+    const cats=['All',...(CH.ROLES_BY_DISCIPLINE[myDisc]||[])];
+    v.innerHTML=`<div class="filterbar">
+      <span class="fb-label">Toronto</span>
+      ${cats.map(c=>`<button class="chip ${c===boardFilter.cat?'on':''}" data-c="${CH.esc(c)}">${CH.esc(c)}</button>`).join('')}
+      <input id="board-q" placeholder="Search listings…" style="flex:1;min-width:160px;margin-left:auto;max-width:260px;">
+    </div><div id="board-list"><div class="empty"><span class="loader"></span> Loading roles for you…</div></div>`;
+    v.querySelectorAll('.chip').forEach(ch=>ch.addEventListener('click',()=>{boardFilter.cat=ch.dataset.c;board();}));
+    const qi=document.getElementById('board-q'); qi.value=boardFilter.q; qi.addEventListener('input',()=>{boardFilter.q=qi.value;drawBoard();});
+    await loadMyApps();
+    const {data,error}=await CH.sb.from('openings').select('*').eq('status','open').gt('expires_at',new Date().toISOString()).order('created_at',{ascending:false});
+    window.__board=(data||[]).filter(o=>(o.discipline==='Any'||o.discipline===myDisc));
+    if(error){document.getElementById('board-list').innerHTML=`<div class="empty">${CH.esc(error.message)}</div>`;return;}
+    drawBoard();
+  }
+  function drawBoard(){
+    const host=document.getElementById('board-list'); let list=window.__board||[];
+    if(boardFilter.cat!=='All') list=list.filter(o=>o.department===boardFilter.cat);
+    if(boardFilter.q){const q=boardFilter.q.toLowerCase();list=list.filter(o=>(o.title||'').toLowerCase().includes(q)||(o.production_title||'').toLowerCase().includes(q)||(o.department||'').toLowerCase().includes(q));}
+    if(!list.length){host.innerHTML='<div class="empty">No matching roles right now. Try another filter.</div>';return;}
+    host.innerHTML=list.map(o=>{
+      const applied=myApps[o.id]; const tl=CH.timeLeft(o.expires_at);
+      return `<div class="panel listing" style="margin-bottom:16px;">
+        <div class="lc-top"><div><div class="lc-cat">${CH.esc(o.department||o.kind||'Role')} · ${CH.esc(o.city||'Toronto')}</div>
+        <div class="lc-title">${CH.esc(o.title)}</div>
+        <div class="lc-meta">${CH.esc([o.production_title,o.commitment].filter(Boolean).join(' · '))}</div></div>
+        <span class="expiry ${tl.cls}">${tl.text}</span></div>
+        ${o.description?`<p class="lead" style="margin-top:12px;">${CH.esc(o.description)}</p>`:''}
+        <div class="spread" style="margin-top:16px;">
+          <button class="share-btn" data-slug="${CH.esc(o.share_slug||'')}">Share</button>
+          ${applied?`<span class="mono muted" style="font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;">Applied · ${CH.esc(applied)}</span>`
+            :`<button class="btn solid sm apply-btn" data-id="${o.id}" data-title="${CH.esc(o.title)}" data-meta="${CH.esc([o.department,o.production_title,o.location].filter(Boolean).join(' · '))}">Apply</button>`}
+        </div></div>`;
+    }).join('');
+    host.querySelectorAll('.apply-btn').forEach(b=>b.addEventListener('click',()=>openApply(b.dataset.id,b.dataset.title,b.dataset.meta)));
+    host.querySelectorAll('.share-btn').forEach(b=>b.addEventListener('click',()=>CH.copyShare(b.dataset.slug,b)));
+  }
+
+  // apply modal
+  const applyModal=document.getElementById('apply-modal'); let applyingTo=null;
+  function openApply(id,title,meta){applyingTo=id;document.getElementById('apply-title').textContent='Apply · '+title;document.getElementById('apply-meta').textContent=meta||'';document.getElementById('a-note').value='';document.getElementById('a-link').value='';CH.clearToast(document.getElementById('apply-alert'));applyModal.classList.add('show');}
+  document.getElementById('apply-cancel').addEventListener('click',()=>applyModal.classList.remove('show'));
+  document.getElementById('apply-x').addEventListener('click',()=>applyModal.classList.remove('show'));
+  applyModal.addEventListener('click',e=>{if(e.target===applyModal)applyModal.classList.remove('show');});
+  document.getElementById('apply-form').addEventListener('submit',async(e)=>{
+    e.preventDefault();const a=document.getElementById('apply-alert');const btn=document.getElementById('apply-submit');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    const {error}=await CH.sb.from('applications').insert({opening_id:applyingTo,applicant_id:uid,cover_note:document.getElementById('a-note').value.trim(),portfolio_link:document.getElementById('a-link').value.trim()||null});
+    btn.disabled=false;btn.textContent='Submit Application';
+    if(error){CH.toast(a,error.code==='23505'?'You already applied to this listing.':error.message,'err');return;}
+    myApps[applyingTo]='submitted';applyModal.classList.remove('show');CH.toast(alertEl,'Application submitted. Good luck.','ok');drawBoard();
+  });
+
+  // ---------- APPLICANT: MY APPLICATIONS ----------
+  async function myApplications(){
+    const v=document.getElementById('view'); v.innerHTML='<div class="empty"><span class="loader"></span> Loading…</div>';
+    const {data}=await CH.sb.from('applications').select('*, openings(title,department,production_title)').eq('applicant_id',uid).order('created_at',{ascending:false});
+    if(!data||!data.length){v.innerHTML='<div class="empty">No applications yet. Browse the job board to apply.</div>';return;}
+    v.innerHTML='<div class="list">'+data.map(a=>{const o=a.openings||{};return `<div class="row"><div><div class="t">${CH.esc(o.title||'Role')}</div><div class="m">${CH.esc([o.department,o.production_title].filter(Boolean).join(' · '))} · Applied ${CH.fmtDate(a.created_at)}</div></div>${CH.pill(a.status)}</div>`;}).join('')+'</div>';
+  }
+
+  // ---------- HIRING: MY LISTINGS ----------
+  async function myListings(){
+    const v=document.getElementById('view');
+    v.innerHTML=`<div class="spread" style="margin-bottom:18px;"><h2 class="block" style="margin:0;">Your Listings</h2><button class="btn solid sm" id="new-listing">+ New Listing</button></div><div id="ml"><div class="empty"><span class="loader"></span> Loading…</div></div>`;
+    document.getElementById('new-listing').addEventListener('click',()=>openListing(null));
+    const {data}=await CH.sb.from('openings').select('*').eq('created_by',uid).order('created_at',{ascending:false});
+    const counts={};
+    const ids=(data||[]).map(o=>o.id);
+    if(ids.length){const {data:apps}=await CH.sb.from('applications').select('opening_id').in('opening_id',ids);(apps||[]).forEach(a=>counts[a.opening_id]=(counts[a.opening_id]||0)+1);}
+    const host=document.getElementById('ml');
+    if(!data||!data.length){host.innerHTML='<div class="empty">No listings yet. Post your first role.</div>';return;}
+    host.innerHTML=data.map(o=>{const tl=CH.timeLeft(o.expires_at);const n=counts[o.id]||0;
+      return `<div class="panel listing" style="margin-bottom:16px;"><div class="lc-top"><div>
+        <div class="lc-cat">${CH.esc(o.department||'Role')} · ${CH.esc(o.city||'Toronto')} · ${CH.esc(o.discipline||'Any')}</div>
+        <div class="lc-title">${CH.esc(o.title)}</div>
+        <div class="tags" style="margin-top:10px;">${CH.pill(o.status)}<span class="tag">${n} applicant${n===1?'':'s'}</span><span class="expiry ${tl.cls}">${tl.text}</span></div></div></div>
+        <div class="spread" style="margin-top:16px;gap:8px;flex-wrap:wrap;">
+          <button class="share-btn" data-slug="${CH.esc(o.share_slug||'')}">Share link</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn ghost sm renew" data-id="${o.id}">Renew 6 wks</button>
+            <button class="btn ghost sm edit-l" data-id="${o.id}">Edit</button>
+          </div></div></div>`;}).join('');
+    window.__mylistings={}; data.forEach(o=>window.__mylistings[o.id]=o);
+    host.querySelectorAll('.share-btn').forEach(b=>b.addEventListener('click',()=>CH.copyShare(b.dataset.slug,b)));
+    host.querySelectorAll('.edit-l').forEach(b=>b.addEventListener('click',()=>openListing(window.__mylistings[b.dataset.id])));
+    host.querySelectorAll('.renew').forEach(b=>b.addEventListener('click',()=>renewListing(b.dataset.id)));
+  }
+  async function renewListing(id){
+    const o=window.__mylistings[id];
+    const {error}=await CH.sb.from('openings').update({expires_at:new Date(Date.now()+42*864e5).toISOString(),renewed_at:new Date().toISOString(),renew_count:(o.renew_count||0)+1,status:'open'}).eq('id',id);
+    if(error){CH.toast(alertEl,error.message,'err');return;}
+    CH.toast(alertEl,'Listing renewed for 6 more weeks.','ok');myListings();
+  }
+
+  // listing modal
+  const listModal=document.getElementById('list-modal');
+  document.getElementById('l-dept').innerHTML=Object.entries(CH.ROLES_BY_DISCIPLINE).map(([g,rs])=>`<optgroup label="${g}">${rs.map(r=>`<option>${r}</option>`).join('')}</optgroup>`).join('');
+  document.getElementById('l-disc').innerHTML=['Any',...CH.DISCIPLINES].map(d=>`<option>${d}</option>`).join('');
+  document.getElementById('l-city').innerHTML=CH.CITIES.map(c=>`<option>${c}</option>`).join('');
+  function openListing(o){
+    document.getElementById('list-form').reset();
+    document.getElementById('list-modal-title').textContent=o?'Edit Listing':'New Listing';
+    document.getElementById('l-id').value=o?o.id:'';
+    document.getElementById('list-save').textContent=o?'Save':'Publish';
+    if(o){['l-title:title','l-prod:production_title','l-loc:location','l-commit:commitment','l-desc:description','l-req:requirements'].forEach(p=>{const[a,b]=p.split(':');document.getElementById(a).value=o[b]||'';});
+      document.getElementById('l-dept').value=o.department||'';document.getElementById('l-disc').value=o.discipline||'Any';document.getElementById('l-city').value=o.city||'Toronto';document.getElementById('l-status').value=o.status||'open';}
+    CH.clearToast(document.getElementById('list-alert'));listModal.classList.add('show');
+  }
+  document.getElementById('list-cancel').addEventListener('click',()=>listModal.classList.remove('show'));
+  document.getElementById('list-x').addEventListener('click',()=>listModal.classList.remove('show'));
+  listModal.addEventListener('click',e=>{if(e.target===listModal)listModal.classList.remove('show');});
+  document.getElementById('list-form').addEventListener('submit',async(e)=>{
+    e.preventDefault();const btn=document.getElementById('list-save');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    const id=document.getElementById('l-id').value;
+    const g=id=>document.getElementById(id).value.trim();
+    const payload={title:g('l-title'),department:document.getElementById('l-dept').value,discipline:document.getElementById('l-disc').value,city:document.getElementById('l-city').value,production_title:g('l-prod')||null,location:g('l-loc')||null,commitment:g('l-commit')||null,description:g('l-desc')||null,requirements:g('l-req')||null,status:document.getElementById('l-status').value};
+    let error;
+    if(id){({error}=await CH.sb.from('openings').update(payload).eq('id',id));}
+    else{payload.created_by=uid;({error}=await CH.sb.from('openings').insert(payload));}
+    btn.disabled=false;btn.textContent=id?'Save':'Publish';
+    if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}
+    listModal.classList.remove('show');CH.toast(alertEl,'Listing saved.','ok');myListings();
+  });
+
+  // ---------- HIRING: APPLICANTS INBOX ----------
+  async function applicantsInbox(){
+    const v=document.getElementById('view');v.innerHTML='<div class="empty"><span class="loader"></span> Loading…</div>';
+    const {data:mine}=await CH.sb.from('openings').select('id,title').eq('created_by',uid);
+    const map={};(mine||[]).forEach(o=>map[o.id]=o.title);const ids=Object.keys(map);
+    if(!ids.length){v.innerHTML='<div class="empty">Post a listing first to receive applications.</div>';return;}
+    const {data}=await CH.sb.from('applications').select('*, profiles:applicant_id(full_name,email,discipline,primary_department,headline,links)').in('opening_id',ids).order('created_at',{ascending:false});
+    if(!data||!data.length){v.innerHTML='<div class="empty">No applications yet.</div>';return;}
+    v.innerHTML='<div class="list">'+data.map(a=>{const p=a.profiles||{};return `<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Applicant')}</div><div class="m">${CH.esc(map[a.opening_id]||'')} · ${CH.esc(p.discipline||'')} · ${CH.fmtDate(a.created_at)}</div>${a.cover_note?`<p class="lead" style="margin-top:8px;max-width:60ch;">${CH.esc(a.cover_note)}</p>`:''}</div><div class="row-right"><select class="st-sel" data-id="${a.id}" style="width:auto;padding:8px 30px 8px 12px;font-size:.8rem;">${['submitted','reviewing','interview','accepted','waitlisted','declined'].map(s=>`<option ${a.status===s?'selected':''}>${s}</option>`).join('')}</select></div></div>`;}).join('')+'</div>';
+    v.querySelectorAll('.st-sel').forEach(s=>s.addEventListener('change',async()=>{const {error}=await CH.sb.from('applications').update({status:s.value}).eq('id',s.dataset.id);CH.toast(alertEl,error?error.message:'Updated.',error?'err':'ok');}));
+  }
+
+  // ---------- PROFILE (shared) ----------
+  async function profileTab(){
+    const v=document.getElementById('view');
+    const L=profile.links||{};
+    const badges=await CH.badgesFor(uid);
+    v.innerHTML=`
+      <div class="panel" style="margin-bottom:18px;"><div class="spread"><h2 class="block" style="margin:0;">Your Badges</h2><span class="mono muted" style="font-size:.6rem;letter-spacing:.14em;text-transform:uppercase;">Earned by taking part</span></div>
+        <div style="margin-top:16px;">${CH.renderBadges(badges)}</div></div>
+      <form id="pf" class="panel">
+        <div class="grid two">
+          <label class="f"><span class="lab">Full name</span><input id="p-name" value="${CH.esc(profile.full_name)}"></label>
+          <label class="f"><span class="lab">Discipline</span><select id="p-disc">${CH.DISCIPLINES.map(d=>`<option ${d===myDisc?'selected':''}>${d}</option>`).join('')}</select></label>
+        </div>
+        <div class="grid two">
+          <label class="f"><span class="lab">Headline</span><input id="p-headline" value="${CH.esc(profile.headline)}" placeholder="Emerging Cinematographer"></label>
+          <label class="f"><span class="lab">City</span><select id="p-city">${CH.CITIES.map(c=>`<option ${c===(profile.city||'Toronto')?'selected':''}>${c}</option>`).join('')}</select></label>
+        </div>
+        <label class="f"><span class="lab">Roles you're interested in (for your feed)</span><div class="tags" id="spec-chips" style="margin-top:4px;">${(CH.ROLES_BY_DISCIPLINE[myDisc]||[]).map(r=>`<button type="button" class="chip ${(profile.specialties||[]).includes(r)?'on':''}" data-r="${CH.esc(r)}">${CH.esc(r)}</button>`).join('')}</div></label>
+        <label class="f"><span class="lab">Short bio</span><textarea id="p-bio" placeholder="Who you are and what you want to make.">${CH.esc(profile.bio)}</textarea></label>
+        <div class="grid two">
+          <label class="f"><span class="lab">Experience</span><select id="p-exp">${['Emerging','Intermediate','Experienced'].map(x=>`<option ${x===profile.experience_level?'selected':''}>${x}</option>`).join('')}</select></label>
+          <label class="f"><span class="lab">Availability</span><input id="p-avail" value="${CH.esc(profile.availability)}" placeholder="Weekends"></label>
+        </div>
+        <div class="split"></div><p class="fieldset-title">Links</p>
+        <div class="grid two">
+          <label class="f"><span class="lab">IMDb</span><input id="p-imdb" value="${CH.esc(L.imdb)}"></label>
+          <label class="f"><span class="lab">Instagram</span><input id="p-insta" value="${CH.esc(L.instagram)}"></label>
+        </div>
+        <div class="grid two">
+          <label class="f"><span class="lab">Website</span><input id="p-web" value="${CH.esc(L.website)}"></label>
+          <label class="f"><span class="lab">Reel</span><input id="p-reel" value="${CH.esc(L.reel)}"></label>
+        </div>
+        <button class="btn solid" type="submit" id="p-save">Save Profile</button>
+      </form>`;
+    let specs=[...(profile.specialties||[])];
+    v.querySelectorAll('#spec-chips .chip').forEach(c=>c.addEventListener('click',()=>{const r=c.dataset.r;if(specs.includes(r)){specs=specs.filter(x=>x!==r);c.classList.remove('on');}else{specs.push(r);c.classList.add('on');}}));
+    document.getElementById('pf').addEventListener('submit',async(e)=>{
+      e.preventDefault();const btn=document.getElementById('p-save');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+      const g=id=>document.getElementById(id).value.trim();
+      const payload={full_name:g('p-name'),discipline:document.getElementById('p-disc').value,headline:g('p-headline'),city:document.getElementById('p-city').value,specialties:specs,bio:g('p-bio'),experience_level:document.getElementById('p-exp').value,availability:g('p-avail'),links:{imdb:g('p-imdb'),instagram:g('p-insta'),website:g('p-web'),reel:g('p-reel')}};
+      const {error}=await CH.sb.from('profiles').update(payload).eq('id',uid);
+      btn.disabled=false;btn.textContent='Save Profile';
+      if(error){CH.toast(alertEl,error.message,'err');return;}
+      profile={...profile,...payload};document.getElementById('member-name').textContent=payload.full_name||'Your Studio';
+      CH.toast(alertEl,'Profile saved.','ok');window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+
+  renderView();
+  CH.mountFeedback();
+})();
+</script>
+</body>
+</html>

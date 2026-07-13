@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listing · Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="appbar">
+  <div class="brand-wrap"><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
+  <nav><a href="/creative-house" class="navlink">The House</a><a href="/dashboard/" class="navlink" id="dash-link" style="display:none;">Dashboard</a><a href="/create-account/" class="navlink solid" id="auth-link">Sign in</a></nav>
+</header>
+
+<div class="wrap narrow" style="max-width:720px;">
+  <div class="alert" id="alert"></div>
+  <div id="content"><div class="empty"><span class="loader"></span> Loading listing…</div></div>
+</div>
+
+<!-- APPLY MODAL -->
+<div class="modal-bg" id="apply-modal"><div class="modal">
+  <button class="modal-close" id="apply-x">&times;</button>
+  <h3>Apply</h3>
+  <p class="mono muted" id="apply-meta" style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px;"></p>
+  <div class="alert" id="apply-alert"></div>
+  <form id="apply-form">
+    <label class="f"><span class="lab">Why you? (cover note)</span><textarea id="a-note" required placeholder="A few honest lines about why this role."></textarea></label>
+    <label class="f"><span class="lab">Portfolio link (optional)</span><input id="a-link" type="url"></label>
+    <div class="spread"><button type="button" class="btn ghost sm" id="apply-cancel">Cancel</button><button type="submit" class="btn solid" id="apply-submit">Submit Application</button></div>
+  </form>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/app.js"></script>
+<script>
+(async function(){
+  const alertEl=document.getElementById('alert'), content=document.getElementById('content');
+  if(!CH.guardConfig('.wrap')) return;
+  const slug=new URLSearchParams(location.search).get('id');
+  const session=await CH.getSession();
+  if(session){document.getElementById('auth-link').style.display='none';document.getElementById('dash-link').style.display='inline-block';}
+
+  if(!slug){content.innerHTML='<div class="empty">No listing specified.</div>';return;}
+  const {data:o,error}=await CH.sb.from('openings').select('*').eq('share_slug',slug).maybeSingle();
+  if(error||!o){content.innerHTML='<div class="empty">This listing could not be found. It may have been closed.</div>';return;}
+
+  const tl=CH.timeLeft(o.expires_at);
+  const expired=(o.status!=='open')||(o.expires_at && new Date(o.expires_at)<new Date());
+  content.innerHTML=`
+    <span class="eyebrow">${CH.esc(o.department||o.kind||'Role')} · ${CH.esc(o.city||'Toronto')}</span>
+    <h1 class="page" style="margin-bottom:14px;">${CH.esc(o.title)}</h1>
+    <div class="tags" style="margin-bottom:22px;">${CH.pill(o.status)}<span class="expiry ${tl.cls}">${tl.text}</span>${o.production_title?`<span class="tag">${CH.esc(o.production_title)}</span>`:''}${o.commitment?`<span class="tag">${CH.esc(o.commitment)}</span>`:''}${o.location?`<span class="tag">${CH.esc(o.location)}</span>`:''}</div>
+    ${o.description?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">The Role</p><p style="line-height:1.75;">${CH.esc(o.description)}</p></div>`:''}
+    ${o.requirements?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Looking For</p><p style="line-height:1.75;">${CH.esc(o.requirements)}</p></div>`:''}
+    <div class="panel"><div class="spread">
+      <button class="share-btn" id="share">Share this listing</button>
+      <div id="cta"></div>
+    </div></div>`;
+  document.getElementById('share').addEventListener('click',(e)=>CH.copyShare(slug,e.target));
+
+  const cta=document.getElementById('cta');
+  if(expired){ cta.innerHTML='<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applications closed</span>'; return; }
+  if(!session){ cta.innerHTML=`<a class="btn solid" href="/create-account/">Sign up to apply</a>`; return; }
+
+  // logged in — check existing application
+  const {data:existing}=await CH.sb.from('applications').select('status').eq('opening_id',o.id).eq('applicant_id',session.user.id).maybeSingle();
+  if(existing){ cta.innerHTML=`<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · ${CH.esc(existing.status)}</span>`; return; }
+  cta.innerHTML=`<button class="btn solid" id="applybtn">Apply now</button>`;
+  const modal=document.getElementById('apply-modal');
+  document.getElementById('apply-meta').textContent=[o.department,o.production_title,o.location].filter(Boolean).join(' · ');
+  document.getElementById('applybtn').addEventListener('click',()=>modal.classList.add('show'));
+  document.getElementById('apply-cancel').addEventListener('click',()=>modal.classList.remove('show'));
+  document.getElementById('apply-x').addEventListener('click',()=>modal.classList.remove('show'));
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
+  document.getElementById('apply-form').addEventListener('submit',async(e)=>{
+    e.preventDefault();const a=document.getElementById('apply-alert');const btn=document.getElementById('apply-submit');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    const {error}=await CH.sb.from('applications').insert({opening_id:o.id,applicant_id:session.user.id,cover_note:document.getElementById('a-note').value.trim(),portfolio_link:document.getElementById('a-link').value.trim()||null});
+    btn.disabled=false;btn.textContent='Submit Application';
+    if(error){CH.toast(a,error.code==='23505'?'You already applied.':error.message,'err');return;}
+    modal.classList.remove('show');CH.toast(alertEl,'Application submitted. Good luck.','ok');
+    cta.innerHTML='<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · submitted</span>';
+  });
+  CH.mountFeedback();
+})();
+</script>
+</body>
+</html>

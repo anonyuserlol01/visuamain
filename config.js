@@ -13,9 +13,9 @@ window.VISUAREALM_CONFIG = {
 
     // Navigation targets
     ROUTES: {
-        afterLogin:  "dashboard.html",
-        afterLogout: "create-account.html",
-        admin:       "admin.html",
+        afterLogin:  "/dashboard/",
+        afterLogout: "/create-account/",
+        admin:       "/admin/",
         // Your main marketing site (used by the "back" / brand links)
         home:        "https://visuarealmstudios.com"
     }
