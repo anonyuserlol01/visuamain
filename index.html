@@ -38,7 +38,7 @@
  <meta name="twitter:site" content="@visuarealmstudios">
 
  <!-- SEO: LinkedIn / Slack / Discord -->
- <meta property="og:image:secure_url" content="https://visuarealmstudios.com/og-banner.png">
+ <meta property="og:image:secure_url" content="https://visuarealmstudios.com/images/og-banner.png">
 
  <!-- SEO: Schema.org JSON-LD Structured Data -->
  <script type="application/ld+json">
@@ -238,13 +238,30 @@
  .nav-deck-arrow { font-family: var(--font-mono); font-size: 1rem; transition: transform 0.4s cubic-bezier(0.16,1,0.3,1); }
  .nav-deck:hover .nav-deck-arrow { transform: translate(3px, -3px); }
 
+ /* Right-side action group */
+ .nav-actions { display: flex; align-items: center; gap: 0.6rem; }
+
+ /* Creative House = primary CTA (filled ember) */
+ .nav-deck--house { background: var(--ember); border-color: var(--ember); color: var(--obsidian); }
+ .nav-deck--house::before { background: var(--bone); }
+ .nav-deck--house .nav-deck-tag { color: rgba(5,5,5,0.6); }
+ .nav-deck--house:hover { color: var(--obsidian); border-color: var(--bone); }
+ .nav-deck--house:hover .nav-deck-tag { color: rgba(5,5,5,0.6); }
+
  @media (max-width: 768px) {
  .site-nav { padding: 1rem 5vw; }
  .site-nav.scrolled { padding-top: 0.75rem; padding-bottom: 0.75rem; }
  .nav-brand { font-size: 0.88rem; letter-spacing: 0.12em; }
- .nav-deck { padding: 0.55rem 1rem; gap: 0.5rem; }
+ .nav-actions { gap: 0.45rem; }
+ .nav-deck { padding: 0.55rem 0.95rem; gap: 0.5rem; }
  .nav-deck-tag { display: none; }
  .nav-deck-label { font-size: 0.8rem; }
+ }
+ @media (max-width: 520px) {
+ .nav-brand .nav-word { display: none; }
+ .nav-deck { padding: 0.5rem 0.8rem; }
+ .nav-deck-label { font-size: 0.72rem; letter-spacing: 0.08em; }
+ .nav-deck-arrow { display: none; }
  }
  @media (prefers-reduced-motion: reduce) {
  .site-nav { opacity: 1; transform: none; }
@@ -1152,11 +1169,18 @@
  <span class="nav-star" aria-hidden="true">&#10022;</span>
  <span class="nav-word">VISUAREALM</span>
  </a>
+ <nav class="nav-actions" aria-label="Primary">
+ <a href="creative-house.html" class="nav-deck nav-deck--house" aria-label="Enter the VISUAREALM Creative House">
+ <span class="nav-deck-tag">[ The House ]</span>
+ <span class="nav-deck-label">Creative House</span>
+ <span class="nav-deck-arrow" aria-hidden="true">&#8599;</span>
+ </a>
  <a href="pitchdeck.html" class="nav-deck" aria-label="Open the VISUAREALM pitch deck">
  <span class="nav-deck-tag">[ The Deck ]</span>
  <span class="nav-deck-label">Pitchdeck</span>
  <span class="nav-deck-arrow" aria-hidden="true">&#8599;</span>
  </a>
+ </nav>
  </header>
 
  <!-- OVERLAYS -->
