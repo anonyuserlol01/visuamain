@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings | Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body class="app">
+<div class="grain" aria-hidden="true"></div>
+<header class="appbar">
+  <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="/creative-house" class="brand">VISUA<span>REALM</span></a><span class="sub">Settings</span></div>
+  <nav><a href="/creative-house/" class="navlink">The House</a><a href="/pricing/" class="navlink">Pricing</a><a href="/dashboard/" class="navlink">Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
+</header>
+
+<div class="wrap" id="app" style="display:none;">
+  <div class="alert" id="alert"></div>
+  <div class="hero-band"><div><span class="eyebrow">Account</span><h1 class="page">Settings</h1></div></div>
+
+  <div class="settings-grid section-gap">
+    <nav class="settings-nav" id="snav">
+      <button data-s="account" class="on">Account</button>
+      <button data-s="privacy">Privacy</button>
+      <button data-s="notifications">Notifications</button>
+      <button data-s="danger">Delete Account</button>
+    </nav>
+    <div id="spanel"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/master-gate.js"></script>
+<script src="/app.js"></script>
+<script>
+(async function(){
+  const alertEl=document.getElementById('alert');
+  if(!CH.guardConfig('body')) return;
+  const session=await CH.requireAuth(); if(!session) return;
+  const uid=session.user.id;
+  document.getElementById('logout').addEventListener('click',()=>CH.signOut());
+  let profile=await CH.profile();
+  if(!CH.enforceAccount(profile)) return;
+  try{const {data:cfg}=await CH.sb.from('app_settings').select('maintenance_active,maintenance_message').eq('id',1).maybeSingle(); if(!CH.enforceMaintenance(profile,cfg||{})) return;}catch(e){}
+  document.getElementById('app').style.display='block';
+
+  let sec='account';
+  document.querySelectorAll('#snav button').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.s;document.querySelectorAll('#snav button').forEach(x=>x.classList.toggle('on',x.dataset.s===sec));draw();}));
+
+  function draw(){({account:acct,privacy:priv,notifications:notif,danger:danger}[sec])();}
+
+  function acct(){
+    document.getElementById('spanel').innerHTML=`
+      <div class="panel" style="margin-bottom:18px;">
+        <p class="fieldset-title">Email address</p>
+        <p class="lead" style="margin-top:0;">Current: <b>${CH.esc(profile.email||session.user.email)}</b></p>
+        <label class="f"><span class="lab">New email</span><input id="new-email" type="email" placeholder="you@email.com"></label>
+        <button class="btn solid sm" id="save-email">Update email</button>
+        <p class="hint" style="margin-top:10px;">We'll send a confirmation link to the new address.</p>
+      </div>
+      <div class="panel">
+        <p class="fieldset-title">Password</p>
+        <label class="f"><span class="lab">New password</span><input id="new-pass" type="password" minlength="12" maxlength="72" placeholder="A phrase of 12+ characters"></label>
+        <label class="f"><span class="lab">Confirm new password</span><input id="new-pass2" type="password" minlength="12" maxlength="72"></label>
+        <button class="btn solid sm" id="save-pass">Update password</button>
+      </div>`;
+    document.getElementById('save-email').addEventListener('click',async()=>{
+      const email=document.getElementById('new-email').value.trim(); if(!email){CH.toast(alertEl,'Enter a new email.','err');return;}
+      const {error}=await CH.sb.auth.updateUser({email}); CH.toast(alertEl,error?error.message:'Confirmation sent to your new email.',error?'err':'ok');
+    });
+    document.getElementById('save-pass').addEventListener('click',async()=>{
+      const p=document.getElementById('new-pass').value,p2=document.getElementById('new-pass2').value;
+      if(p.length<8){CH.toast(alertEl,'Password must be at least 8 characters.','err');return;}
+      if(p!==p2){CH.toast(alertEl,'Passwords do not match.','err');return;}
+      const {error}=await CH.sb.auth.updateUser({password:p}); CH.toast(alertEl,error?error.message:'Password updated.',error?'err':'ok');
+      if(!error){document.getElementById('new-pass').value='';document.getElementById('new-pass2').value='';}
+    });
+  }
+
+  function priv(){
+    const pub=profile.profile_public!==false;
+    document.getElementById('spanel').innerHTML=`
+      <div class="panel">
+        <p class="fieldset-title">Profile visibility</p>
+        <label class="agree" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
+          <input type="checkbox" id="pub" ${pub?'checked':''} style="width:auto;margin-top:3px;flex:none;">
+          <span>Show my profile to other signed-in members. When off, hiring members and mentors won't see you in listings and directories. You can always apply to roles either way.</span>
+        </label>
+        <button class="btn solid sm" id="save-priv" style="margin-top:18px;">Save privacy</button>
+        <p class="hint" style="margin-top:14px;">Read how we handle your data in the <a href="/privacy.html">Privacy Policy</a>.</p>
+      </div>`;
+    document.getElementById('save-priv').addEventListener('click',async()=>{
+      const v=document.getElementById('pub').checked;const {error}=await CH.sb.from('profiles').update({profile_public:v}).eq('id',uid);
+      if(!error)profile.profile_public=v;CH.toast(alertEl,error?error.message:'Privacy updated.',error?'err':'ok');
+    });
+  }
+
+  function notif(){
+    const n=profile.notify_prefs||{applications:true,announcements:true,mentions:true};
+    const row=(k,label,desc)=>`<label class="agree" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;padding:12px 0;border-top:1px solid var(--line);">
+      <input type="checkbox" data-k="${k}" ${n[k]!==false?'checked':''} style="width:auto;margin-top:3px;flex:none;">
+      <span><b>${label}</b><br><span class="hint" style="margin:0;">${desc}</span></span></label>`;
+    document.getElementById('spanel').innerHTML=`<div class="panel">
+      <p class="fieldset-title">Email notifications</p>
+      ${row('applications','Application updates','When your application status changes, or you receive a new applicant.')}
+      ${row('announcements','Announcements','Occasional news about Creative House and new features.')}
+      ${row('mentions','Mentorship & community','When a mentor or member reaches out.')}
+      <button class="btn solid sm" id="save-notif" style="margin-top:18px;">Save preferences</button>
+    </div>`;
+    document.getElementById('save-notif').addEventListener('click',async()=>{
+      const prefs={};document.querySelectorAll('#spanel [data-k]').forEach(c=>prefs[c.dataset.k]=c.checked);
+      const {error}=await CH.sb.from('profiles').update({notify_prefs:prefs}).eq('id',uid);
+      if(!error)profile.notify_prefs=prefs;CH.toast(alertEl,error?error.message:'Preferences saved.',error?'err':'ok');
+    });
+  }
+
+  function danger(){
+    document.getElementById('spanel').innerHTML=`
+      <div class="danger-zone">
+        <h3>Delete account</h3>
+        <p class="lead" style="margin-top:6px;">This permanently deletes your profile, your applications, and the listings you created. <b>It cannot be undone</b> — there is no recovery.</p>
+        <div id="del-flow"><button class="btn ghost sm" id="del1" style="border-color:rgba(217,90,43,.5);color:var(--ember);">Begin deletion</button></div>
+      </div>`;
+    let stage=0;const flow=document.getElementById('del-flow');
+    document.getElementById('del1').addEventListener('click',()=>{
+      flow.innerHTML=`<p class="lead">Are you sure? You'll lose your badges, application history, and any listings you posted.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="del-cancel">Keep my account</button><button class="btn ghost sm" id="del2" style="border-color:rgba(217,90,43,.5);color:var(--ember);">Continue</button></div>`;
+      wire();
+    });
+    function wire(){
+      const c=document.getElementById('del-cancel'); if(c)c.addEventListener('click',()=>danger());
+      const d2=document.getElementById('del2'); if(d2)d2.addEventListener('click',()=>{
+        flow.innerHTML=`<p class="lead">Final step. Type <b>DELETE MY ACCOUNT</b> below to confirm.</p>
+          <label class="f"><input id="del-confirm" placeholder="DELETE MY ACCOUNT" autocomplete="off"></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn ghost sm" id="del-final-cancel">Cancel</button><button class="btn solid" id="del-final" disabled style="background:var(--ember);">Permanently delete</button></div>`;
+        const inp=document.getElementById('del-confirm'),fin=document.getElementById('del-final');
+        inp.addEventListener('input',()=>{fin.disabled=inp.value.trim()!=='DELETE MY ACCOUNT';});
+        document.getElementById('del-final-cancel').addEventListener('click',()=>danger());
+        fin.addEventListener('click',async()=>{
+          fin.disabled=true;fin.innerHTML='<span class="loader"></span>';
+          const {data,error}=await CH.sb.functions.invoke('delete-account');
+          if(error||!data?.ok){CH.toast(alertEl,data?.error||error?.message||'We could not safely delete the account. Nothing was partially removed. Contact support.','err');fin.disabled=false;fin.textContent='Permanently delete';return;}
+          await CH.sb.auth.signOut();
+          CH.renderDeleted();
+        });
+      });
+    }
+  }
+
+  draw();
+  CH.mountFeedback();
+  CH.mountNotifications();
+  CH.mountFooter();
+  CH.wireBack('/dashboard/');
+})();
+</script>
+</body>
+</html>

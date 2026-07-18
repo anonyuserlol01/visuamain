@@ -1,18 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Listing · Creative House</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<title>Opportunity | Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
 <link rel="stylesheet" href="/app.css">
 </head>
-<body>
+<body class="app">
 <div class="grain" aria-hidden="true"></div>
 
 <header class="appbar">
-  <div class="brand-wrap"><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
-  <nav><a href="/creative-house" class="navlink">The House</a><a href="/dashboard/" class="navlink" id="dash-link" style="display:none;">Dashboard</a><a href="/create-account/" class="navlink solid" id="auth-link">Sign in</a></nav>
+  <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
+  <nav><a href="/creative-house/" class="navlink">The House</a><a href="/pricing/" class="navlink">Pricing</a><a href="/dashboard/" class="navlink" id="dash-link" style="display:none;">Dashboard</a><a href="/create-account/" class="navlink solid" id="auth-link">Sign in</a></nav>
 </header>
 
 <div class="wrap narrow" style="max-width:720px;">
@@ -35,6 +37,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
+<script src="/master-gate.js"></script>
 <script src="/app.js"></script>
 <script>
 (async function(){
@@ -44,31 +47,43 @@
   const session=await CH.getSession();
   if(session){document.getElementById('auth-link').style.display='none';document.getElementById('dash-link').style.display='inline-block';}
 
-  if(!slug){content.innerHTML='<div class="empty">No listing specified.</div>';return;}
+  if(!slug){CH.go404('missing-listing');return;}
   const {data:o,error}=await CH.sb.from('openings').select('*').eq('share_slug',slug).maybeSingle();
-  if(error||!o){content.innerHTML='<div class="empty">This listing could not be found. It may have been closed.</div>';return;}
+  if(error||!o){CH.go404('listing-not-found');return;}
+  document.title=((o.title||'Opportunity').slice(0,38))+' | Creative House';
+  // enough separate people flagged this listing that it is off the board while a moderator reads it
+  if(o.review_state==='hidden'){content.innerHTML='<div class="empty">This listing is paused while our team takes a look. Nothing to do here for now — everything else on Creative House is still open.</div>';return;}
 
   const tl=CH.timeLeft(o.expires_at);
   const expired=(o.status!=='open')||(o.expires_at && new Date(o.expires_at)<new Date());
   content.innerHTML=`
-    <span class="eyebrow">${CH.esc(o.department||o.kind||'Role')} · ${CH.esc(o.city||'Toronto')}</span>
+    ${o.poster_url?`<div class="listing-poster"><img src="${CH.esc(o.poster_url)}" alt="${CH.esc(o.title)} poster" loading="lazy"></div>`:''}
+    <span class="eyebrow">${CH.esc(o.department||o.kind||'Role')} · ${CH.esc(o.city||'Toronto')}${o.company?' · '+CH.esc(o.company):''}</span>
     <h1 class="page" style="margin-bottom:14px;">${CH.esc(o.title)}</h1>
-    <div class="tags" style="margin-bottom:22px;">${CH.pill(o.status)}<span class="expiry ${tl.cls}">${tl.text}</span>${o.production_title?`<span class="tag">${CH.esc(o.production_title)}</span>`:''}${o.commitment?`<span class="tag">${CH.esc(o.commitment)}</span>`:''}${o.location?`<span class="tag">${CH.esc(o.location)}</span>`:''}</div>
+    <div class="tags" style="margin-bottom:14px;">${CH.pill(o.status)}<span class="expiry ${tl.cls}">${tl.text}</span>${o.production_title?`<span class="tag">${CH.esc(o.production_title)}</span>`:''}${o.genre?`<span class="tag">${CH.esc(o.genre)}</span>`:''}${o.commitment?`<span class="tag">${CH.esc(o.commitment)}</span>`:''}${o.location?`<span class="tag">${CH.esc(o.location)}</span>`:''}</div>
+    <div class="metachips" style="margin-bottom:22px;"><span class="mchip ${(o.pay_type||'unpaid')==='paid'?'paid':(o.pay_type==='deferred'?'deferred':'')}">${CH.esc(o.pay_type||'unpaid')}</span>${o.production_type?`<span class="mchip">${CH.esc(o.production_type)}</span>`:''}${o.work_mode?`<span class="mchip">${CH.esc(o.work_mode)}</span>`:''}${o.experience_level&&o.experience_level!=='Any'?`<span class="mchip">${CH.esc(o.experience_level)} welcome</span>`:''}${o.expires_at?`<span class="mchip">Apply by ${CH.fmtDate(o.expires_at)}</span>`:''}</div>
+    ${o.synopsis?`<div class="panel showcase" style="margin-bottom:16px;"><p class="fieldset-title">Synopsis</p><p style="line-height:1.8;font-size:1.02rem;">${CH.esc(o.synopsis)}</p></div>`:''}
     ${o.description?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">The Role</p><p style="line-height:1.75;">${CH.esc(o.description)}</p></div>`:''}
     ${o.requirements?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Looking For</p><p style="line-height:1.75;">${CH.esc(o.requirements)}</p></div>`:''}
-    <div class="panel"><div class="spread">
-      <button class="share-btn" id="share">Share this listing</button>
+    ${(o.gallery&&o.gallery.length)?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Gallery</p><div class="listing-gallery">${o.gallery.map(g=>`<a href="${CH.esc(g)}" target="_blank" rel="noopener"><img src="${CH.esc(g)}" alt="Still" loading="lazy"></a>`).join('')}</div></div>`:''}
+    ${o.script_url?`<div class="panel" style="margin-bottom:16px;"><div class="spread"><p class="fieldset-title" style="margin:0;">Script / sides</p><a class="btn ghost sm" href="${CH.esc(o.script_url)}" target="_blank" rel="noopener">Open document</a></div></div>`:''}
+    <div class="panel apply-cta"><div class="spread">
+      <button class="share-btn" id="share" aria-label="Copy link to this listing">Share this listing</button>
       <div id="cta"></div>
     </div></div>`;
   document.getElementById('share').addEventListener('click',(e)=>CH.copyShare(slug,e.target));
 
   const cta=document.getElementById('cta');
   if(expired){ cta.innerHTML='<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applications closed</span>'; return; }
-  if(!session){ cta.innerHTML=`<a class="btn solid" href="/create-account/">Sign up to apply</a>`; return; }
+  if(!session){ cta.innerHTML=`<a class="btn solid" href="/create-account/">Create an account to apply</a>`; return; }
+
+  // suspended users cannot apply
+  const meProf=await CH.profile();
+  if(meProf && meProf.status==='suspended'){ cta.innerHTML=`<a class="btn ghost" href="mailto:${CH.SUPPORT_EMAIL}?subject=Account%20Suspension%20Appeal">Account suspended — contact support</a>`; return; }
 
   // logged in — check existing application
-  const {data:existing}=await CH.sb.from('applications').select('status').eq('opening_id',o.id).eq('applicant_id',session.user.id).maybeSingle();
-  if(existing){ cta.innerHTML=`<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · ${CH.esc(existing.status)}</span>`; return; }
+  const {data:existing}=await CH.sb.from('applications').select('status,status_announced_at').eq('opening_id',o.id).eq('applicant_id',session.user.id).maybeSingle();
+  if(existing){ cta.innerHTML=`<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · ${CH.esc(CH.visibleApplicationStatus(existing))}</span>`; return; }
   cta.innerHTML=`<button class="btn solid" id="applybtn">Apply now</button>`;
   const modal=document.getElementById('apply-modal');
   document.getElementById('apply-meta').textContent=[o.department,o.production_title,o.location].filter(Boolean).join(' · ');
@@ -83,8 +98,14 @@
     if(error){CH.toast(a,error.code==='23505'?'You already applied.':error.message,'err');return;}
     modal.classList.remove('show');CH.toast(alertEl,'Application submitted. Good luck.','ok');
     cta.innerHTML='<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · submitted</span>';
+    // the badge itself is awarded by the database on insert — this shows it off
+    await CH.celebrateFirstApplication();
+    await CH.showProgressReward();
   });
   CH.mountFeedback();
+  CH.mountNotifications();
+  CH.mountFooter();
+  CH.wireBack('/creative-house');
 })();
 </script>
 </body>

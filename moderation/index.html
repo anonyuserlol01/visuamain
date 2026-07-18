@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moderation | Creative House</title>
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,500;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body class="app moderation-console">
+<div id="denied" class="gate" style="display:none;">
+  <div class="gate-card">
+    <span class="eyebrow">Restricted</span>
+    <h1 class="page" style="margin:8px 0 16px;">Moderators Only</h1>
+    <p class="lead" style="margin:0 auto 26px;">This portal is for the moderation team. If you think you should have access, reach out and we'll sort it.</p>
+    <a class="btn solid" href="/dashboard/">Back to Dashboard</a>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <header class="topbar mod-topbar">
+    <div class="tb-in">
+      <div class="mod-brand"><a href="/dashboard/" class="brand">VISUA<span>REALM</span></a><b>Safety Operations</b></div>
+      <div class="tb-right">
+        <span class="mono muted" id="who"></span>
+        <a href="/admin/" class="navlink" id="admin-return">Mission Control</a>
+        <a href="/dashboard/" class="navlink">Dashboard</a>
+        <button class="btn ghost sm" id="signout">Sign Out</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="mod-shell">
+    <div id="alert"></div>
+    <div class="mod-hero">
+      <div class="mod-hero-copy"><span class="dialog-kicker">Human decisions, documented</span><h1>Case Desk</h1>
+      <p id="mod-hi">Keeping this place safe for everyone. Thanks for doing this.</p>
+      <div class="mod-principles"><span>Listen first</span><span>Check context</span><span>Document decisions</span></div>
+      </div><div class="mod-hero-orbit"><span></span><span></span><b>SAFE<br>BY<br>CARE</b></div><div class="mod-live" id="mod-live"><i></i><span>Connecting</span><small id="mod-sync">Starting desk…</small><button type="button" id="mod-refresh">Refresh</button></div>
+    </div>
+    <div class="mod-workspace">
+      <aside class="mod-rail"><div class="mod-rail-label">Workspaces</div><div class="segbar" id="segs"></div><div class="mod-rail-note"><i>!</i><p><b>Reports are signals.</b><span>They never change an account by themselves.</span></p></div><div class="mod-keys"><span><kbd>R</kbd> Refresh desk</span><span><kbd>/</kbd> Search queue</span></div></aside>
+      <main class="mod-stage"><div class="mod-stage-head"><div><span id="stage-kicker">Safety workspace</span><h2 id="stage-title">Case Queue</h2></div><a href="/community-guidelines.html" target="_blank">Standards ↗</a></div><div id="view"><div class="empty"><span class="loader"></span> Loading…</div></div></main>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/master-gate.js"></script>
+<script src="/app.js"></script>
+<script>
+(async function(){
+  const alertEl=document.getElementById('alert');
+  const s=await CH.getSession();
+  if(!s){location.href='/create-account/';return;}
+  const me=await CH.profile();
+  if(!me||!(me.is_moderator||me.is_admin)){document.getElementById('denied').style.display='block';return;}
+  document.getElementById('app').style.display='block';
+  if(!me.is_admin)document.getElementById('admin-return').style.display='none';
+  document.getElementById('who').textContent=(me.full_name||me.email||'')+(me.is_admin?' · Admin':' · Moderator');
+  document.getElementById('signout').addEventListener('click',()=>CH.signOut());
+
+  // maintenance still applies to moderators (admins pass)
+  let settings={};
+  try{const {data:cfg}=await CH.sb.from('app_settings').select('maintenance_active,maintenance_message').eq('id',1).maybeSingle();settings=cfg||{};}catch(e){}
+  if(!CH.enforceMaintenance(me,settings))return;
+
+  let reports=[],profiles=[],logs=[],openings=[],cases=[],oMap={},loading=false;
+  async function load(quiet=false){
+    if(loading)return;loading=true;
+    const [r,p,l,o,c]=await Promise.all([
+      CH.sb.from('reports').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('profiles').select('id,full_name,email,discipline,primary_department,city,status,warning_active,warning_note,flag_note,is_mentor,is_admin,is_moderator,created_at').order('created_at',{ascending:false}),
+      CH.sb.from('moderation_log').select('*').order('created_at',{ascending:false}).limit(60),
+      CH.sb.from('openings').select('id,title,production_title,department,city,status,created_by,share_slug,flag_count,review_state,flagged,created_at,expires_at').order('created_at',{ascending:false}),
+      CH.sb.from('ch_cases').select('*').order('last_reported_at',{ascending:false})
+    ]);
+    reports=r.data||[];profiles=p.data||[];logs=l.data||[];openings=o.data||[];cases=c.data||[];
+    oMap={};openings.forEach(x=>oMap[x.id]=x);
+    loading=false;const now=new Date();document.getElementById('mod-sync').textContent='Synced '+now.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});document.getElementById('mod-live').classList.add('ready');
+    if(!quiet)draw();
+  }
+  const pMap=()=>Object.fromEntries(profiles.map(p=>[p.id,p]));
+
+  let seg='cases';
+  function openCount(){return reports.filter(r=>r.status==='open').length;}
+  function activeCases(){return cases.filter(c=>!['resolved','dismissed'].includes(c.status));}
+  function flaggedCount(){return profiles.filter(p=>p.status==='flagged').length;}
+  function flaggedListings(){return openings.filter(o=>(o.flag_count||0)>0&&o.review_state!=='cleared');}
+  function drawSegs(){
+    const segs=[['cases','Case Queue','Review and decide',activeCases().length,'◇'],['reports','Report Inbox','Original submissions',openCount(),'!'],['listings','Listing Watch','Flagged opportunities',flaggedListings().length,'□'],['members','Member Files','People and history',flaggedCount(),'○'],['log','Decision Trail','Staff accountability',logs.length,'↗']];
+    document.getElementById('segs').innerHTML=segs.map(([k,l,d,n,i])=>`<button class="${k===seg?'on':''}" data-k="${k}"><i>${i}</i><span><b>${l}</b><small>${d}</small></span><em>${n}</em></button>`).join('');
+    document.querySelectorAll('#segs button').forEach(b=>b.addEventListener('click',()=>{seg=b.dataset.k;document.getElementById('stage-title').textContent=b.querySelector('b').textContent;draw();}));
+  }
+  function draw(){drawSegs();seg==='cases'?viewCases():seg==='reports'?viewReports():seg==='listings'?viewListings():seg==='members'?viewMembers():viewLog();}
+
+  // ---------- CASE QUEUE ----------
+  let caseFilter='active',caseQuery='',onlyMine=false;
+  function viewCases(){
+    const v=document.getElementById('view'),M=pMap();
+    const order={critical:0,high:1,normal:2,low:3};
+    let list=cases.filter(c=>caseFilter==='all'||(caseFilter==='active'?!['resolved','dismissed'].includes(c.status):c.status===caseFilter));if(onlyMine)list=list.filter(c=>c.assigned_to===me.id);if(caseQuery){const q=caseQuery.toLowerCase();list=list.filter(c=>{const person=M[c.subject_user]||{},o=oMap[c.subject_listing]||{};return[c.case_number,c.category,c.status,o.title,person.full_name,person.email].some(x=>(x||'').toLowerCase().includes(q));});}list.sort((a,b)=>(order[a.priority]??2)-(order[b.priority]??2)||new Date(b.last_reported_at)-new Date(a.last_reported_at));
+    const critical=activeCases().filter(c=>c.priority==='critical').length,unclaimed=activeCases().filter(c=>!c.assigned_to).length,mine=activeCases().filter(c=>c.assigned_to===me.id).length;
+    v.innerHTML=`<div class="case-pulse"><div><span>Critical</span><b>${critical}</b><small>${critical?'Begin here':'None waiting'}</small></div><div><span>Unclaimed</span><b>${unclaimed}</b><small>Needs an owner</small></div><div><span>With me</span><b>${mine}</b><small>Your active desk</small></div><div><span>Closed today</span><b>${cases.filter(c=>['resolved','dismissed'].includes(c.status)&&new Date(c.resolved_at).toDateString()===new Date().toDateString()).length}</b><small>Decisions logged</small></div></div>
+      <div class="case-command"><div><span class="dialog-kicker">One report never punishes</span><h2>${list.length} case${list.length===1?'':'s'} in view</h2><p>Search, claim and move through the queue without losing the human context.</p></div><div class="case-tools"><label class="case-search"><span>Search cases</span><input id="case-search" placeholder="Number, person, listing…" value="${CH.esc(caseQuery)}"></label><label><span>Queue view</span><select id="case-filter">${[['active','Active'],['open','Unclaimed'],['triage','Triage'],['investigating','Investigating'],['awaiting_info','Waiting'],['resolved','Resolved'],['dismissed','Dismissed'],['all','Everything']].map(([x,l])=>`<option value="${x}" ${caseFilter===x?'selected':''}>${l}</option>`).join('')}</select></label><button type="button" class="mine-toggle ${onlyMine?'on':''}" id="case-mine">My queue</button></div></div>
+      ${list.length?`<div class="case-grid">${list.map(c=>{const person=M[c.subject_user]||{},o=oMap[c.subject_listing]||{},assignee=M[c.assigned_to]||{};return `<button class="case-card priority-${CH.esc(c.priority)}" data-case="${c.id}"><div class="case-card-top"><span class="case-number">${CH.esc(c.case_number)}</span><span class="case-priority">${CH.esc(c.priority)}</span></div><h3>${CH.esc(o.title||person.full_name||person.email||(c.subject_kind==='listing'?'Listing':'Member'))}</h3><p>${CH.esc((c.category||'general').replaceAll('_',' '))} · ${c.report_count||1} report${(c.report_count||1)===1?'':'s'} · ${c.distinct_reporter_count||1} voice${(c.distinct_reporter_count||1)===1?'':'s'}</p><div class="case-card-foot"><span class="case-state">${CH.esc(c.status.replaceAll('_',' '))}</span><span>${c.assigned_to?'With '+CH.esc(assignee.full_name||'staff'):'Unclaimed'} · ${CH.fmtDate(c.last_reported_at)}</span></div></button>`;}).join('')}</div>`:'<div class="empty">Nothing in this view. The queue is clear.</div>'}`;
+    document.getElementById('case-filter').addEventListener('change',e=>{caseFilter=e.target.value;viewCases();});
+    document.getElementById('case-search').addEventListener('input',e=>{caseQuery=e.target.value;const pos=e.target.selectionStart;viewCases();const n=document.getElementById('case-search');n.focus();n.setSelectionRange(pos,pos);});document.getElementById('case-mine').addEventListener('click',()=>{onlyMine=!onlyMine;viewCases();});
+    v.querySelectorAll('[data-case]').forEach(b=>b.addEventListener('click',()=>openCase(b.dataset.case)));
+  }
+
+  async function openCase(id){
+    const bg=document.createElement('div');bg.className='cdialog-bg';bg.innerHTML='<div class="cdialog case-dossier"><div class="empty"><span class="loader"></span> Building the case file…</div></div>';document.body.appendChild(bg);requestAnimationFrame(()=>bg.classList.add('show'));
+    const close=()=>{bg.classList.remove('show');setTimeout(()=>bg.remove(),200);};bg.addEventListener('click',e=>{if(e.target===bg)close();});
+    const {data:d,error}=await CH.sb.rpc('ch_case_dossier',{p_case:id});
+    if(error||!d){bg.querySelector('.cdialog').innerHTML=`<h4>Could not open case</h4><p>${CH.esc(error?.message||'Try again shortly.')}</p><div class="cd-actions"><button class="btn solid sm" data-x>Close</button></div>`;bg.querySelector('[data-x]').onclick=close;return;}
+    const c=d.case||{},subject=d.subject||{},listing=d.listing||{},events=d.events||[],evidence=(d.reports||[]).flatMap(r=>r.evidence||[]);
+    bg.querySelector('.cdialog').innerHTML=`<div class="case-dossier-head"><div><span class="case-number">${CH.esc(c.case_number||'Case')}</span><h4>${CH.esc(listing.title||subject.full_name||subject.email||'Case review')}</h4><p>${CH.esc((c.category||'general').replaceAll('_',' '))} · ${c.report_count||1} report${(c.report_count||1)===1?'':'s'}</p></div><button class="case-close" data-x aria-label="Close">×</button></div>
+      <div class="case-facts"><div><span>Status</span><b>${CH.esc((c.status||'open').replaceAll('_',' '))}</b></div><div><span>Priority</span><b>${CH.esc(c.priority||'normal')}</b></div><div><span>History</span><b>${(d.related_cases||[]).length} related</b></div><div><span>Evidence</span><b>${evidence.length} item${evidence.length===1?'':'s'}</b></div></div>
+      ${(d.reports||[]).map(r=>`<article class="case-report"><span>${CH.fmtDate(r.created_at)} · ${CH.esc(r.reason||c.category||'Report')}</span><p>${CH.esc(r.details||'No additional context was provided.')}</p>${(r.evidence||[]).map(e=>`<a href="${CH.esc(e.value)}" target="_blank" rel="noopener">${CH.esc(e.kind||'Evidence')} ↗</a>`).join('')}</article>`).join('')}
+      <div class="case-workbench"><label class="f"><span class="lab">Case priority</span><select id="case-priority">${['low','normal','high','critical'].map(x=>`<option ${c.priority===x?'selected':''}>${x}</option>`).join('')}</select></label><label class="f"><span class="lab">Move case</span><select id="case-status">${['open','triage','investigating','awaiting_info','resolved','dismissed'].map(x=>`<option value="${x}" ${c.status===x?'selected':''}>${x.replaceAll('_',' ')}</option>`).join('')}</select></label><label class="f case-note"><span class="lab">Decision note</span><textarea id="case-note" placeholder="What did you check, decide, or need next?"></textarea></label></div>
+      <div class="case-timeline"><span class="dialog-kicker">Accountable trail</span>${events.length?events.slice().reverse().map(e=>`<div><i></i><p><b>${CH.esc((e.action||'update').replaceAll('_',' '))}</b><small>${CH.esc(e.actor||'System')} · ${CH.fmtDate(e.created_at)}</small>${e.note?`<span>${CH.esc(e.note)}</span>`:''}</p></div>`).join(''):'<p class="hint">No staff actions yet.</p>'}</div>
+      <div class="cd-actions"><button class="btn ghost sm" data-claim>${c.assigned_to===me.id?'Release case':'Claim case'}</button><button class="btn solid sm" data-save>Save case update</button></div>`;
+    bg.querySelector('[data-x]').onclick=close;
+    bg.querySelector('[data-claim]').onclick=async e=>{e.currentTarget.disabled=true;const {error}=await CH.sb.rpc('ch_case_assign',{p_case:id,p_to:c.assigned_to===me.id?null:me.id});if(error){CH.toast(alertEl,error.message,'err');}else{close();await refreshDesk();}};
+    bg.querySelector('[data-save]').onclick=async e=>{const btn=e.currentTarget,status=bg.querySelector('#case-status').value,priority=bg.querySelector('#case-priority').value,note=bg.querySelector('#case-note').value.trim();if(['resolved','dismissed'].includes(status)&&note.length<3){CH.toast(alertEl,'Closing a case needs a short decision note.','err');return;}btn.disabled=true;btn.innerHTML='<span class="loader"></span>';let err=null;if(priority!==c.priority){({error:err}=await CH.sb.rpc('ch_case_priority',{p_case:id,p_priority:priority,p_reason:note||null}));}if(!err&&status!==c.status){({error:err}=await CH.sb.rpc('ch_case_transition',{p_case:id,p_status:status,p_reason:note||null,p_resolution:status==='resolved'?'reviewed':null}));}else if(!err&&note){({error:err}=await CH.sb.rpc('ch_case_note',{p_case:id,p_note:note}));}if(err){btn.disabled=false;btn.textContent='Save case update';CH.toast(alertEl,err.message,'err');return;}close();CH.toast(alertEl,'Case updated immediately.','ok');await refreshDesk();};
+  }
+
+  async function refreshDesk(quiet=false){await load(true);document.getElementById('mod-hi').textContent=activeCases().length?`${activeCases().length} active case${activeCases().length===1?'':'s'} in the desk. Start with critical, then unclaimed.`:'The case desk is clear right now. Thank you for keeping it human.';draw();if(!quiet)document.getElementById('mod-live').animate([{transform:'scale(.98)'},{transform:'scale(1)'}],{duration:220});}
+
+  // ---------- FLAGGED LISTINGS ----------
+  function viewListings(){
+    const v=document.getElementById('view');const M=pMap();
+    const list=flaggedListings().sort((a,b)=>(b.flag_count||0)-(a.flag_count||0));
+    if(!list.length){v.innerHTML='<div class="empty">No listing is carrying a flag right now. Nothing urgent. Breathe.</div>';return;}
+    v.innerHTML=`<p class="hint" style="margin:0 0 14px;">A listing goes under review the moment one person flags it, and comes off the board on its own once three separate people have. The account behind it is untouched until you decide otherwise.</p>
+      <div class="list">${list.map(o=>{const p=M[o.created_by]||{};return `<div class="row"><div>
+        <div class="t">${CH.esc(o.title||'Untitled')} ${o.review_state==='hidden'?'<span class="pill suspended" style="margin-left:6px;">Hidden</span>':'<span class="pill reviewing" style="margin-left:6px;">Under review</span>'}</div>
+        <div class="m">${CH.esc([o.production_title,o.city].filter(Boolean).join(' · '))} · by ${CH.esc(p.full_name||p.email||'member')} · flagged by <b>${o.flag_count||0}</b> ${(o.flag_count||0)===1?'person':'separate people'}</div>
+      </div><div class="row-right">
+        ${o.share_slug?`<a class="btn ghost sm" href="/listing/?id=${CH.esc(o.share_slug)}" target="_blank" rel="noopener">Open</a>`:''}
+        <button class="btn ghost sm" data-df="${o.created_by}">Poster's file</button>
+      </div></div>`;}).join('')}</div>`;
+    v.querySelectorAll('[data-df]').forEach(b=>b.addEventListener('click',()=>openDossier(b.dataset.df)));
+  }
+
+  async function logAction(userId,action,note){
+    try{await CH.sb.from('moderation_log').insert({user_id:userId,action,note:note||null,by_admin:me.id});}catch(e){}
+  }
+
+  // ---------- REPORTS ----------
+  function viewReports(){
+    const v=document.getElementById('view');
+    const open=reports.filter(r=>r.status==='open'||r.status==='reviewing');
+    const done=reports.filter(r=>r.status==='resolved'||r.status==='dismissed');
+    const M=pMap();
+    if(!reports.length){v.innerHTML='<div class="empty">No reports. Quiet is good — it means people are being decent to each other.</div>';return;}
+    const card=(r)=>{
+      const who=M[r.reported_user]||{};const by=M[r.reporter_id]||{};
+      const isOpen=r.status==='open'||r.status==='reviewing';
+      const o=r.opening_id?oMap[r.opening_id]:null;
+      // the LISTING carries the flag. The person only carries what a mod gives them by hand.
+      const flagState=o?`<span class="pill ${o.review_state==='hidden'?'suspended':(o.review_state==='under_review'?'reviewing':'active')}">${o.review_state==='hidden'?'Listing hidden':(o.review_state==='under_review'?'Listing under review':'Listing live')}</span>`:'';
+      return `<div class="rep-card ${isOpen?'open':''}">
+        <div class="spread"><div>
+          <div class="rep-reason">${CH.esc(r.reason)}</div>
+          <div class="rep-meta">${r.opening_id?'Listing report':'Member report'} · ${CH.fmtDate(r.created_at)} · reported by ${CH.esc(by.full_name||by.email||'a member')}</div>
+        </div>${CH.pill(r.status)}</div>
+        ${r.details?`<div class="rep-details">${CH.esc(r.details)}</div>`:''}
+        ${o?`<div class="rep-listing">
+          <div class="spread">
+            <div><div class="t">${CH.esc(o.title||'Listing')}</div>
+            <div class="m">${CH.esc([o.production_title,o.department,o.city].filter(Boolean).join(' · '))||'—'} · flagged by <b>${o.flag_count||0}</b> ${(o.flag_count||0)===1?'person':'separate people'}</div></div>
+            ${flagState}
+          </div>
+          <div class="rep-actions" style="margin-top:10px;">
+            ${o.share_slug?`<a class="btn ghost sm" href="/listing/?id=${CH.esc(o.share_slug)}" target="_blank" rel="noopener">Open the listing</a>`:''}
+            ${o.review_state==='hidden'?`<button class="btn ghost sm" data-unhide="${o.id}">Put it back up</button>`:`<button class="btn ghost sm" data-hide="${o.id}" style="border-color:rgba(217,90,43,.4);color:var(--ember);">Take the listing down</button>`}
+            <button class="btn ghost sm" data-clearflag="${o.id}">Mark listing fine</button>
+          </div>
+        </div>`:''}
+        ${r.reported_user?`<div class="rep-meta" style="margin-top:8px;">Posted by: <b>${CH.esc(who.full_name||who.email||'member')}</b> ${who.status?'· '+CH.esc(who.status):''}
+          <button class="linkbtn" data-dossier="${r.reported_user}" style="margin-left:8px;color:var(--ember);">View profile &amp; listings &rarr;</button></div>`:''}
+        ${r.resolution_note?`<div class="rep-details" style="opacity:.75;">Note: ${CH.esc(r.resolution_note)}</div>`:''}
+        ${isOpen?`<div class="rep-actions">
+          <button class="btn ghost sm" data-rev="${r.id}">Mark reviewing</button>
+          <button class="btn solid sm" data-res="${r.id}">Resolve</button>
+          <button class="btn ghost sm" data-dis="${r.id}">Dismiss</button>
+          ${r.reported_user?`<button class="btn ghost sm" data-warn="${r.reported_user}" style="border-color:rgba(217,90,43,.4);color:var(--ember);">Warn member</button>`:''}
+        </div>`:''}
+      </div>`;
+    };
+    const listingReports=reports.filter(r=>r.opening_id).length,memberReports=reports.filter(r=>r.reported_user&&!r.opening_id).length;
+    v.innerHTML=`<div class="report-overview"><div><span>Needs review</span><b>${open.length}</b></div><div><span>Listing reports</span><b>${listingReports}</b></div><div><span>Member reports</span><b>${memberReports}</b></div><p><b>Read the report. Open the case.</b><span>This inbox preserves the original submission. Case Queue is where the documented decision belongs.</span></p></div>
+      ${open.length?`<div class="section-label"><span>Needs a look</span><em>${open.length} open</em></div>`+open.map(card).join(''):'<div class="empty">Nothing waiting on you right now. Nothing urgent. Breathe.</div>'}
+      ${done.length?`<div class="section-label handled"><span>Handled</span><em>${done.length} archived</em></div>`+done.map(card).join(''):''}`;
+
+    async function setStatus(id,status,note){
+      const {error}=await CH.sb.from('reports').update({status,resolution_note:note||null,handled_by:me.id,handled_at:new Date().toISOString()}).eq('id',id);
+      if(error){CH.toast(alertEl,error.message,'err');return;}
+      const r=reports.find(x=>x.id===id);
+      // Listing flags are recalculated by the database from the open reports
+      // (ch_reports_sync_listing). Closing a report releases the listing on its
+      // own. A member's account status is never touched here — that is a
+      // separate, deliberate decision under Manage.
+      if(r&&r.opening_id&&status==='dismissed'){
+        await CH.sb.from('openings').update({review_state:'cleared',flag_note:note||'Report dismissed — listing cleared.'}).eq('id',r.opening_id);
+      }
+      await logAction(r?r.reported_user:null,'report_'+status,[r?r.reason:null,r&&r.opening_id?'listing '+r.opening_id:null].filter(Boolean).join(' · '));
+      CH.toast(alertEl,'Updated. Thanks for handling it.','ok');
+      await load();draw();
+    }
+    async function setListing(openingId,patch,msg,action){
+      const {error}=await CH.sb.from('openings').update(patch).eq('id',openingId);
+      if(error){CH.toast(alertEl,error.message,'err');return;}
+      const o=oMap[openingId]||{};
+      await logAction(o.created_by||null,action,(o.title||'listing')+' — '+msg);
+      CH.toast(alertEl,msg,'ok');
+      await load();draw();
+    }
+    v.querySelectorAll('[data-hide]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!(await CH.confirm({title:'Take this listing down?',message:'It disappears from Browse and stops taking applications. The person who posted it keeps their account exactly as it is.',ok:'Take it down'})))return;
+      setListing(b.dataset.hide,{review_state:'hidden',status:'closed'},'Listing taken down.','listing_hidden');
+    }));
+    v.querySelectorAll('[data-unhide]').forEach(b=>b.addEventListener('click',()=>
+      setListing(b.dataset.unhide,{review_state:'under_review',status:'open'},'Listing is back up.','listing_restored')));
+    v.querySelectorAll('[data-clearflag]').forEach(b=>b.addEventListener('click',()=>
+      setListing(b.dataset.clearflag,{review_state:'cleared',flag_note:'Reviewed — nothing wrong.'},'Marked fine. It stays up.','listing_cleared')));
+    v.querySelectorAll('[data-dossier]').forEach(b=>b.addEventListener('click',()=>openDossier(b.dataset.dossier)));
+    v.querySelectorAll('[data-rev]').forEach(b=>b.addEventListener('click',()=>setStatus(b.dataset.rev,'reviewing')));
+    v.querySelectorAll('[data-res]').forEach(b=>b.addEventListener('click',async()=>{
+      const note=await CH.prompt({title:'Resolve report',message:'Optional note for the audit log — what did you do?',ok:'Resolve',placeholder:'e.g. Listing removed, member warned'});
+      setStatus(b.dataset.res,'resolved',note);
+    }));
+    v.querySelectorAll('[data-dis]').forEach(b=>b.addEventListener('click',async()=>{
+      if(!(await CH.confirm({title:'Dismiss this report?',message:'Use this when nothing was actually wrong. The reporter still gets a thank-you.',ok:'Dismiss'})))return;
+      setStatus(b.dataset.dis,'dismissed');
+    }));
+    v.querySelectorAll('[data-warn]').forEach(b=>b.addEventListener('click',()=>warnMember(b.dataset.warn)));
+  }
+
+  // ---------- MEMBERS (limited) ----------
+  let q='';
+  function viewMembers(){
+    const v=document.getElementById('view');
+    let list=profiles.filter(p=>!p.is_admin);
+    if(q){const t=q.toLowerCase();list=list.filter(p=>[p.full_name,p.email,p.city,p.primary_department].some(x=>(x||'').toLowerCase().includes(t)));}
+    const flagged=list.filter(p=>p.status==='flagged'||p.warning_active);
+    const rest=list.filter(p=>!(p.status==='flagged'||p.warning_active));
+    const row=(p)=>`<div class="row"><div>
+        <div class="t">${CH.esc(p.full_name||p.email||'Member')} ${p.is_mentor?CH.mentorStar():''} ${p.is_moderator?'<span class="pill reviewing" style="margin-left:6px;">Mod</span>':''} ${p.warning_active?'<span class="pill soon" style="margin-left:6px;">Warned</span>':''}</div>
+        <div class="m">${CH.esc([p.primary_department||p.discipline,p.city].filter(Boolean).join(' · '))||CH.esc(p.email||'')}${p.flag_note?' · '+CH.esc(p.flag_note):''}</div>
+      </div><div class="row-right">${CH.pill(p.status||'active')}<button class="btn ghost sm" data-df="${p.id}">File</button><button class="btn ghost sm" data-mm="${p.id}">Manage</button></div></div>`;
+    v.innerHTML=`<label class="f" style="max-width:340px;"><input id="mq" placeholder="Search members…" value="${CH.esc(q)}"></label>
+      ${flagged.length?`<h3 class="block" style="margin:6px 0 12px;">Needs attention (${flagged.length})</h3><div class="list">${flagged.map(row).join('')}</div>`:''}
+      <h3 class="block" style="margin:26px 0 12px;">All members (${rest.length})</h3><div class="list">${rest.map(row).join('')}</div>
+      <p class="hint" style="margin-top:16px;">Moderators can warn, flag, and suspend. Bans, roles, verification, and account deletion stay with admins — email ${CH.SUPPORT_EMAIL} if something needs to go further.</p>`;
+    const qi=document.getElementById('mq');
+    qi.addEventListener('input',()=>{q=qi.value;const pos=qi.selectionStart;viewMembers();const n=document.getElementById('mq');n.focus();n.setSelectionRange(pos,pos);});
+    v.querySelectorAll('[data-mm]').forEach(b=>b.addEventListener('click',()=>manageMember(b.dataset.mm)));
+    v.querySelectorAll('[data-df]').forEach(b=>b.addEventListener('click',()=>openDossier(b.dataset.df)));
+  }
+
+  // ---------- MEMBER DOSSIER (profile + everything they've posted) ----------
+  // Reports flag listings, not people. So when you need to judge the person
+  // behind a flagged listing, you open this and look at the whole picture.
+  async function openDossier(id){
+    const bg=document.createElement('div');bg.className='cdialog-bg';
+    bg.innerHTML='<div class="cdialog dossier" style="max-width:640px;"><div class="empty"><span class="loader"></span> Pulling their file…</div></div>';
+    document.body.appendChild(bg);requestAnimationFrame(()=>bg.classList.add('show'));
+    const close=()=>{bg.classList.remove('show');setTimeout(()=>bg.remove(),200);};
+    bg.addEventListener('click',e=>{if(e.target===bg)close();});
+
+    const {data,error}=await CH.sb.rpc('ch_member_dossier',{target:id});
+    const d=(data&&data[0])||null;
+    if(error||!d){
+      bg.querySelector('.cdialog').innerHTML=`<h4>Could not open that file</h4><p>${CH.esc(error?error.message:'This member could not be loaded.')}</p><div class="cd-actions"><button class="btn solid sm" data-x>Close</button></div>`;
+      bg.querySelector('[data-x]').addEventListener('click',close);return;
+    }
+    const listings=Array.isArray(d.listings)?d.listings:[];
+    const stateLabel=(s,n)=>s==='hidden'?'<span class="pill suspended">Hidden</span>'
+      :s==='under_review'?'<span class="pill reviewing">Under review</span>'
+      :s==='cleared'?'<span class="pill active">Cleared</span>'
+      :(n>0?'<span class="pill soon">Flagged</span>':'<span class="pill active">Clear</span>');
+
+    bg.querySelector('.cdialog').innerHTML=`
+      <div class="spread" style="align-items:flex-start;">
+        <div><span class="dialog-kicker">Member file</span>
+          <h4 style="margin:6px 0 4px;">${CH.esc(d.full_name||d.email||'Member')} ${d.is_mentor?CH.mentorStar():''}</h4>
+          <p style="margin:0;">${CH.esc([d.discipline,d.city].filter(Boolean).join(' · '))||CH.esc(d.email||'')} · joined ${CH.fmtDate(d.created_at)}</p>
+        </div>
+        <div style="text-align:right;">${CH.pill(d.status||'active')}${d.id_verified?'<div class="hp-b ok" style="margin-top:6px;">ID verified</div>':''}</div>
+      </div>
+      ${d.warning_active?`<div class="rep-details" style="margin-top:12px;"><b>Active warning:</b> ${CH.esc(d.warning_note||'—')}</div>`:''}
+      ${d.flag_note?`<div class="rep-details" style="margin-top:8px;"><b>Internal note:</b> ${CH.esc(d.flag_note)}</div>`:''}
+      <div class="hp-stats" style="margin-top:16px;">
+        <div><span class="n">${d.listings_total||0}</span><span class="l">Listings posted</span></div>
+        <div><span class="n">${d.listings_flagged||0}</span><span class="l">Listings flagged</span></div>
+        <div><span class="n">${d.reports_total||0}</span><span class="l">Reports naming them</span></div>
+      </div>
+      <h3 class="block" style="margin:22px 0 10px;">Their listings (${listings.length})</h3>
+      ${listings.length?`<div class="list dossier-list">${listings.map(o=>`
+        <div class="row"><div>
+          <div class="t">${CH.esc(o.title||'Untitled')}</div>
+          <div class="m">${CH.esc([o.production,o.status].filter(Boolean).join(' · '))} · posted ${CH.fmtDate(o.created_at)}${o.flag_count?` · flagged by ${o.flag_count} ${o.flag_count===1?'person':'separate people'}`:''}</div>
+        </div><div class="row-right">${stateLabel(o.review_state,o.flag_count)}
+          ${o.share_slug?`<a class="btn ghost sm" href="/listing/?id=${CH.esc(o.share_slug)}" target="_blank" rel="noopener">Open</a>`:''}
+        </div></div>`).join('')}</div>`
+        :'<div class="empty">They have never posted a listing.</div>'}
+      <p class="hint" style="margin-top:16px;">Reports flag listings. Changing this person\u2019s account status is a separate call — make it under Members &rsaquo; Manage, and say why.</p>
+      <div class="cd-actions">
+        <button class="btn ghost sm" data-x>Close</button>
+        <button class="btn ghost sm" data-warn2="${CH.esc(d.id)}" style="border-color:rgba(217,90,43,.4);color:var(--ember);">Warn member</button>
+        <button class="btn solid sm" data-manage="${CH.esc(d.id)}">Manage account</button>
+      </div>`;
+    bg.querySelector('[data-x]').addEventListener('click',close);
+    bg.querySelector('[data-warn2]').addEventListener('click',()=>{close();warnMember(d.id);});
+    bg.querySelector('[data-manage]').addEventListener('click',()=>{close();manageMember(d.id);});
+  }
+
+  async function warnMember(id){
+    const note=await CH.prompt({title:'Warn this member',message:'They\u2019ll see this on their dashboard. Keep it clear and human — the goal is to correct, not to punish.',ok:'Send warning',placeholder:'What needs to change'});
+    if(!note)return;
+    const {error}=await CH.sb.from('profiles').update({warning_active:true,warning_note:note}).eq('id',id);
+    if(error){CH.toast(alertEl,error.message,'err');return;}
+    await logAction(id,'warned',note);
+    try{await CH.sb.from('notifications').insert({user_id:id,kind:'moderation',title:'A note from the moderation team',body:note,link:'/community-guidelines'});}catch(e){}
+    CH.toast(alertEl,'Warning sent.','ok');await load();draw();
+  }
+
+  function manageMember(id){
+    const p=pMap()[id];if(!p)return;
+    const bg=document.createElement('div');bg.className='cdialog-bg';
+    bg.innerHTML=`<div class="cdialog" style="max-width:460px;">
+      <h4>${CH.esc(p.full_name||p.email||'Member')}</h4>
+      <p>${CH.esc([p.primary_department||p.discipline,p.city].filter(Boolean).join(' · '))||''} · joined ${CH.fmtDate(p.created_at)}</p>
+      <label class="f"><span class="lab">Status</span><select id="mm-status">${['active','flagged','suspended'].map(x=>`<option ${p.status===x?'selected':''}>${x}</option>`).join('')}</select></label>
+      <label class="f"><span class="lab">Internal note</span><textarea id="mm-note" placeholder="Why — for the audit log.">${CH.esc(p.flag_note||'')}</textarea></label>
+      <label class="agree" style="display:flex;gap:10px;align-items:flex-start;cursor:pointer;"><input type="checkbox" id="mm-warn" ${p.warning_active?'checked':''} style="width:auto;margin-top:3px;flex:none;"><span>Active warning banner</span></label>
+      <label class="f" style="margin-top:10px;"><span class="lab">Warning text</span><textarea id="mm-wnote" placeholder="Shown to them on their dashboard.">${CH.esc(p.warning_note||'')}</textarea></label>
+      <div class="cd-actions"><button class="btn ghost sm" data-x>Cancel</button><button class="btn solid sm" data-o>Save</button></div>
+      <p class="hint" style="margin-top:12px;">Banning, roles, and verification are admin-only.</p>
+    </div>`;
+    document.body.appendChild(bg);requestAnimationFrame(()=>bg.classList.add('show'));
+    const close=()=>{bg.classList.remove('show');setTimeout(()=>bg.remove(),200);};
+    bg.querySelector('[data-x]').addEventListener('click',close);
+    bg.addEventListener('click',e=>{if(e.target===bg)close();});
+    bg.querySelector('[data-o]').addEventListener('click',async(e)=>{
+      const btn=e.target;btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+      const status=bg.querySelector('#mm-status').value;
+      const note=bg.querySelector('#mm-note').value.trim()||null;
+      const warn=bg.querySelector('#mm-warn').checked;
+      const wnote=bg.querySelector('#mm-wnote').value.trim()||null;
+      const {error}=await CH.sb.from('profiles').update({status,flag_note:note,warning_active:warn,warning_note:wnote}).eq('id',id);
+      if(error){CH.toast(alertEl,error.message,'err');close();return;}
+      if(status!==p.status) await logAction(id,'status_'+status,note);
+      if(warn&&!p.warning_active) await logAction(id,'warned',wnote);
+      close();CH.toast(alertEl,'Saved.','ok');await load();draw();
+    });
+  }
+
+  // ---------- AUDIT LOG ----------
+  function viewLog(){
+    const v=document.getElementById('view');const M=pMap();
+    if(!logs.length){v.innerHTML='<div class="empty">Nothing logged yet.</div>';return;}
+    v.innerHTML='<div class="list">'+logs.map(l=>{
+      const who=M[l.user_id]||{};const by=M[l.by_admin]||{};
+      return `<div class="row"><div><div class="t">${CH.esc(l.action)}</div>
+        <div class="m">${CH.esc(who.full_name||who.email||'—')} · by ${CH.esc(by.full_name||by.email||'staff')} · ${CH.fmtDate(l.created_at)}${l.note?' · '+CH.esc(l.note):''}</div></div></div>`;
+    }).join('')+'</div>';
+  }
+
+  document.getElementById('mod-refresh').addEventListener('click',()=>refreshDesk());
+  document.addEventListener('keydown',e=>{if(e.key==='/'&&!/input|textarea|select/i.test(document.activeElement?.tagName||'')){e.preventDefault();if(seg!=='cases'){seg='cases';document.getElementById('stage-title').textContent='Case Queue';draw();}setTimeout(()=>document.getElementById('case-search')?.focus(),0);}if(e.key.toLowerCase()==='r'&&!/input|textarea|select/i.test(document.activeElement?.tagName||''))refreshDesk();});
+  await refreshDesk(true);
+  let refreshTimer=null;
+  const scheduleRefresh=()=>{clearTimeout(refreshTimer);refreshTimer=setTimeout(()=>refreshDesk(true),350);};
+  try{
+    CH.sb.channel('case-desk-live')
+      .on('postgres_changes',{event:'*',schema:'public',table:'ch_cases'},scheduleRefresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'reports'},scheduleRefresh)
+      .on('postgres_changes',{event:'*',schema:'public',table:'ch_case_events'},scheduleRefresh)
+      .subscribe(status=>{const live=document.getElementById('mod-live');live.querySelector('span').textContent=status==='SUBSCRIBED'?'Live desk':'Auto-refresh';live.classList.toggle('ready',status==='SUBSCRIBED');});
+  }catch(e){document.querySelector('#mod-live span').textContent='Auto-refresh';}
+  setInterval(()=>refreshDesk(true),12000);
+  CH.mountNotifications();
+  CH.mountFooter();
+})();
+</script>
+</body>
+</html>

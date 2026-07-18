@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>404 | Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
+<link rel="stylesheet" href="/app.css">
+</head>
+<body class="error-page">
+  <main class="error-shell">
+    <div class="error-grid" aria-hidden="true"></div>
+    <div class="error-halo" aria-hidden="true"></div>
+    <section class="error-content" aria-labelledby="error-title">
+      <div class="error-code" aria-label="Error 404"><span>4</span><span class="zero">0</span><span>4</span></div>
+      <span class="error-kicker">Lost between rooms</span>
+      <h1 id="error-title">This door does not open.</h1>
+      <p id="error-copy">The page may have moved, the link may be old, or maybe this room is still being built. No worries. The house is right behind you.</p>
+      <div class="error-actions"><button class="btn solid" id="error-back" type="button">Go back</button><a class="btn ghost" href="/dashboard/">Dashboard</a></div>
+    </section>
+    <span class="error-whisper">Wrong turn. Right place. You still belong.</span>
+  </main>
+  <script>
+  (function(){const reason=new URLSearchParams(location.search).get('reason');if(reason==='listing-not-found'||reason==='missing-listing'||reason==='project-not-found'){document.getElementById('error-title').textContent='That listing has left the room.';document.getElementById('error-copy').textContent='It may have closed, expired, or moved while you were looking. Your next opportunity is still inside the house.';}document.getElementById('error-back').addEventListener('click',()=>{if(history.length>1)history.back();else location.href='/dashboard/';});})();
+  </script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script>
+</body>
+</html>

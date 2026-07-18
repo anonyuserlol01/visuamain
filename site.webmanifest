@@ -1,0 +1,14 @@
+{
+  "name": "VISUAREALM",
+  "short_name": "VISUAREALM",
+  "description": "Realm Pictures, Realm Music and Creative House.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#050505",
+  "icons": [
+    {"src": "/Images/favicon-32.png", "sizes": "32x32", "type": "image/png"},
+    {"src": "/Images/apple-touch-icon.png", "sizes": "180x180", "type": "image/png"},
+    {"src": "/Images/mark-ivory-1024-transparent.png", "sizes": "1024x1024", "type": "image/png", "purpose": "any maskable"}
+  ]
+}

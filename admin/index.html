@@ -1,45 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin · Creative House</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<title>Mission Control | Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
 <link rel="stylesheet" href="/app.css">
 </head>
-<body>
+<body class="app admin-console">
 <div class="grain" aria-hidden="true"></div>
 <header class="appbar">
-  <div class="brand-wrap"><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Admin · Creative House</span></div>
-  <nav><a href="/dashboard/" class="navlink">My Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
+  <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="/creative-house" class="brand">VISUA<span>REALM</span></a><span class="sub">Mission Control</span></div>
+  <nav><button id="admin-command" class="admin-command-trigger" type="button" aria-label="Quick jump"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>Quick jump</span><kbd>⌘K</kbd></button><button id="admin-mobile-toggle" class="mobile-console-toggle" type="button" aria-pressed="false" title="Toggle mobile console"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect><path d="M10 18.5h4"></path></svg><span>Mobile view</span></button><a href="/creative-house/" class="navlink">The House</a><a href="/pricing/" class="navlink">Pricing</a><a href="/dashboard/" class="navlink">My Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
 </header>
+<nav class="admin-mobile-dock" aria-label="Mission Control mobile navigation">
+  <a href="/dashboard/" aria-label="Back to member dashboard"><span aria-hidden="true">⌂</span><b>Dashboard</b></a>
+  <button type="button" data-admin-dock="dashboard"><span aria-hidden="true">◎</span><b>Control</b></button>
+  <a href="/moderation/" aria-label="Open live case desk"><span aria-hidden="true">!</span><b>Cases</b></a>
+  <button type="button" data-admin-dock="security"><span aria-hidden="true">◇</span><b>Guard</b></button>
+  <button type="button" id="dock-logout"><span aria-hidden="true">↗</span><b>Exit</b></button>
+</nav>
 
 <div class="wrap" id="app" style="display:none;">
   <div class="alert" id="alert"></div>
-  <div class="hero-band"><div><span class="eyebrow">Control Room</span><h1 class="page">The House, Managed</h1></div>
-    <button class="btn solid sm" id="new-top">+ New Listing</button></div>
-
-  <div class="kpis section-gap">
-    <div class="kpi"><div class="n" id="k-members">0</div><div class="l">Members</div></div>
-    <div class="kpi"><div class="n" id="k-open">0</div><div class="l">Live Listings</div></div>
-    <div class="kpi"><div class="n" id="k-apps">0</div><div class="l">Applications</div></div>
-    <div class="kpi"><div class="n" id="k-reports">0</div><div class="l">New Reports</div></div>
+  <div class="admin-ribbon"><div><i></i><span>Mission Control</span><b id="admin-date"></b></div><nav><a href="/moderation/">Open Case Desk</a><a href="/creative-house/" target="_blank">View public site ↗</a><button type="button" id="admin-refresh">Refresh data</button></nav></div>
+  <div class="mc-shell">
+    <aside class="mc-side" id="mc-side"></aside>
+    <main>
+      <div class="mc-head"><div><span class="mc-overline">VISUAREALM operations</span><h2 id="sec-title">Dashboard</h2><div class="sub" id="sec-sub">Platform overview</div></div><div class="mc-head-tools"><span class="mc-system"><i></i>Systems live</span><div id="sec-action"></div></div></div>
+      <div id="view"></div>
+    </main>
   </div>
-
-  <div class="tabs section-gap" id="tabs">
-    <button class="tab active" data-t="listings">Listings</button>
-    <button class="tab" data-t="applications">Applications</button>
-    <button class="tab" data-t="members">Members</button>
-    <button class="tab" data-t="reports">Reports</button>
-    <button class="tab" data-t="peer">Peer Feedback</button>
-  </div>
-  <div id="view"></div>
 </div>
 
 <div class="wrap center" id="denied" style="display:none;">
   <span class="eyebrow">Restricted</span><h1 class="page">Admins Only</h1>
   <p class="lead" style="margin:16px auto;">Run the admin line from schema.sql with your email, then reload.</p>
   <a class="btn ghost" href="/dashboard/">Back to Dashboard</a>
+  <p class="hint" style="margin-top:18px;">support@visuarealmstudios.com</p>
 </div>
 
 <!-- LISTING MODAL -->
@@ -51,11 +51,21 @@
     <div class="grid two"><label class="f"><span class="lab">Role / category</span><select id="l-dept"></select></label>
       <label class="f"><span class="lab">Audience</span><select id="l-disc"></select></label></div>
     <div class="grid two"><label class="f"><span class="lab">Production</span><input id="l-prod"></label>
-      <label class="f"><span class="lab">City</span><select id="l-city"></select></label></div>
+      <label class="f"><span class="lab">Production type</span><select id="l-ptype"></select></label></div>
+    <div class="grid two"><label class="f"><span class="lab">City</span><select id="l-city"></select></label>
+      <label class="f"><span class="lab">Work mode</span><select id="l-mode"></select></label></div>
+    <div class="grid two"><label class="f"><span class="lab">Pay</span><select id="l-pay"></select></label>
+      <label class="f"><span class="lab">Experience</span><select id="l-exp"></select></label></div>
     <div class="grid two"><label class="f"><span class="lab">Commitment</span><input id="l-commit"></label>
-      <label class="f"><span class="lab">Location</span><input id="l-loc"></label></div>
+      <label class="f"><span class="lab">Expires on <span class="mono" style="color:var(--muted);">(admin override)</span></span><input id="l-expiry" type="date"></label></div>
+    <label class="f"><span class="lab">Location</span><input id="l-loc"></label>
     <label class="f"><span class="lab">Description</span><textarea id="l-desc"></textarea></label>
     <label class="f"><span class="lab">Requirements</span><textarea id="l-req"></textarea></label>
+    <div class="split"></div><p class="fieldset-title">Showcase</p>
+    <label class="f"><span class="lab">Synopsis / logline</span><textarea id="l-syn"></textarea></label>
+    <div class="grid two"><label class="f"><span class="lab">Company</span><input id="l-company"></label><label class="f"><span class="lab">Genre</span><input id="l-genre"></label></div>
+    <div class="grid two"><label class="f"><span class="lab">Poster URL</span><input id="l-poster" type="url"></label><label class="f"><span class="lab">Script link</span><input id="l-script" type="url"></label></div>
+    <label class="f"><span class="lab">Gallery URLs (comma-separated)</span><input id="l-gallery"></label>
     <label class="f"><span class="lab">Status</span><select id="l-status"><option value="open">Open</option><option value="soon">Opening soon</option><option value="closed">Closed</option></select></label>
     <div class="spread"><button type="button" class="btn ghost sm" id="l-delete" style="display:none;">Delete</button>
       <div style="display:flex;gap:8px;margin-left:auto;"><button type="button" class="btn ghost sm" id="list-cancel">Cancel</button><button type="submit" class="btn solid" id="list-save">Save</button></div></div>
@@ -81,12 +91,31 @@
   <input type="hidden" id="mem-id">
   <div class="grid two">
     <label class="f"><span class="lab">Discipline</span><select id="mem-disc"></select></label>
-    <label class="f"><span class="lab">Account status</span><select id="mem-status"><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
+    <label class="f"><span class="lab">Account status</span><select id="mem-status"><option value="active">Active</option><option value="flagged">Flagged (under review)</option><option value="suspended">Suspended</option><option value="banned">Banned (permanent)</option></select></label>
   </div>
-  <div class="grid two">
-    <label class="f"><span class="lab">Can hire (post listings)</span><select id="mem-hire"><option value="false">No</option><option value="true">Yes</option></select></label>
+  <div class="grid two admin-only-ctl">
+    <label class="f"><span class="lab">Can hire</span><select id="mem-hire"><option value="false">No</option><option value="true">Yes</option></select></label>
     <label class="f"><span class="lab">Administrator</span><select id="mem-admin"><option value="false">No</option><option value="true">Yes</option></select></label>
   </div>
+  <div class="grid two admin-only-ctl">
+    <label class="f"><span class="lab">Moderator</span><select id="mem-mod"><option value="false">No</option><option value="true">Yes</option></select></label>
+    <label class="f"><span class="lab">ID verified</span><select id="mem-verified"><option value="false">No</option><option value="true">Yes</option></select></label>
+  </div>
+  <label class="f"><span class="lab">Internal flag note</span><textarea id="mem-flagnote" placeholder="Why is this account flagged? (internal only)"></textarea></label>
+  <div class="grid two">
+    <label class="f"><span class="lab">Active warning</span><select id="mem-warn"><option value="false">No</option><option value="true">Yes — show notice</option></select></label>
+    <label class="f"><span class="lab">Warning message (shown to member)</span><input id="mem-warnnote" placeholder="Please review our Community Standards…"></label>
+  </div>
+  <div class="split"></div><p class="fieldset-title">Mentor <span class="mentor-star">&#9733;</span></p>
+  <div class="grid two">
+    <label class="f"><span class="lab">Community mentor</span><select id="mem-mentor"><option value="false">No</option><option value="true">Yes</option></select></label>
+    <label class="f"><span class="lab">Contact preference</span><select id="mem-contact"></select></label>
+  </div>
+  <label class="f"><span class="lab">Mentor bio (public in directory)</span><textarea id="mem-mbio" placeholder="What they can help with, in their voice."></textarea></label>
+  <label class="f"><span class="lab">Mentor specialties (comma-separated)</span><input id="mem-mspec" placeholder="Lighting, Low-budget workflow, Film festivals"></label>
+  <label class="f"><span class="lab">Availability</span><input id="mem-avail" placeholder="Available / Limited"></label>
+  <div class="split"></div><p class="fieldset-title">Moderation history</p>
+  <div id="mem-history" style="margin-bottom:16px;"></div>
   <div class="split"></div><p class="fieldset-title">Award a badge</p>
   <div id="mem-badges" class="badge-grid" style="margin-bottom:14px;"></div>
   <div class="grid two"><label class="f"><span class="lab">Badge</span><select id="mem-badgesel"></select></label>
@@ -97,6 +126,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
+<script src="/master-gate.js"></script>
 <script src="/app.js"></script>
 <script>
 (async function(){
@@ -105,84 +135,416 @@
   const session=await CH.requireAuth(); if(!session) return;
   const uid=session.user.id;
   document.getElementById('logout').addEventListener('click',()=>CH.signOut());
+  document.getElementById('dock-logout').addEventListener('click',()=>CH.signOut());
+  const mobileToggle=document.getElementById('admin-mobile-toggle');
+  const setMobileConsole=(on)=>{document.body.classList.toggle('admin-compact',on);mobileToggle.setAttribute('aria-pressed',String(on));mobileToggle.classList.toggle('on',on);mobileToggle.querySelector('span').textContent=on?'Full view':'Mobile view';try{localStorage.setItem('vr-admin-compact',on?'1':'0');}catch(e){}};
+  let compactSaved=null;try{compactSaved=localStorage.getItem('vr-admin-compact');}catch(e){}
+  setMobileConsole(compactSaved===null?matchMedia('(max-width:820px)').matches:compactSaved==='1');
+  mobileToggle.addEventListener('click',()=>setMobileConsole(!document.body.classList.contains('admin-compact')));
   const me=await CH.profile();
-  if(!me||!me.is_admin){document.getElementById('denied').style.display='block';return;}
+  if(!me||!(me.is_admin||me.is_moderator)){document.getElementById('denied').style.display='block';return;}
+  const IS_ADMIN=!!me.is_admin;      // full access
+  const IS_MOD=!IS_ADMIN;            // moderator: people & moderation only
   document.getElementById('app').style.display='block';
+  document.getElementById('admin-date').textContent=new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+  try{ CH.sb.rpc('delete_expired_listings'); }catch(e){}
+  if(IS_MOD){ document.querySelector('.mc-head .sub')?.setAttribute('data-mod','1'); }
 
-  let profiles=[],openings=[],apps=[],badges=[],reports=[],peer=[],pMap={},oMap={};
+  let profiles=[],openings=[],apps=[],badges=[],reports=[],peer=[],modlog=[],settings={},health=null,signals=[],pMap={},oMap={};
+
+  // shared select fills for modals
   document.getElementById('l-dept').innerHTML=Object.entries(CH.ROLES_BY_DISCIPLINE).map(([g,rs])=>`<optgroup label="${g}">${rs.map(r=>`<option>${r}</option>`).join('')}</optgroup>`).join('');
   document.getElementById('l-disc').innerHTML=['Any',...CH.DISCIPLINES].map(d=>`<option>${d}</option>`).join('');
   document.getElementById('l-city').innerHTML=CH.CITIES.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('l-ptype').innerHTML=CH.PRODUCTION_TYPES.map(x=>`<option>${x}</option>`).join('');
+  document.getElementById('l-mode').innerHTML=CH.WORK_MODES.map(x=>`<option>${x}</option>`).join('');
+  document.getElementById('l-pay').innerHTML=CH.PAY_TYPES.map(x=>`<option>${x}</option>`).join('');
+  document.getElementById('l-exp').innerHTML=CH.EXPERIENCE_LEVELS.map(x=>`<option>${x}</option>`).join('');
   document.getElementById('mem-disc').innerHTML=CH.DISCIPLINES.map(d=>`<option>${d}</option>`).join('');
-  document.getElementById('app-status').innerHTML=['submitted','reviewing','interview','accepted','waitlisted','declined'].map(s=>`<option>${s}</option>`).join('');
+  document.getElementById('mem-contact').innerHTML=CH.CONTACT_PREFS.map(c=>`<option>${c}</option>`).join('');
+  document.getElementById('app-status').innerHTML=['submitted','shortlisted','hired','reviewing','interview','accepted','waitlisted','declined'].map(s=>`<option>${s}</option>`).join('');
 
-  let tab='listings';
-  document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');tab=t.dataset.t;render();}));
+  // ---------- helpers: charts ----------
+  function weekly(items,key,weeks){const now=Date.now();const b=Array(weeks).fill(0);(items||[]).forEach(it=>{const t=new Date(it[key]).getTime();if(isNaN(t))return;const wk=Math.floor((now-t)/6048e5);if(wk>=0&&wk<weeks)b[weeks-1-wk]++;});return b;}
+  function cumulative(a){let s=0;return a.map(v=>s+=v);}
+  function areaChart(vals,id){const w=320,h=90,pad=6;const max=Math.max(1,...vals);const step=(w-pad*2)/Math.max(1,vals.length-1);
+    const pts=vals.map((v,i)=>[pad+i*step,h-pad-(v/max)*(h-pad*2)]);
+    const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    const area=line+` L ${(pad+(vals.length-1)*step).toFixed(1)} ${h-pad} L ${pad} ${h-pad} Z`;
+    return `<svg class="chart-svg" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="g${id}" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--ember)" stop-opacity="0.32"/><stop offset="1" stop-color="var(--ember)" stop-opacity="0"/></linearGradient></defs><path d="${area}" fill="url(#g${id})"/><path d="${line}" fill="none" stroke="var(--ember)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>${pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2" fill="var(--ember)"/>`).join('')}</svg>`;}
+  function barChart(vals){const w=320,h=90,pad=6;const max=Math.max(1,...vals);const n=Math.max(1,vals.length);const gap=(w-pad*2)/n;const bw=gap*0.6;
+    return `<svg class="chart-svg" viewBox="0 0 ${w} ${h}">${vals.map((v,i)=>{const bh=(v/max)*(h-pad*2);const x=pad+i*gap+(gap-bw)/2;const y=h-pad-bh;return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(1,bh).toFixed(1)}" rx="2" fill="var(--ember)" opacity="${(0.45+0.55*(v/max)).toFixed(2)}"/>`;}).join('')}</svg>`;}
+  function hbars(pairs){const max=Math.max(1,...pairs.map(p=>p[1]));return pairs.map(([lab,val])=>`<div class="hbar"><span class="hlab">${CH.esc(lab)}</span><span class="htrack"><span class="hfill" style="width:${(val/max*100).toFixed(0)}%"></span></span><span class="hval">${val}</span></div>`).join('')||'<span class="muted mono" style="font-size:.66rem;">No data yet.</span>';}
+  function delta(cur,prev){if(prev===0&&cur===0)return `<span class="sd flat">no change</span>`;if(prev===0)return `<span class="sd up">+${cur} new</span>`;const d=Math.round((cur-prev)/prev*100);return `<span class="sd ${d>0?'up':d<0?'down':'flat'}">${d>0?'+':''}${d}% vs last wk</span>`;}
+  function countBy(items,fn){const m={};(items||[]).forEach(i=>{const k=fn(i);if(!k)return;m[k]=(m[k]||0)+1;});return Object.entries(m).sort((a,b)=>b[1]-a[1]);}
+  function activeCount(){return profiles.filter(p=>(p.status||'active')==='active').length;}
+  function modAlerts(){return profiles.filter(p=>['flagged','suspended','banned'].includes(p.status)||p.warning_active).length+reports.filter(r=>r.status==='new').length;}
+
+  // ---------- sections ----------
+  const SECTIONS=[
+    {k:'dashboard',g:'Overview',label:'Dashboard',admin:true},
+    {k:'members',g:'Community',label:'Members',count:()=>profiles.length},
+    {k:'moderation',g:'Community',label:'Moderation',count:()=>modAlerts(),alert:true},
+    {k:'security',g:'Safety',label:'Security Guard',count:()=>signals.filter(x=>x.status==='open'||x.status==='reviewing').length,alert:true,admin:true},
+    {k:'listings',g:'Content',label:'Listings',count:()=>openings.length,admin:true},
+    {k:'applications',g:'Content',label:'Applications',count:()=>apps.length,admin:true},
+    {k:'analytics',g:'Insight',label:'Analytics',admin:true},
+    {k:'updates',g:'System',label:'Changelog',admin:true},
+    {k:'settings',g:'System',label:'Settings',admin:true}
+  ].filter(s=>IS_ADMIN||!s.admin);
+  const SUBTITLES={dashboard:'Platform overview',members:'Member management',moderation:'Safety & audit log',security:'Database-observable risks and system care',listings:'Listing administration',applications:'Review & respond',analytics:'Growth & activity',updates:'Release notes & member updates',settings:'Platform configuration'};
+  const SECTION_ICONS={dashboard:'⌂',members:'○',moderation:'!',security:'◇',listings:'□',applications:'↗',analytics:'⌁',updates:'✦',settings:'·'};
+  let sec=IS_ADMIN?'dashboard':'members';try{const saved=localStorage.getItem('vr-admin-section');if(SECTIONS.some(s=>s.k===saved))sec=saved;}catch(e){}
+  function renderSidebar(){
+    let html='',lastG='';
+    SECTIONS.forEach(s=>{ if(s.g!==lastG){html+=`<div class="mc-group">${s.g}</div>`;lastG=s.g;}
+      const c=s.count?s.count():null;
+      html+=`<button data-k="${s.k}" class="${s.k===sec?'on':''}"><span class="mc-nav-label"><i>${SECTION_ICONS[s.k]||'·'}</i>${s.label}</span>${c!==null?`<span class="cnt ${c===0?'zero':''}">${c}</span>`:''}</button>`;});
+    html+=`<div class="mc-side-foot"><span>${IS_ADMIN?'Administrator':'Moderator'}</span><b>${CH.esc(me.full_name||me.email||'Staff')}</b><a href="/dashboard/">Leave Mission Control ↗</a></div>`;document.getElementById('mc-side').innerHTML=html;
+    document.querySelectorAll('#mc-side button').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.k;go();}));
+  }
+  function go(){try{localStorage.setItem('vr-admin-section',sec);}catch(e){}renderSidebar();document.querySelectorAll('[data-admin-dock]').forEach(b=>b.classList.toggle('on',b.dataset.adminDock===sec));document.getElementById('sec-title').textContent=SECTIONS.find(s=>s.k===sec).label;document.getElementById('sec-sub').textContent=SUBTITLES[sec];
+    document.getElementById('sec-action').innerHTML = sec==='listings'?'<button class="btn solid sm" id="new-top">+ New Listing</button>':sec==='moderation'?'<a class="btn solid sm" href="/moderation/">Open Case Desk</a>':'';
+    const nt=document.getElementById('new-top'); if(nt) nt.addEventListener('click',()=>openListing(null));
+    ({dashboard:secDashboard,members:secMembers,moderation:secModeration,security:secSecurity,listings:secListings,applications:secApplications,analytics:secAnalytics,updates:secUpdates,settings:secSettings}[sec])();}
+  document.querySelectorAll('[data-admin-dock]').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.adminDock;if(SECTIONS.some(s=>s.k===target)){sec=target;go();scrollTo({top:0,behavior:'smooth'});}}));
+
+  function openAdminCommand(){
+    if(document.getElementById('admin-command-bg'))return;const bg=document.createElement('div');bg.id='admin-command-bg';bg.className='admin-command-bg';
+    bg.innerHTML=`<div class="admin-command"><div class="command-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><input id="command-input" placeholder="Jump to a section…" autocomplete="off"><kbd>Esc</kbd></div><div class="command-label">Mission Control</div><div class="command-results" id="command-results"></div><div class="command-foot"><span>Type to filter</span><span>Enter to open</span></div></div>`;
+    document.body.appendChild(bg);const input=bg.querySelector('input'),results=bg.querySelector('#command-results');let matches=[];
+    const draw=()=>{const q=input.value.toLowerCase().trim();matches=SECTIONS.filter(s=>!q||s.label.toLowerCase().includes(q)||SUBTITLES[s.k].toLowerCase().includes(q));results.innerHTML=matches.map((s,i)=>`<button data-k="${s.k}" class="${i===0?'hot':''}"><span class="mc-nav-icon">${SECTION_ICONS[s.k]||'·'}</span><span><b>${s.label}</b><small>${SUBTITLES[s.k]}</small></span><em>Open</em></button>`).join('')||'<div class="command-empty">No matching section.</div>';results.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.k;bg.remove();go();}));};
+    const close=()=>bg.remove();input.addEventListener('input',draw);input.addEventListener('keydown',e=>{if(e.key==='Escape')close();if(e.key==='Enter'&&matches[0]){sec=matches[0].k;close();go();}});bg.addEventListener('click',e=>{if(e.target===bg)close();});draw();requestAnimationFrame(()=>{bg.classList.add('show');input.focus();});
+  }
+  document.getElementById('admin-command').addEventListener('click',openAdminCommand);document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openAdminCommand();}});
+  document.getElementById('admin-refresh').addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Refreshing…';await loadAll();b.disabled=false;b.textContent='Refresh data';CH.toast(alertEl,'Mission Control is up to date.','ok');});
 
   async function loadAll(){
-    const [p,o,a,b,f,pf]=await Promise.all([
+    const [p,o,a,b,f,pf,ml,st,h,sg]=await Promise.all([
       CH.sb.from('profiles').select('*').order('created_at',{ascending:false}),
       CH.sb.from('openings').select('*').order('created_at',{ascending:false}),
       CH.sb.from('applications').select('*').order('created_at',{ascending:false}),
       CH.sb.from('badges').select('*'),
       CH.sb.from('feedback').select('*').order('created_at',{ascending:false}),
-      CH.sb.from('peer_feedback').select('*').order('created_at',{ascending:false})
+      CH.sb.from('peer_feedback').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('moderation_log').select('*').order('created_at',{ascending:false}),
+      CH.sb.from('app_settings').select('*').eq('id',1).maybeSingle(),
+      IS_ADMIN?CH.sb.rpc('ch_mission_control_health'):Promise.resolve({data:null}),
+      IS_ADMIN?CH.sb.from('ch_security_signals').select('*').order('created_at',{ascending:false}).limit(100):Promise.resolve({data:[]})
     ]);
-    profiles=p.data||[];openings=o.data||[];apps=a.data||[];badges=b.data||[];reports=f.data||[];peer=pf.data||[];
+    profiles=p.data||[];openings=o.data||[];apps=a.data||[];badges=b.data||[];reports=f.data||[];peer=pf.data||[];modlog=ml.data||[];settings=st.data||{};health=h.data||null;signals=sg.data||[];
     pMap={};profiles.forEach(x=>pMap[x.id]=x);oMap={};openings.forEach(x=>oMap[x.id]=x);
-    document.getElementById('k-members').textContent=profiles.length;
-    document.getElementById('k-open').textContent=openings.filter(x=>x.status==='open'&&(!x.expires_at||new Date(x.expires_at)>new Date())).length;
-    document.getElementById('k-apps').textContent=apps.length;
-    document.getElementById('k-reports').textContent=reports.filter(r=>r.status==='new').length;
     document.getElementById('mem-badgesel').innerHTML=badges.map(b=>`<option value="${b.code}">${b.emoji} ${b.label}</option>`).join('');
-    render();
+    go();
   }
-  function render(){document.querySelectorAll('#tabs .tab').forEach(x=>x.classList.toggle('active',x.dataset.t===tab));
-    ({listings:rListings,applications:rApps,members:rMembers,reports:rReports,peer:rPeer}[tab])();}
+  const nm=id=>{const p=pMap[id];return p?(p.full_name||p.email||'Member'):'Member';};
 
-  // LISTINGS
-  function rListings(){
+  // ===== DASHBOARD =====
+  function secDashboard(){
     const v=document.getElementById('view');
-    if(!openings.length){v.innerHTML='<div class="empty">No listings yet.</div>';return;}
-    v.innerHTML=openings.map(o=>{const tl=CH.timeLeft(o.expires_at);const n=apps.filter(a=>a.opening_id===o.id).length;
+    const mThis=weekly(profiles,'created_at',2),aThis=weekly(apps,'created_at',2),oThis=weekly(openings,'created_at',2);
+    const memW=weekly(profiles,'created_at',8),appW=weekly(apps,'created_at',8);
+    const newReports=reports.filter(r=>r.status==='new').length;
+    const restricted=profiles.filter(p=>['flagged','suspended','banned'].includes(p.status)).length,attention=newReports+restricted+signals.filter(x=>x.status==='open').length;
+    v.innerHTML=`
+      <section class="mc-brief"><div class="mc-brief-copy"><span class="mc-overline">Today inside the House</span><h2>${attention?'There are '+attention+' things worth your attention.':'Everything feels steady.'}</h2><p>${attention?'Nothing here makes an automatic decision. Open the right workspace, look at the context, and leave a clear trail.':'No urgent queues are calling. This is a good moment to review growth, publish an update, or simply let the system breathe.'}</p><div class="mc-brief-actions"><button class="btn solid sm goto" data-s="${attention?'security':'analytics'}">${attention?'Review attention':'See the story'}</button><a class="btn ghost sm" href="/moderation/">Open Case Desk</a></div></div><div class="mc-brief-signal ${attention?'watch':'clear'}"><i></i><b>${attention||'CLEAR'}</b><span>${attention?'signals across workspaces':'no urgent signals'}</span></div></section>
+      <div class="mc-sectionline"><div><span>Live pulse</span><small>The numbers that matter first</small></div><em>Updated just now</em></div>
+      <div class="statgrid">
+        <div class="statcard"><div class="sv">${profiles.length}</div><div class="sl">Members</div>${delta(mThis[1],mThis[0])}</div>
+        <div class="statcard"><div class="sv">${openings.filter(x=>x.status==='open'&&(!x.expires_at||new Date(x.expires_at)>new Date())).length}</div><div class="sl">Live Listings</div>${delta(oThis[1],oThis[0])}</div>
+        <div class="statcard"><div class="sv">${apps.length}</div><div class="sl">Applications</div>${delta(aThis[1],aThis[0])}</div>
+        <div class="statcard ${newReports?'alert-card':''}"><div class="sv">${newReports}</div><div class="sl">New Reports</div><div class="sd ${newReports?'down':'flat'}">${newReports?'needs review':'all clear'}</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>Member growth</h3><div class="ch-sub">New members · last 8 weeks</div>${areaChart(cumulative(memW),'m')}</div>
+        <div class="chart-card"><h3>Applications</h3><div class="ch-sub">Per week · last 8 weeks</div>${barChart(appW)}</div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>Moderation</h3><div class="ch-sub">Attention needed</div>
+          <div class="qa-row">
+            <button class="btn ghost sm goto" data-s="moderation">Flagged ${profiles.filter(p=>p.status==='flagged').length}</button>
+            <button class="btn ghost sm goto" data-s="moderation">Suspended ${profiles.filter(p=>p.status==='suspended').length}</button>
+            <button class="btn ghost sm goto" data-s="moderation">Banned ${profiles.filter(p=>p.status==='banned').length}</button>
+            <button class="btn ghost sm goto" data-s="moderation">Warnings ${profiles.filter(p=>p.warning_active).length}</button>
+          </div>
+          <div class="split"></div><p class="fieldset-title">System health</p>
+          <div class="feed"><div class="fitem"><span class="fdot ${health?.overall==='action'?'mod':health?.overall==='watch'?'app':'member'}"></span><div><div class="ft">${health?CH.esc(health.overall==='action'?'Action needed':health.overall==='watch'?'Worth a look':'Systems healthy'):'Health check unavailable'}</div><div class="fm">${health?CH.esc(health.plain_english):'Open Security Guard for details.'}</div></div></div>
+          <div class="fitem"><span class="fdot member"></span><div><div class="ft">${activeCount()} active accounts</div><div class="fm">${profiles.length-activeCount()} restricted</div></div></div></div>
+          ${IS_ADMIN?'<button class="btn ghost sm goto" data-s="security" style="margin-top:14px;">Open Security Guard</button>':''}
+        </div>
+        <div class="chart-card"><h3>Recent activity</h3><div class="ch-sub">Latest across the platform</div><div class="feed" id="feed"></div></div>
+      </div>`;
+    v.querySelectorAll('.goto').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.s;go();}));
+    // activity feed
+    const ev=[];
+    profiles.slice(0,20).forEach(p=>ev.push({t:`${p.full_name||p.email||'Member'} joined`,time:p.created_at,k:'member'}));
+    apps.slice(0,20).forEach(a=>ev.push({t:`${nm(a.applicant_id)} applied to ${(oMap[a.opening_id]||{}).title||'a role'}`,time:a.created_at,k:'app'}));
+    openings.slice(0,20).forEach(o=>ev.push({t:`Listing posted: ${o.title}`,time:o.created_at,k:'app'}));
+    modlog.slice(0,20).forEach(m=>ev.push({t:`${m.action} · ${nm(m.user_id)}`,time:m.created_at,k:'mod'}));
+    ev.sort((a,b)=>new Date(b.time)-new Date(a.time));
+    document.getElementById('feed').innerHTML=ev.slice(0,12).map(e=>`<div class="fitem"><span class="fdot ${e.k}"></span><div><div class="ft">${CH.esc(e.t)}</div><div class="fm">${CH.fmtDate(e.time)}</div></div></div>`).join('')||'<span class="muted mono" style="font-size:.66rem;">Quiet so far.</span>';
+  }
+
+  // ===== SECURITY GUARD =====
+  function secSecurity(){
+    const v=document.getElementById('view');if(!IS_ADMIN){v.innerHTML='<div class="empty">Administrators only.</div>';return;}
+    const h=health||{},s=h.signals||{},c=h.cases||{},l=h.listings||{},ac=h.accounts||{},m=h.maintenance||{};
+    const open=signals.filter(x=>x.status==='open'||x.status==='reviewing');
+    const tone=h.overall==='action'?'danger':h.overall==='watch'?'watch':'good';
+    v.innerHTML=`<section class="guard-hero ${tone}"><div><span class="mc-overline">Your quiet security guard</span><h2>${h.overall==='action'?'Something needs you.':h.overall==='watch'?'A few things deserve a look.':'The House looks steady.'}</h2><p>${CH.esc(h.plain_english||'The health check could not be read. Refresh once, then verify the Phase 2 migration if it stays unavailable.')}</p></div><div class="guard-orb"><i></i><b>${h.overall==='action'?'Action':h.overall==='watch'?'Watch':'Clear'}</b><span>${h.checked_at?CH.fmtDate(h.checked_at):'Not checked'}</span></div></section>
+      <div class="guard-grid">
+        <article><span>Security signals</span><b>${(s.critical||0)+(s.watch||0)}</b><small>${s.critical||0} critical · ${s.watch||0} watch</small></article>
+        <article><span>Open cases</span><b>${c.open||0}</b><small>${c.stale||0} waiting over 7 days</small></article>
+        <article><span>Evidence holds</span><b>${l.evidence_holds||0}</b><small>${l.overdue_cleanup||0} overdue cleanup</small></article>
+        <article><span>Account watch</span><b>${ac.possible_rejoins||0}</b><small>${ac.tombstones||0} privacy-safe tombstones</small></article>
+      </div>
+      <section class="panel guard-queue"><div class="spread"><div><span class="mc-overline">Human review queue</span><h3>Signals</h3></div><button class="btn ghost sm" id="guard-refresh">Refresh</button></div>
+        <p class="hint">A signal is a reason to look, never an automatic punishment.</p>
+        <div class="signal-list">${open.length?open.map(x=>`<article class="signal ${CH.esc(x.severity)}"><div><span class="signal-sev">${CH.esc(x.severity)}</span><h4>${CH.esc(x.title)}</h4><p>${CH.esc(x.detail||'No additional detail.')}</p><small>${CH.fmtDate(x.created_at)} · ${CH.esc(x.status)}</small></div><div class="signal-actions"><button class="btn ghost sm" data-review="${x.id}">Reviewing</button><button class="btn solid sm" data-resolve="${x.id}">Resolve</button></div></article>`).join(''):'<div class="empty">Nothing waiting. Quiet is good.</div>'}</div>
+      </section>
+      <section class="panel guard-note"><h3>What this can actually see</h3><p>Open moderation cases, evidence holds, overdue listing cleanup, restricted accounts and privacy-safe possible returns. It does not pretend to read Supabase Auth logs, network attacks or storage health when those sources are not connected.</p><div class="guard-maint">Last listing maintenance: <b>${m.last_run?CH.fmtDate(m.last_run):'Not recorded yet'}</b></div></section>`;
+    document.getElementById('guard-refresh').addEventListener('click',loadAll);
+    v.querySelectorAll('[data-review]').forEach(b=>b.addEventListener('click',async()=>{const {error}=await CH.sb.rpc('ch_resolve_security_signal',{p_signal:b.dataset.review,p_status:'reviewing',p_note:null});if(error)CH.toast(alertEl,error.message,'err');else loadAll();}));
+    v.querySelectorAll('[data-resolve]').forEach(b=>b.addEventListener('click',async()=>{const note=await CH.prompt({title:'Resolve this signal',message:'Write what you checked and why this is resolved.',placeholder:'Checked account history…',ok:'Resolve'});if(!note)return;const {error}=await CH.sb.rpc('ch_resolve_security_signal',{p_signal:b.dataset.resolve,p_status:'resolved',p_note:note});if(error)CH.toast(alertEl,error.message,'err');else{CH.toast(alertEl,'Signal resolved and logged.','ok');loadAll();}}));
+  }
+
+  // ===== MEMBERS =====
+  let memF={q:'',disc:'All',status:'All',mentor:'All',hire:'All'};
+  function secMembers(){
+    const v=document.getElementById('view');
+    v.innerHTML=`<div class="filters"><div class="frow selects">
+        <input class="searchbox" id="m-q" placeholder="Search name, email, craft…" value="${CH.esc(memF.q)}">
+        <select id="m-disc"><option>All</option>${CH.DISCIPLINES.map(d=>`<option ${d===memF.disc?'selected':''}>${d}</option>`).join('')}</select>
+        <select id="m-status">${['All','active','flagged','suspended','banned'].map(s=>`<option ${s===memF.status?'selected':''}>${s}</option>`).join('')}</select>
+        <select id="m-mentor">${['All','Mentors','Non-mentors'].map(s=>`<option ${s===memF.mentor?'selected':''}>${s}</option>`).join('')}</select>
+        <select id="m-hire">${['All','Can hire','Applicant only'].map(s=>`<option ${s===memF.hire?'selected':''}>${s}</option>`).join('')}</select>
+      </div></div><div id="m-list"></div>`;
+    document.getElementById('m-q').addEventListener('input',e=>{memF.q=e.target.value;drawMembers();});
+    ['disc:m-disc','status:m-status','mentor:m-mentor','hire:m-hire'].forEach(p=>{const[k,id]=p.split(':');document.getElementById(id).addEventListener('change',e=>{memF[k]=e.target.value;drawMembers();});});
+    drawMembers();
+  }
+  function drawMembers(){
+    let list=profiles.slice();
+    if(memF.disc!=='All')list=list.filter(p=>p.discipline===memF.disc);
+    if(memF.status!=='All')list=list.filter(p=>(p.status||'active')===memF.status);
+    if(memF.mentor!=='All')list=list.filter(p=>memF.mentor==='Mentors'?p.is_mentor:!p.is_mentor);
+    if(memF.hire!=='All')list=list.filter(p=>memF.hire==='Can hire'?(p.can_hire||p.is_admin):!(p.can_hire||p.is_admin));
+    if(memF.q){const q=memF.q.toLowerCase();list=list.filter(p=>[p.full_name,p.email,p.discipline,p.primary_department,p.city].some(x=>(x||'').toLowerCase().includes(q)));}
+    const host=document.getElementById('m-list');
+    if(!list.length){host.innerHTML='<div class="empty">No members match.</div>';return;}
+    host.innerHTML=`<div class="mono muted" style="font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;margin:2px 0 14px;">${list.length} member${list.length>1?'s':''}</div><div class="list">`+list.map(p=>`<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Member')} ${p.is_mentor?CH.mentorStar():''} ${p.is_admin?'<span class="pill open" style="margin-left:6px;">Admin</span>':(p.is_moderator?'<span class="pill reviewing" style="margin-left:6px;">Mod</span>':'')} ${p.can_hire?'<span class="pill reviewing" style="margin-left:6px;">Hiring</span>':''} ${p.id_verified?'<span class="pill open" style="margin-left:6px;">Verified</span>':''} ${p.warning_active?'<span class="pill soon" style="margin-left:6px;">Warned</span>':''}</div><div class="m">${CH.esc([p.discipline,p.primary_department,p.city].filter(Boolean).join(' · '))||CH.esc(p.email||'')}</div></div><div class="row-right">${CH.pill(p.status||'active')}<button class="btn ghost sm vm" data-id="${p.id}">Manage</button></div></div>`).join('')+'</div>';
+    host.querySelectorAll('.vm').forEach(b=>b.addEventListener('click',()=>openMember(b.dataset.id)));
+  }
+
+  // ===== MODERATION =====
+  let modSeg='audit';
+  function secModeration(){
+    const v=document.getElementById('view');
+    const segs=[['audit','Audit Log',modlog.length],['warned','Warnings',profiles.filter(p=>p.warning_active).length],['flagged','Flagged',profiles.filter(p=>p.status==='flagged').length],['suspended','Suspended',profiles.filter(p=>p.status==='suspended').length],['banned','Banned',profiles.filter(p=>p.status==='banned').length],['reports','Reports & Appeals',reports.length],['peer','Peer Notes',peer.length]];
+    v.innerHTML=`<div class="segbar">${segs.map(([k,l,n])=>`<button class="${k===modSeg?'on':''}" data-k="${k}">${l} <span class="n">${n}</span></button>`).join('')}</div><div id="mod-body"></div>`;
+    v.querySelectorAll('.segbar button').forEach(b=>b.addEventListener('click',()=>{modSeg=b.dataset.k;secModeration();}));
+    drawMod();
+  }
+  function memberBucket(pred,empty){const list=profiles.filter(pred);const host=document.getElementById('mod-body');
+    host.innerHTML=list.length?'<div class="list">'+list.map(p=>`<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email)} ${p.is_mentor?CH.mentorStar():''}</div><div class="m">${CH.esc([p.discipline,p.city].filter(Boolean).join(' · '))} ${p.flag_note?'· '+CH.esc(p.flag_note):''} ${p.warning_note?'· '+CH.esc(p.warning_note):''}</div></div><div class="row-right">${CH.pill(p.status||'active')}<button class="btn ghost sm vm" data-id="${p.id}">Manage</button></div></div>`).join('')+'</div>':`<div class="empty">${empty}</div>`;
+    host.querySelectorAll('.vm').forEach(b=>b.addEventListener('click',()=>openMember(b.dataset.id)));}
+  function drawMod(){
+    if(modSeg==='warned')return memberBucket(p=>p.warning_active,'No active warnings.');
+    if(modSeg==='flagged')return memberBucket(p=>p.status==='flagged','No flagged accounts.');
+    if(modSeg==='suspended')return memberBucket(p=>p.status==='suspended','No suspended accounts.');
+    if(modSeg==='banned')return memberBucket(p=>p.status==='banned','No banned accounts.');
+    const host=document.getElementById('mod-body');
+    if(modSeg==='reports'){ if(!reports.length){host.innerHTML='<div class="empty">No reports or appeals yet.</div>';return;}
+      host.innerHTML='<div class="list">'+reports.map(r=>{const p=r.user_id?pMap[r.user_id]:null;return `<div class="row"><div><div class="t">${CH.esc(r.kind)} ${CH.pill(r.status)}</div><div class="m">${CH.esc(p?p.full_name||p.email:(r.email||'anonymous'))} · ${CH.fmtDate(r.created_at)} · ${CH.esc(r.page||'')}</div><p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(r.message)}</p></div><div class="row-right"><select class="rs" data-id="${r.id}" style="width:auto;padding:8px 30px 8px 12px;font-size:.8rem;">${['new','seen','resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div></div>`;}).join('')+'</div>';
+      host.querySelectorAll('.rs').forEach(s=>s.addEventListener('change',async()=>{await CH.sb.from('feedback').update({status:s.value}).eq('id',s.dataset.id);CH.toast(alertEl,'Updated.','ok');}));return;}
+    if(modSeg==='peer'){ if(!peer.length){host.innerHTML='<div class="empty">No peer notes yet. They appear privately after projects.</div>';return;}
+      host.innerHTML='<div class="list">'+peer.map(f=>{const to=pMap[f.to_user]||{},fr=pMap[f.from_user]||{},o=oMap[f.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(to.full_name||'Member')} <span class="muted mono" style="font-size:.62rem;">from ${CH.esc(fr.full_name||'someone')}</span></div><div class="m">${CH.esc(o.title||'Project')}${f.rating?' · '+f.rating+'/5':''} · ${CH.fmtDate(f.created_at)}</div>${f.message?`<p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(f.message)}</p>`:''}</div></div>`;}).join('')+'</div>';return;}
+    // audit log timeline
+    if(!modlog.length){host.innerHTML='<div class="empty">No moderation actions recorded yet.</div>';return;}
+    host.innerHTML='<div class="timeline">'+modlog.map(m=>`<div class="tl ${CH.esc(m.action)}"><div class="tt">${CH.esc(m.action)} · ${CH.esc(nm(m.user_id))}</div><div class="tm">${CH.fmtDate(m.created_at)}${m.note?' · '+CH.esc(m.note):''}</div></div>`).join('')+'</div>';
+  }
+
+  // ===== LISTINGS =====
+  let lSeg='all';
+  function secListings(){
+    const v=document.getElementById('view');const now=new Date();
+    const isLive=o=>o.status==='open'&&(!o.expires_at||new Date(o.expires_at)>now);
+    const isExpired=o=>o.expires_at&&new Date(o.expires_at)<=now;
+    const segs=[['all','All',openings.length],['live','Live',openings.filter(isLive).length],['soon','Opening soon',openings.filter(o=>o.status==='soon').length],['renew','Renewal-eligible',openings.filter(o=>CH.canRenew(o.expires_at)&&o.status==='open').length],['expired','Expired',openings.filter(isExpired).length],['closed','Closed',openings.filter(o=>o.status==='closed').length]];
+    v.innerHTML=`<div class="segbar">${segs.map(([k,l,n])=>`<button class="${k===lSeg?'on':''}" data-k="${k}">${l} <span class="n">${n}</span></button>`).join('')}</div><div id="l-list"></div>`;
+    v.querySelectorAll('.segbar button').forEach(b=>b.addEventListener('click',()=>{lSeg=b.dataset.k;secListings();}));
+    let list=openings.slice();
+    if(lSeg==='live')list=list.filter(isLive);
+    else if(lSeg==='soon')list=list.filter(o=>o.status==='soon');
+    else if(lSeg==='renew')list=list.filter(o=>CH.canRenew(o.expires_at)&&o.status==='open');
+    else if(lSeg==='expired')list=list.filter(isExpired);
+    else if(lSeg==='closed')list=list.filter(o=>o.status==='closed');
+    const host=document.getElementById('l-list');
+    if(!list.length){host.innerHTML='<div class="empty">Nothing here.</div>';return;}
+    host.innerHTML=list.map(o=>{const tl=CH.timeLeft(o.expires_at);const n=apps.filter(a=>a.opening_id===o.id).length;const pay=(o.pay_type||'unpaid');
       return `<div class="panel listing" style="margin-bottom:16px;"><div class="lc-top"><div>
-        <div class="lc-cat">${CH.esc(o.department||'Role')} · ${CH.esc(o.city||'Toronto')} · ${CH.esc(o.discipline||'Any')}</div>
+        <div class="lc-cat">${CH.esc(o.department||'Role')} · ${CH.esc(o.city||'Toronto')} · ${CH.esc(o.discipline||'Any')} · by ${CH.esc(nm(o.created_by))}</div>
         <div class="lc-title">${CH.esc(o.title)}</div>
-        <div class="tags" style="margin-top:10px;">${CH.pill(o.status)}<span class="tag">${n} applicant${n===1?'':'s'}</span><span class="expiry ${tl.cls}">${tl.text}</span>${o.renew_count?`<span class="tag">renewed ${o.renew_count}x</span>`:''}</div></div></div>
-        <div class="spread" style="margin-top:16px;gap:8px;flex-wrap:wrap;">
-          <button class="share-btn" data-slug="${CH.esc(o.share_slug||'')}">Share</button>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            ${o.status!=='open'?`<button class="btn solid sm q" data-id="${o.id}" data-s="open">Open</button>`:`<button class="btn ghost sm q" data-id="${o.id}" data-s="closed">Close</button>`}
-            <button class="btn ghost sm rn" data-id="${o.id}">Renew</button>
-            <button class="btn ghost sm ed" data-id="${o.id}">Edit</button>
-          </div></div></div>`;}).join('');
-    v.querySelectorAll('.share-btn').forEach(b=>b.addEventListener('click',()=>CH.copyShare(b.dataset.slug,b)));
-    v.querySelectorAll('.q').forEach(b=>b.addEventListener('click',()=>quick(b.dataset.id,b.dataset.s)));
-    v.querySelectorAll('.rn').forEach(b=>b.addEventListener('click',()=>renew(b.dataset.id)));
-    v.querySelectorAll('.ed').forEach(b=>b.addEventListener('click',()=>openListing(oMap[b.dataset.id])));
+        <div class="tags" style="margin-top:10px;">${CH.pill(o.status)}<span class="tag">${n} applicant${n===1?'':'s'}</span><span class="expiry ${tl.cls}">${tl.text}</span><span class="mchip ${pay==='paid'?'paid':pay==='deferred'?'deferred':''}">${CH.esc(pay)}</span>${o.renew_count?`<span class="tag">renewed ${o.renew_count}x</span>`:''}</div></div></div>
+        <div class="spread" style="margin-top:16px;gap:8px;flex-wrap:wrap;"><button class="share-btn" data-slug="${CH.esc(o.share_slug||'')}">Share</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">${o.status!=='open'?`<button class="btn solid sm q" data-id="${o.id}" data-s="open">Open</button>`:`<button class="btn ghost sm q" data-id="${o.id}" data-s="closed">Close</button>`}<button class="btn ghost sm rn" data-id="${o.id}">Renew</button><button class="btn ghost sm ed" data-id="${o.id}">Edit</button></div></div></div>`;}).join('');
+    host.querySelectorAll('.share-btn').forEach(b=>b.addEventListener('click',()=>CH.copyShare(b.dataset.slug,b)));
+    host.querySelectorAll('.q').forEach(b=>b.addEventListener('click',()=>quick(b.dataset.id,b.dataset.s)));
+    host.querySelectorAll('.rn').forEach(b=>b.addEventListener('click',()=>renew(b.dataset.id)));
+    host.querySelectorAll('.ed').forEach(b=>b.addEventListener('click',()=>openListing(oMap[b.dataset.id])));
   }
   async function quick(id,s){const {error}=await CH.sb.from('openings').update({status:s}).eq('id',id);if(error){CH.toast(alertEl,error.message,'err');return;}loadAll();}
-  async function renew(id){const o=oMap[id];const {error}=await CH.sb.from('openings').update({expires_at:new Date(Date.now()+42*864e5).toISOString(),renewed_at:new Date().toISOString(),renew_count:(o.renew_count||0)+1,status:'open'}).eq('id',id);if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Renewed.','ok');loadAll();}
+  async function renew(id){const o=oMap[id];const {error}=await CH.sb.from('openings').update({expires_at:new Date(Date.now()+42*864e5).toISOString(),renewed_at:new Date().toISOString(),renew_count:(o.renew_count||0)+1,status:'open'}).eq('id',id);if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Renewed (admin override).','ok');loadAll();}
 
-  const listModal=document.getElementById('list-modal');
-  function openListing(o){document.getElementById('list-form').reset();document.getElementById('list-title').textContent=o?'Edit Listing':'New Listing';document.getElementById('l-id').value=o?o.id:'';document.getElementById('l-delete').style.display=o?'inline-flex':'none';
-    if(o){[['l-title','title'],['l-prod','production_title'],['l-loc','location'],['l-commit','commitment'],['l-desc','description'],['l-req','requirements']].forEach(([a,b])=>document.getElementById(a).value=o[b]||'');document.getElementById('l-dept').value=o.department||'';document.getElementById('l-disc').value=o.discipline||'Any';document.getElementById('l-city').value=o.city||'Toronto';document.getElementById('l-status').value=o.status||'open';}
+  // ===== APPLICATIONS =====
+  let appSeg='All';
+  function secApplications(){
+    const v=document.getElementById('view');
+    const statuses=['All','submitted','shortlisted','hired','reviewing','interview','accepted','waitlisted','declined'];
+    v.innerHTML=`<div class="segbar">${statuses.map(s=>`<button class="${s===appSeg?'on':''}" data-k="${s}">${s} <span class="n">${s==='All'?apps.length:apps.filter(a=>a.status===s).length}</span></button>`).join('')}</div><div id="ap-list"></div>`;
+    v.querySelectorAll('.segbar button').forEach(b=>b.addEventListener('click',()=>{appSeg=b.dataset.k;secApplications();}));
+    let list=apps.slice(); if(appSeg!=='All')list=list.filter(a=>a.status===appSeg);
+    const host=document.getElementById('ap-list');
+    if(!list.length){host.innerHTML='<div class="empty">No applications here.</div>';return;}
+    host.innerHTML='<div class="list">'+list.map(a=>{const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Applicant')} ${p.is_mentor?CH.mentorStar():''}</div><div class="m">${CH.esc(o.title||'')} · ${CH.esc(p.discipline||'')} · ${CH.fmtDate(a.created_at)}</div></div><div class="row-right">${CH.pill(a.status)}<button class="btn ghost sm rv" data-id="${a.id}">Review</button></div></div>`;}).join('')+'</div>';
+    host.querySelectorAll('.rv').forEach(b=>b.addEventListener('click',()=>review(b.dataset.id)));
+  }
+
+  // ===== ANALYTICS =====
+  function secAnalytics(){
+    const v=document.getElementById('view');
+    const memW=weekly(profiles,'created_at',8),oW=weekly(openings,'created_at',8),aW=weekly(apps,'created_at',8);
+    const byStatus=countBy(apps,a=>a.status);
+    const accepted=apps.filter(a=>a.status==='accepted').length;
+    const conv=apps.length?Math.round(accepted/apps.length*100):0;
+    const discCounts=countBy(profiles,p=>p.discipline);
+    const cityCounts=countBy(profiles,p=>p.city||'Toronto');
+    const applied=new Set(apps.map(a=>a.applicant_id)).size;
+    const engaged=profiles.length?Math.round(applied/profiles.length*100):0;
+    v.innerHTML=`
+      <div class="statgrid">
+        <div class="statcard"><div class="sv">${conv}%</div><div class="sl">Application → Accepted</div><div class="sd flat">${accepted} of ${apps.length}</div></div>
+        <div class="statcard"><div class="sv">${engaged}%</div><div class="sl">Members who applied</div><div class="sd flat">${applied} of ${profiles.length}</div></div>
+        <div class="statcard"><div class="sv">${profiles.filter(p=>p.is_mentor).length}</div><div class="sl">Mentors</div></div>
+        <div class="statcard"><div class="sv">${profiles.filter(p=>p.can_hire||p.is_admin).length}</div><div class="sl">Hiring members</div></div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>Member growth</h3><div class="ch-sub">Cumulative · 8 weeks</div>${areaChart(cumulative(memW),'am')}</div>
+        <div class="chart-card"><h3>Listing growth</h3><div class="ch-sub">Cumulative · 8 weeks</div>${areaChart(cumulative(oW),'ao')}</div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>Application volume</h3><div class="ch-sub">Per week · 8 weeks</div>${barChart(aW)}</div>
+        <div class="chart-card"><h3>Application outcomes</h3><div class="ch-sub">Conversion funnel</div>${hbars(byStatus)}</div>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-card"><h3>Most active disciplines</h3><div class="ch-sub">By members</div>${hbars(discCounts)}</div>
+        <div class="chart-card"><h3>Most active cities</h3><div class="ch-sub">By members</div>${hbars(cityCounts)}</div>
+      </div>`;
+  }
+
+  // ===== CHANGELOG =====
+  function secUpdates(){
+    const v=document.getElementById('view');
+    const current=CH.parseChangelog(settings.announcement||'');
+    const points=(current.points||[]).join('\n');
+    v.innerHTML=`
+      <div class="update-studio">
+        <section class="update-editor panel">
+          <div class="update-editor-head"><div><span class="editor-kicker">Member release</span><h3>Tell the house what changed.</h3></div><span class="publish-state ${settings.announcement_active?'live':'draft'}">${settings.announcement_active?'Live':'Draft'}</span></div>
+          <p class="hint">This opens once for each member when they enter after a new release. Keep it warm, specific and easy to scan.</p>
+          <div class="grid two">
+            <label class="f"><span class="lab">Update title</span><input id="up-title" value="${CH.esc(current.title||'A little more room to create')}" placeholder="A little more room to create"></label>
+            <label class="f"><span class="lab">Release label</span><input id="up-version" value="${CH.esc(current.version||'July 2026')}" placeholder="July 2026 · Update 04"></label>
+          </div>
+          <label class="f"><span class="lab">Opening note</span><textarea id="up-intro" placeholder="We have been listening. This release makes the house easier to move through…">${CH.esc(current.intro||'We have been listening. This release makes the house easier to move through, with more clarity and a little more care in the details.')}</textarea></label>
+          <label class="f"><span class="lab">What is new <span class="muted">(one item per line)</span></span><textarea id="up-points" placeholder="A calmer hiring dashboard\nBetter profile guidance\nNew listing showcases">${CH.esc(points||'A calmer, more focused dashboard\nClearer profile guidance for new creatives\nBetter project showcases for every listing')}</textarea></label>
+          <label class="f"><span class="lab">Closing line</span><input id="up-close" value="${CH.esc(current.closing||'Keep making. You belong here.')}" placeholder="Keep making. You belong here."></label>
+          <div class="update-actions"><button class="btn ghost sm" id="up-preview">Preview</button><button class="btn solid sm" id="up-save">Save & publish</button><button class="btn ghost sm" id="up-unpublish" ${settings.announcement_active?'':'disabled'}>Take down</button></div>
+        </section>
+        <aside class="update-guide">
+          <span class="editor-kicker">A useful rhythm</span>
+          <h3>Make every update feel worth opening.</h3>
+          <ol><li><b>Lead with why.</b><span>One human sentence about what got better.</span></li><li><b>Name the changes.</b><span>Three to five clear, useful highlights.</span></li><li><b>End with heart.</b><span>Remind young creatives this place is being built with them.</span></li></ol>
+          <div class="guide-note">A new title, version or message creates a new release, so members will see it once even if they dismissed the last one.</div>
+        </aside>
+      </div>`;
+    const readUpdate=()=>({title:document.getElementById('up-title').value.trim(),version:document.getElementById('up-version').value.trim(),intro:document.getElementById('up-intro').value.trim(),points:document.getElementById('up-points').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,6),closing:document.getElementById('up-close').value.trim()});
+    document.getElementById('up-preview').addEventListener('click',()=>CH.showChangelog(readUpdate(),{preview:true}));
+    document.getElementById('up-save').addEventListener('click',async(e)=>{
+      const btn=e.currentTarget,update=readUpdate();if(!update.title||!update.intro||!update.points.length){CH.toast(alertEl,'Add a title, opening note and at least one highlight.','err');return;}
+      btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+      const announcement=CH.stringifyChangelog(update);const payload={announcement,announcement_active:true,updated_at:new Date().toISOString()};
+      const {error}=await CH.sb.from('app_settings').update(payload).eq('id',1);btn.disabled=false;btn.textContent='Save & publish';
+      if(error){CH.toast(alertEl,error.message,'err');return;}settings={...settings,...payload};CH.toast(alertEl,'Update published. Members will see it when they enter.','ok');secUpdates();
+    });
+    document.getElementById('up-unpublish').addEventListener('click',async()=>{const {error}=await CH.sb.from('app_settings').update({announcement_active:false,updated_at:new Date().toISOString()}).eq('id',1);if(error){CH.toast(alertEl,error.message,'err');return;}settings.announcement_active=false;CH.toast(alertEl,'Update taken down.','ok');secUpdates();});
+  }
+
+  // ===== SETTINGS =====
+  function secSettings(){
+    const v=document.getElementById('view');const s=settings||{};
+    v.innerHTML=`
+      <section class="master-control ${s.maintenance_active?'closed':'open'}"><div class="master-control-head"><div><span class="mc-overline">Global platform switch</span><h3>${s.maintenance_active?'The public House is closed.':'The public House is open.'}</h3><p>${s.maintenance_active?'Every public route is showing the Coming Soon transmission. Admin access and sign-in remain online.':'All public pages and member workspaces are available normally.'}</p></div><div class="master-state"><i></i><b>${s.maintenance_active?'MASTER ON':'LIVE'}</b><span>${s.maintenance_active?'Admin bypass active':'All routes open'}</span></div></div>
+        <div class="master-control-grid"><label class="f"><span class="lab">Public transmission message</span><input id="st-maint-msg" value="${CH.esc(s.maintenance_message||'')}" placeholder="We are building something worth returning to."><small>Shown on the Coming Soon page. Set this before changing the switch.</small></label><div class="master-impact"><span>What stays available</span><b>Member sign-in</b><b>Admin Mission Control</b><b>Support email</b></div></div>
+        <button class="btn ${s.maintenance_active?'solid':'master-danger'}" id="st-master-toggle">${s.maintenance_active?'Reopen every page':'Enable master maintenance'}</button>
+      </section>
+      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Member updates</p>
+        <p class="hint" style="margin-top:0;">Release notes and sign-in popups now live in the Changelog studio, with a reusable writing template and member preview.</p>
+        <button class="btn ghost sm" id="st-updates">Open changelog</button>
+      </div>
+      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Public signup door</p>
+        <p class="hint" style="margin-top:0;">This is enforced by the database for email and Google signup. Existing members can still sign in.</p>
+        <div class="grid two"><label class="f"><span class="lab">Signup mode</span><select id="st-signup-mode">${[['open','Open'],['paused','Paused'],['invite_only','Invite only'],['maintenance','Maintenance']].map(([v,l])=>`<option value="${v}" ${v===(s.signup_mode||'open')?'selected':''}>${l}</option>`).join('')}</select></label><label class="f"><span class="lab">Reopens (optional)</span><input id="st-signup-date" type="datetime-local" value="${s.signup_reopens_at?new Date(s.signup_reopens_at).toISOString().slice(0,16):''}"></label></div>
+        <label class="f"><span class="lab">Message shown to new members</span><input id="st-signup-msg" value="${CH.esc(s.signup_message||'')}" placeholder="We are opening the doors again soon."></label>
+      </div>
+      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Community configuration</p>
+        <label class="agree" style="display:flex;gap:10px;align-items:center;cursor:pointer;padding:8px 0;"><input type="checkbox" id="st-music" ${s.music_waitlist!==false?'checked':''} style="width:auto;flex:none;"> <span>Music waitlist teaser visible</span></label>
+      </div>
+      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Email templates <span class="mono muted" style="font-size:.6rem;">(stored for future SMTP)</span></p>
+        <label class="f"><span class="lab">Welcome email</span><textarea id="st-welcome" placeholder="Welcome to Creative House…">${CH.esc(s.email_welcome||'')}</textarea></label>
+        <label class="f"><span class="lab">Suspension email</span><textarea id="st-suspend" placeholder="Regarding your account…">${CH.esc(s.email_suspend||'')}</textarea></label>
+      </div>
+      <div class="panel"><p class="fieldset-title">Support</p><p class="lead" style="margin-top:0;">Members are directed to <a href="mailto:support@visuarealmstudios.com">support@visuarealmstudios.com</a> for account issues, appeals, and help. Rule management lives in the <a href="/community-guidelines.html">Community Standards</a>.</p></div>
+      <button class="btn solid" id="st-save" style="margin-top:18px;">Save settings</button>`;
+    document.getElementById('st-updates').addEventListener('click',()=>{sec='updates';go();});
+    document.getElementById('st-master-toggle').addEventListener('click',async()=>{
+      const active=!!s.maintenance_active,next=!active;
+      const secret=await CH.secretConfirm({title:next?'Close every public door?':'Reopen the entire platform?',message:next?'Every route will switch to the Coming Soon transmission. Your administrator session will remain inside.':'The Coming Soon transmission will end immediately and every route will reopen.',ok:next?'Enable master mode':'Reopen the House',label:'Master maintenance password'});if(!secret)return;
+      const btn=document.getElementById('st-master-toggle');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';const message=document.getElementById('st-maint-msg').value.trim()||null;
+      const {data,error}=await CH.sb.rpc('ch_set_master_maintenance',{p_active:next,p_message:message,p_confirmation:secret});
+      if(error){btn.disabled=false;btn.textContent=next?'Enable master maintenance':'Reopen every page';CH.toast(alertEl,error.message,'err');return;}
+      settings={...settings,maintenance_active:!!data.active,maintenance_message:data.message||message,updated_at:data.updated_at};CH.toast(alertEl,next?'Master maintenance is live. Public routes are now closed.':'The House is open. Every route is live again.','ok');secSettings();
+    });
+    document.getElementById('st-save').addEventListener('click',async()=>{
+      const mode=document.getElementById('st-signup-mode').value,msg=document.getElementById('st-signup-msg').value.trim()||null,date=document.getElementById('st-signup-date').value;
+      const gate=await CH.sb.rpc('ch_set_signup_mode',{p_mode:mode,p_message:msg,p_reopens_at:date?new Date(date).toISOString():null});if(gate.error){CH.toast(alertEl,gate.error.message,'err');return;}
+      const payload={maintenance_message:document.getElementById('st-maint-msg').value.trim()||null,music_waitlist:document.getElementById('st-music').checked,email_welcome:document.getElementById('st-welcome').value.trim()||null,email_suspend:document.getElementById('st-suspend').value.trim()||null,updated_at:new Date().toISOString()};
+      const {error}=await CH.sb.from('app_settings').update(payload).eq('id',1);
+      if(error){CH.toast(alertEl,error.message,'err');return;}
+      settings={...settings,...payload,signup_mode:mode,signup_message:msg,signup_reopens_at:date?new Date(date).toISOString():null};CH.toast(alertEl,'Settings saved. The signup door is enforced.','ok');
+    });
+  }
+
+  // ===== MODALS (listing / application / member) =====
+  const listModal=document.getElementById('list-modal');const lexp=document.getElementById('l-expiry');lexp.min=CH.todayISO();
+  function openListing(o){document.getElementById('list-form').reset();document.getElementById('list-title').textContent=o?'Edit Listing':'New Listing';document.getElementById('l-id').value=o?o.id:'';document.getElementById('l-delete').style.display=o?'inline-flex':'none';lexp.min=CH.todayISO();
+    if(o){[['l-title','title'],['l-prod','production_title'],['l-loc','location'],['l-commit','commitment'],['l-desc','description'],['l-req','requirements']].forEach(([a,b])=>document.getElementById(a).value=o[b]||'');document.getElementById('l-dept').value=o.department||'';document.getElementById('l-disc').value=o.discipline||'Any';document.getElementById('l-city').value=o.city||'Toronto';document.getElementById('l-status').value=o.status||'open';document.getElementById('l-ptype').value=o.production_type||CH.PRODUCTION_TYPES[0];document.getElementById('l-mode').value=o.work_mode||'On-site';document.getElementById('l-pay').value=o.pay_type||'unpaid';document.getElementById('l-exp').value=o.experience_level||'Any';document.getElementById('l-syn').value=o.synopsis||'';document.getElementById('l-company').value=o.company||'';document.getElementById('l-genre').value=o.genre||'';document.getElementById('l-poster').value=o.poster_url||'';document.getElementById('l-script').value=o.script_url||'';document.getElementById('l-gallery').value=(o.gallery||[]).join(', ');lexp.value=o.expires_at?o.expires_at.slice(0,10):'';}
+    else{lexp.value=new Date(Date.now()+42*864e5).toISOString().slice(0,10);}
     CH.clearToast(document.getElementById('list-alert'));listModal.classList.add('show');}
-  document.getElementById('new-top').addEventListener('click',()=>openListing(null));
   document.getElementById('list-cancel').addEventListener('click',()=>listModal.classList.remove('show'));
   document.getElementById('list-x').addEventListener('click',()=>listModal.classList.remove('show'));
   listModal.addEventListener('click',e=>{if(e.target===listModal)listModal.classList.remove('show');});
   document.getElementById('list-form').addEventListener('submit',async(e)=>{e.preventDefault();const btn=document.getElementById('list-save');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-    const id=document.getElementById('l-id').value;const g=i=>document.getElementById(i).value.trim();
-    const payload={title:g('l-title'),department:document.getElementById('l-dept').value,discipline:document.getElementById('l-disc').value,city:document.getElementById('l-city').value,production_title:g('l-prod')||null,location:g('l-loc')||null,commitment:g('l-commit')||null,description:g('l-desc')||null,requirements:g('l-req')||null,status:document.getElementById('l-status').value};
+    const id=document.getElementById('l-id').value;const g=i=>document.getElementById(i).value.trim();const ex=document.getElementById('l-expiry').value;
+    const gallery=document.getElementById('l-gallery').value.split(',').map(x=>x.trim()).filter(Boolean);
+    const prevL=id?oMap[id]:null;const newStatus=document.getElementById('l-status').value;
+    const payload={title:g('l-title'),department:document.getElementById('l-dept').value,discipline:document.getElementById('l-disc').value,city:document.getElementById('l-city').value,production_title:g('l-prod')||null,location:g('l-loc')||null,commitment:g('l-commit')||null,description:g('l-desc')||null,requirements:g('l-req')||null,status:newStatus,production_type:document.getElementById('l-ptype').value,work_mode:document.getElementById('l-mode').value,pay_type:document.getElementById('l-pay').value,experience_level:document.getElementById('l-exp').value,synopsis:g('l-syn')||null,company:g('l-company')||null,genre:g('l-genre')||null,poster_url:g('l-poster')||null,script_url:g('l-script')||null,gallery,expires_at:ex?new Date(ex+'T23:59:59').toISOString():null};
+    if(newStatus==='closed' && (!prevL||prevL.status!=='closed')) payload.closed_at=new Date().toISOString();
+    if(newStatus!=='closed' && prevL && prevL.status==='closed') payload.closed_at=null; // admin can always reopen
     let error;if(id){({error}=await CH.sb.from('openings').update(payload).eq('id',id));}else{payload.created_by=uid;({error}=await CH.sb.from('openings').insert(payload));}
     btn.disabled=false;btn.textContent='Save';if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}listModal.classList.remove('show');CH.toast(alertEl,'Saved.','ok');loadAll();});
-  document.getElementById('l-delete').addEventListener('click',async()=>{const id=document.getElementById('l-id').value;if(!confirm('Delete this listing and its applications?'))return;const {error}=await CH.sb.from('openings').delete().eq('id',id);if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}listModal.classList.remove('show');CH.toast(alertEl,'Deleted.','ok');loadAll();});
+  document.getElementById('l-delete').addEventListener('click',async()=>{const id=document.getElementById('l-id').value;if(!(await CH.confirm({title:'Delete listing?',message:'This removes the listing and its applications. This can’t be undone.',ok:'Delete',danger:true})))return;const {error}=await CH.sb.from('openings').delete().eq('id',id);if(error){CH.toast(document.getElementById('list-alert'),error.message,'err');return;}listModal.classList.remove('show');CH.toast(alertEl,'Deleted.','ok');loadAll();});
 
-  // APPLICATIONS
-  function rApps(){const v=document.getElementById('view');if(!apps.length){v.innerHTML='<div class="empty">No applications.</div>';return;}
-    v.innerHTML='<div class="list">'+apps.map(a=>{const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Applicant')}</div><div class="m">${CH.esc(o.title||'')} · ${CH.esc(p.discipline||'')} · ${CH.fmtDate(a.created_at)}</div></div><div class="row-right">${CH.pill(a.status)}<button class="btn ghost sm rv" data-id="${a.id}">Review</button></div></div>`;}).join('')+'</div>';
-    v.querySelectorAll('.rv').forEach(b=>b.addEventListener('click',()=>review(b.dataset.id)));}
   const appModal=document.getElementById('app-modal');
   function review(id){const a=apps.find(x=>x.id===id);const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{},L=p.links||{};
     document.getElementById('app-id').value=id;document.getElementById('app-meta').textContent=(o.title||'')+' · '+CH.fmtDate(a.created_at);
@@ -193,33 +555,41 @@
   appModal.addEventListener('click',e=>{if(e.target===appModal)appModal.classList.remove('show');});
   document.getElementById('appm-save').addEventListener('click',async()=>{const id=document.getElementById('app-id').value;const {error}=await CH.sb.from('applications').update({status:document.getElementById('app-status').value,admin_notes:document.getElementById('app-notes').value.trim()}).eq('id',id);if(error){CH.toast(document.getElementById('appm-alert'),error.message,'err');return;}appModal.classList.remove('show');CH.toast(alertEl,'Updated.','ok');loadAll();});
 
-  // MEMBERS
-  function rMembers(){const v=document.getElementById('view');if(!profiles.length){v.innerHTML='<div class="empty">No members.</div>';return;}
-    v.innerHTML='<div class="list">'+profiles.map(p=>`<div class="row"><div><div class="t">${CH.esc(p.full_name||p.email||'Member')} ${p.is_admin?'<span class="pill open" style="margin-left:6px;">Admin</span>':''} ${p.can_hire?'<span class="pill reviewing" style="margin-left:6px;">Hiring</span>':''}</div><div class="m">${CH.esc([p.discipline,p.primary_department,p.city].filter(Boolean).join(' · '))||CH.esc(p.email||'')}</div></div><div class="row-right">${CH.pill(p.status||'active')}<button class="btn ghost sm vm" data-id="${p.id}">Manage</button></div></div>`).join('')+'</div>';
-    v.querySelectorAll('.vm').forEach(b=>b.addEventListener('click',()=>openMember(b.dataset.id)));}
-  const memModal=document.getElementById('mem-modal');let memBadges=[];
-  async function openMember(id){const p=pMap[id],L=p.links||{};document.getElementById('mem-id').value=id;document.getElementById('mem-name').textContent=p.full_name||'Member';document.getElementById('mem-meta').textContent=[p.email,p.city].filter(Boolean).join(' · ');
-    document.getElementById('mem-body').innerHTML=`${p.headline?`<p class="lead" style="margin-top:0;">${CH.esc(p.headline)}</p>`:''}${p.bio?`<p style="margin-top:8px;">${CH.esc(p.bio)}</p>`:''}<div class="tags" style="margin-top:10px;">${(p.skills||[]).map(s=>`<span class="tag">${CH.esc(s)}</span>`).join('')}</div>`;
-    document.getElementById('mem-disc').value=p.discipline||'Crew';document.getElementById('mem-status').value=p.status||'active';document.getElementById('mem-hire').value=p.can_hire?'true':'false';document.getElementById('mem-admin').value=p.is_admin?'true':'false';
-    memBadges=await CH.badgesFor(id);drawMemBadges();CH.clearToast(document.getElementById('memm-alert'));memModal.classList.add('show');}
+  const memModal=document.getElementById('mem-modal');let memBadges=[],memOrigStatus='active';
+  async function openMember(id){const p=pMap[id],L=p.links||{};document.getElementById('mem-id').value=id;document.getElementById('mem-name').innerHTML=`${p.is_mentor?CH.mentorStar()+' ':''}${CH.esc(p.full_name||'Member')}`;document.getElementById('mem-meta').textContent=[p.email,p.city].filter(Boolean).join(' · ');
+    document.getElementById('mem-body').innerHTML=`${p.headline?`<p class="lead" style="margin-top:0;">${CH.esc(p.headline)}</p>`:''}${p.bio?`<p style="margin-top:8px;">${CH.esc(p.bio)}</p>`:''}<div class="tags" style="margin-top:10px;">${L.imdb?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.imdb)}">IMDb</a>`:''}${L.website?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.website)}">Website</a>`:''}${L.reel?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.reel)}">Reel</a>`:''}</div>`;
+    document.getElementById('mem-disc').value=p.discipline||'Crew';document.getElementById('mem-status').value=p.status||'active';memOrigStatus=p.status||'active';document.getElementById('mem-hire').value=p.can_hire?'true':'false';document.getElementById('mem-admin').value=p.is_admin?'true':'false';document.getElementById('mem-flagnote').value=p.flag_note||'';
+    document.getElementById('mem-mod').value=p.is_moderator?'true':'false';document.getElementById('mem-verified').value=p.id_verified?'true':'false';
+    document.querySelectorAll('.admin-only-ctl').forEach(el=>el.style.display=IS_ADMIN?'':'none');
+    document.getElementById('mem-warn').value=p.warning_active?'true':'false';document.getElementById('mem-warnnote').value=p.warning_note||'';
+    document.getElementById('mem-mentor').value=p.is_mentor?'true':'false';document.getElementById('mem-contact').value=p.contact_pref||'Email';document.getElementById('mem-mbio').value=p.mentor_bio||'';document.getElementById('mem-mspec').value=(p.mentor_specialties||[]).join(', ');document.getElementById('mem-avail').value=p.availability||'';
+    memBadges=await CH.badgesFor(id);drawMemBadges();await drawHistory(id);CH.clearToast(document.getElementById('memm-alert'));memModal.classList.add('show');}
+  async function drawHistory(id){const {data}=await CH.sb.from('moderation_log').select('*').eq('user_id',id).order('created_at',{ascending:false});const host=document.getElementById('mem-history');
+    host.innerHTML=(data&&data.length)?'<div class="timeline">'+data.map(m=>`<div class="tl ${CH.esc(m.action)}"><div class="tt">${CH.esc(m.action)}</div><div class="tm">${CH.fmtDate(m.created_at)}${m.note?' · '+CH.esc(m.note):''}</div></div>`).join('')+'</div>':'<span class="muted mono" style="font-size:.66rem;">No moderation history.</span>';}
   function drawMemBadges(){document.getElementById('mem-badges').innerHTML=memBadges.length?memBadges.map(b=>{const m=b.badges||{};return `<span class="badge-chip ${m.kind==='special'?'special':''}"><span class="bx">${CH.esc(m.emoji||'+')}</span>${CH.esc(m.label||b.badge_code)} <button data-code="${b.badge_code}" class="rmb" style="background:none;border:none;color:var(--muted);cursor:pointer;">×</button></span>`;}).join(''):'<span class="muted mono" style="font-size:.66rem;">No badges yet.</span>';
     document.querySelectorAll('#mem-badges .rmb').forEach(x=>x.addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;await CH.sb.from('user_badges').delete().eq('user_id',id).eq('badge_code',x.dataset.code);memBadges=await CH.badgesFor(id);drawMemBadges();}));}
   document.getElementById('mem-award').addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;const code=document.getElementById('mem-badgesel').value;const note=document.getElementById('mem-badgenote').value.trim()||null;const {error}=await CH.sb.from('user_badges').insert({user_id:id,badge_code:code,awarded_by:uid,note});if(error&&error.code!=='23505'){CH.toast(document.getElementById('memm-alert'),error.message,'err');return;}document.getElementById('mem-badgenote').value='';memBadges=await CH.badgesFor(id);drawMemBadges();});
   document.getElementById('memm-cancel').addEventListener('click',()=>memModal.classList.remove('show'));
   document.getElementById('mem-x').addEventListener('click',()=>memModal.classList.remove('show'));
   memModal.addEventListener('click',e=>{if(e.target===memModal)memModal.classList.remove('show');});
-  document.getElementById('memm-save').addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;const {error}=await CH.sb.from('profiles').update({discipline:document.getElementById('mem-disc').value,status:document.getElementById('mem-status').value,can_hire:document.getElementById('mem-hire').value==='true',is_admin:document.getElementById('mem-admin').value==='true'}).eq('id',id);if(error){CH.toast(document.getElementById('memm-alert'),error.message,'err');return;}memModal.classList.remove('show');CH.toast(alertEl,'Member updated.','ok');loadAll();});
+  document.getElementById('memm-save').addEventListener('click',async()=>{const id=document.getElementById('mem-id').value;const newStatus=document.getElementById('mem-status').value;const flagNote=document.getElementById('mem-flagnote').value.trim()||null;
+    const warnOn=document.getElementById('mem-warn').value==='true';const warnNote=document.getElementById('mem-warnnote').value.trim()||null;
+    const mspec=document.getElementById('mem-mspec').value.split(',').map(x=>x.trim()).filter(Boolean);
+    const wasWarned=(pMap[id]||{}).warning_active;
+    const {error}=await CH.sb.from('profiles').update({discipline:document.getElementById('mem-disc').value,status:newStatus,can_hire:document.getElementById('mem-hire').value==='true',is_admin:document.getElementById('mem-admin').value==='true',is_moderator:document.getElementById('mem-mod').value==='true',id_verified:document.getElementById('mem-verified').value==='true',flag_note:flagNote,warning_active:warnOn,warning_note:warnNote,is_mentor:document.getElementById('mem-mentor').value==='true',contact_pref:document.getElementById('mem-contact').value,mentor_bio:document.getElementById('mem-mbio').value.trim()||null,mentor_specialties:mspec,availability:document.getElementById('mem-avail').value.trim()||null}).eq('id',id);
+    if(error){CH.toast(document.getElementById('memm-alert'),error.message,'err');return;}
+    if(newStatus!==memOrigStatus){const actionMap={flagged:'flagged',suspended:'suspended',banned:'banned',active:(memOrigStatus==='suspended'||memOrigStatus==='banned'?'reinstated':'unflagged')};await CH.sb.from('moderation_log').insert({user_id:id,action:actionMap[newStatus]||newStatus,note:flagNote,by_admin:uid});}
+    if(warnOn&&!wasWarned){await CH.sb.from('moderation_log').insert({user_id:id,action:'warning',note:warnNote,by_admin:uid});}
+    memModal.classList.remove('show');CH.toast(alertEl,'Member updated.','ok');loadAll();});
 
-  // REPORTS
-  function rReports(){const v=document.getElementById('view');if(!reports.length){v.innerHTML='<div class="empty">No reports or feedback yet.</div>';return;}
-    v.innerHTML='<div class="list">'+reports.map(r=>{const p=r.user_id?pMap[r.user_id]:null;return `<div class="row"><div><div class="t">${CH.esc(r.kind)} ${CH.pill(r.status)}</div><div class="m">${CH.esc(p?p.full_name||p.email:(r.email||'anonymous'))} · ${CH.fmtDate(r.created_at)} · ${CH.esc(r.page||'')}</div><p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(r.message)}</p></div><div class="row-right"><select class="rs" data-id="${r.id}" style="width:auto;padding:8px 30px 8px 12px;font-size:.8rem;">${['new','seen','resolved'].map(s=>`<option ${r.status===s?'selected':''}>${s}</option>`).join('')}</select></div></div>`;}).join('')+'</div>';
-    v.querySelectorAll('.rs').forEach(s=>s.addEventListener('change',async()=>{await CH.sb.from('feedback').update({status:s.value}).eq('id',s.dataset.id);CH.toast(alertEl,'Updated.','ok');}));}
-
-  // PEER FEEDBACK (private)
-  function rPeer(){const v=document.getElementById('view');if(!peer.length){v.innerHTML='<div class="empty">No peer feedback yet. It appears here privately after projects.</div>';return;}
-    v.innerHTML='<div class="list">'+peer.map(f=>{const fr=pMap[f.from_user]||{},to=pMap[f.to_user]||{},o=oMap[f.opening_id]||{};return `<div class="row"><div><div class="t">${CH.esc(to.full_name||'Member')} <span class="muted mono" style="font-size:.62rem;">from ${CH.esc(fr.full_name||'someone')}</span></div><div class="m">${CH.esc(o.title||'Project')}${f.rating?' · '+f.rating+'/5':''} · ${CH.fmtDate(f.created_at)}</div>${f.message?`<p class="lead" style="margin-top:8px;max-width:70ch;">${CH.esc(f.message)}</p>`:''}</div></div>`;}).join('')+'</div>';}
+  // expose review() for any application lists (used indirectly)
+  window.__review=review;
 
   await loadAll();
+  CH.mountFeedback();
+  CH.mountNotifications();
+  CH.mountFooter();
+  CH.wireBack('/dashboard/');
 })();
 </script>
 </body>

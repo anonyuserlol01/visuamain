@@ -1,42 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Create Account · Creative House</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png">
+<title>Sign In | Creative House</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
 <link rel="stylesheet" href="/app.css">
+<style>
+/* Creative House auth: editorial projection room */
+.auth-rework{background:var(--obsidian);--ease:cubic-bezier(.16,1,.3,1)}
+.auth-rework>.grain{opacity:.018}
+.auth-rework .auth-shell{grid-template-columns:minmax(420px,1.08fr) minmax(470px,.92fr)}
+.auth-rework .auth-brandpane{background:#0a0908;padding:42px 4.2vw 38px;isolation:isolate}
+.auth-rework .auth-brandpane::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(232,227,221,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(232,227,221,.035) 1px,transparent 1px);background-size:48px 48px;mask-image:linear-gradient(to bottom,black,transparent 85%);z-index:-3}
+.auth-rework .auth-brandpane::after{content:'';position:absolute;width:110%;height:54%;left:-15%;top:19%;background:linear-gradient(105deg,transparent 8%,rgba(217,90,43,.055) 38%,rgba(232,227,221,.13) 50%,rgba(217,90,43,.04) 62%,transparent 82%);transform:rotate(-6deg);filter:blur(9px);z-index:-2}
+.contact-sheet{position:absolute;z-index:-1;right:-72px;top:-5%;height:110%;width:210px;border-inline:1px solid rgba(232,227,221,.13);background:#050505;transform:rotate(5deg);overflow:hidden;box-shadow:-24px 0 60px rgba(0,0,0,.5)}
+.contact-track{display:flex;flex-direction:column;gap:12px;padding:16px}
+.contact-frame{height:118px;border:1px solid rgba(232,227,221,.18);position:relative;display:flex;align-items:flex-end;padding:10px;overflow:hidden;background:radial-gradient(circle at var(--x,30%) var(--y,30%),rgba(217,90,43,.28),transparent 32%),linear-gradient(145deg,#1c1a17,#080808 60%)}
+.contact-frame:nth-child(2n){--x:75%;--y:65%;background:radial-gradient(circle at var(--x) var(--y),rgba(232,227,221,.18),transparent 30%),linear-gradient(35deg,#050505,#20140f)}
+.contact-frame::before,.contact-frame::after{content:'';position:absolute;left:-8px;width:5px;height:8px;background:var(--bone);opacity:.28;box-shadow:0 20px 0 var(--bone),0 40px 0 var(--bone),0 60px 0 var(--bone),0 80px 0 var(--bone),0 100px 0 var(--bone)}
+.contact-frame::after{left:auto;right:-8px}.contact-frame span{font-family:var(--font-mono);font-size:.44rem;letter-spacing:.14em;text-transform:uppercase;color:var(--bone);position:relative;z-index:1}
+.auth-rework .auth-top{display:flex;align-items:center;gap:12px}.auth-rework .auth-top::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 6px rgba(217,90,43,.1)}.auth-shortcuts{display:flex;justify-content:space-between;align-items:center;gap:16px}.auth-price{font-family:var(--font-mono);font-size:.5rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}.auth-price:hover{color:var(--ember)}
+.auth-edition{position:absolute;top:50%;right:160px;transform:translateY(-50%) rotate(90deg);font-family:var(--font-mono);font-size:.5rem;letter-spacing:.25em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.auth-rework .auth-mid{max-width:780px}.auth-rework .auth-hgroup{font-size:clamp(3.7rem,7.2vw,7.7rem);line-height:.89;letter-spacing:.005em;text-shadow:0 10px 50px rgba(0,0,0,.45)}
+.auth-rework .auth-rotator{margin-top:30px;max-width:620px;height:1.55em;overflow:hidden;font-size:clamp(1.08rem,1.55vw,1.45rem);line-height:1.55}.auth-rotator-track{display:block;animation:authMessages 13s var(--ease) infinite}.auth-rework .auth-rotator b{display:block;height:1.55em;line-height:1.55;white-space:nowrap;animation:none}@keyframes authMessages{0%,20%{transform:translateY(0)}25%,45%{transform:translateY(-1.55em)}50%,70%{transform:translateY(-3.1em)}75%,95%{transform:translateY(-4.65em)}100%{transform:translateY(0)}}
+.creative-fields{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px;max-width:620px}.creative-fields span{border:1px solid rgba(232,227,221,.16);padding:7px 9px;font-family:var(--font-mono);font-size:.46rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.auth-promise{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;margin-top:28px;max-width:590px;padding-top:20px;border-top:1px solid rgba(232,227,221,.14)}
+.auth-promise strong{font-family:var(--font-serif);font-style:italic;font-size:1.4rem;color:var(--ember);font-weight:400}.auth-promise p{font-family:var(--font-mono);font-size:.52rem;line-height:1.7;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.auth-rework .auth-meta{color:var(--muted)}
+.auth-rework .auth-formpane{position:relative;background:radial-gradient(600px 500px at 65% 35%,rgba(217,90,43,.07),transparent 64%),var(--obsidian);padding:48px 5.5vw;overflow:hidden}
+.auth-rework .auth-formpane::before{content:'CH';position:absolute;right:-.04em;bottom:-.18em;font-family:var(--font-impact);font-size:30vw;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(232,227,221,.035);pointer-events:none}
+.auth-rework .auth-card{max-width:490px;background:rgba(16,16,16,.8);border:1px solid var(--line-2);padding:clamp(28px,4vw,48px);box-shadow:0 34px 100px rgba(0,0,0,.42);backdrop-filter:blur(14px);position:relative}
+.auth-rework .auth-card::before{content:'CH / MEMBER ACCESS';position:absolute;top:-1px;right:24px;transform:translateY(-50%);background:var(--obsidian);padding:0 10px;font-family:var(--font-mono);font-size:.45rem;letter-spacing:.16em;color:var(--dim)}
+.auth-modebar{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid var(--line);background:var(--obsidian);margin:26px 0 34px}
+.auth-modebar button{border:0;background:transparent;color:var(--muted);padding:11px;font-family:var(--font-mono);font-size:.55rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:.25s}
+.auth-modebar button.active{background:var(--bone);color:var(--obsidian)}
+.auth-rework .auth-title{font-size:clamp(2.1rem,3.3vw,3.1rem);line-height:1;letter-spacing:.025em}.auth-rework .auth-desc{font-family:var(--font-serif);font-size:1.05rem;line-height:1.5}
+.free-mark{display:flex;justify-content:center;gap:8px;align-items:center;margin-top:26px;padding:13px 0;border-block:1px solid var(--line);font-family:var(--font-mono);font-size:.52rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.free-mark strong{color:var(--ember);font-size:.56rem}
+.signup-meter{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:-4px 0 25px}.signup-meter i{height:2px;background:var(--line-2);transition:.3s}.auth-form[data-step="1"] .signup-meter i:nth-child(1),.auth-form[data-step="2"] .signup-meter i:nth-child(-n+2),.auth-form[data-step="3"] .signup-meter i:nth-child(-n+3),.auth-form[data-step="4"] .signup-meter i{background:var(--ember)}
+.auth-rework label.f input{background:rgba(5,5,5,.7);border-radius:0;border-color:var(--line-2);min-height:52px}.auth-rework label.f input:focus{border-color:var(--ember);box-shadow:0 0 0 3px rgba(217,90,43,.09)}
+.auth-rework .rolecard{border-radius:0;background:rgba(5,5,5,.5);color:var(--bone)}.auth-rework .rolecard .rc-t{color:var(--bone);font-size:1.02rem;line-height:1.15;letter-spacing:.035em}.auth-rework .rolecard .rc-d{color:#a9a198}.auth-rework .rolecard.sel{background:rgba(217,90,43,.1);color:var(--bone)}.auth-rework .rolecard.sel .rc-t{color:var(--ember)}
+.auth-rework .btn{border-radius:0;min-height:48px}.auth-rework .btn.solid{background:var(--ember);border-color:var(--ember);color:var(--obsidian)}
+.auth-rework .btn.google{position:relative;background:#f4f2ee;color:#181818;border:1px solid #f4f2ee;box-shadow:none;letter-spacing:.07em;text-transform:none;font-size:.72rem}.auth-rework .btn.google:hover{background:#fff;color:#111}.auth-rework .btn.google svg{position:absolute;left:17px;width:18px;height:18px}
+.auth-rework .or-split{margin:21px 0 18px;color:#716a63}.auth-rework .or-split::before,.auth-rework .or-split::after{background:rgba(232,227,221,.1)}
+.oauth-note{display:flex;justify-content:center;gap:7px;align-items:center;color:var(--dim);font-family:var(--font-mono);font-size:.46rem;line-height:1.55;letter-spacing:.06em;text-align:center;margin-top:9px}.oauth-note::before{content:'✓';color:#7f9b91}
+.auth-rework .pw-meter{height:3px;border-radius:0;margin:7px 0}.auth-rework .pw-hint{margin-bottom:17px;line-height:1.55}
+.auth-rework .agree{padding:12px 13px;border:1px solid var(--line);background:rgba(255,255,255,.018)}
+.verify-panel{text-align:center;padding:8px 0}.verify-signal{display:grid;place-items:center;width:72px;height:72px;margin:0 auto 22px;border:1px solid rgba(217,90,43,.35);position:relative;color:var(--ember);font-family:var(--font-serif);font-size:1.5rem}.verify-signal::before,.verify-signal::after{content:'';position:absolute;background:rgba(217,90,43,.35)}.verify-signal::before{width:94px;height:1px}.verify-signal::after{width:1px;height:94px}.verify-panel .auth-desc{max-width:390px;margin:0 auto 22px!important;color:#bbb3aa}.verify-panel .auth-desc b{color:var(--bone);word-break:break-word}.verify-actions{display:flex;justify-content:space-between;gap:12px;margin-top:16px}
+.auth-security{display:flex;gap:10px;align-items:flex-start;margin-top:24px;color:var(--dim);font-family:var(--font-mono);font-size:.48rem;line-height:1.6;letter-spacing:.08em;text-transform:uppercase}.auth-security::before{content:'✓';color:var(--ember)}
+@media(max-width:900px){.auth-rework .auth-shell{grid-template-columns:1fr}.auth-rework .auth-brandpane{display:flex;min-height:330px;padding:34px 7vw}.auth-rework .auth-mid{margin-top:auto}.auth-rework .auth-hgroup{font-size:clamp(3.7rem,14vw,6.3rem)}.auth-rework .auth-rotator,.auth-promise,.creative-fields,.auth-edition{display:none}.contact-sheet{right:-30px;width:150px;opacity:.7}.auth-rework .auth-meta{display:none}.auth-rework .auth-formpane{min-height:auto;padding:7vh 7vw}.auth-rework .auth-formpane::before{font-size:60vw}}
+@media(max-width:520px){.auth-rework .auth-brandpane{min-height:245px;padding:26px 6vw}.auth-rework .auth-hgroup{font-size:3.45rem}.auth-rework .auth-top{font-size:.5rem}.contact-sheet{right:-45px;width:118px}.contact-frame{height:90px}.auth-rework .auth-formpane{padding:5vh 4vw}.auth-rework .auth-card{padding:27px 20px}.auth-modebar{margin-bottom:28px}}
+</style>
 </head>
-<body>
+<body class="auth-rework">
 <div class="grain" aria-hidden="true"></div>
 <div class="auth-shell">
   <aside class="auth-brandpane">
-    <div class="orb" aria-hidden="true"></div>
-    <div class="auth-top">VISUAREALM · CREATIVE HOUSE</div>
+    <div class="contact-sheet" aria-hidden="true"><div class="contact-track"><div class="contact-frame"><span>Frame 001 / First room</span></div><div class="contact-frame"><span>Frame 002 / Your people</span></div><div class="contact-frame"><span>Frame 003 / Real work</span></div><div class="contact-frame"><span>Frame 004 / Build proof</span></div><div class="contact-frame"><span>Frame 005 / Return</span></div><div class="contact-frame"><span>Frame 001 / First room</span></div><div class="contact-frame"><span>Frame 002 / Your people</span></div><div class="contact-frame"><span>Frame 003 / Real work</span></div><div class="contact-frame"><span>Frame 004 / Build proof</span></div><div class="contact-frame"><span>Frame 005 / Return</span></div></div></div>
+    <span class="auth-edition" aria-hidden="true">Founding generation / Toronto / 2026</span>
+    <div class="auth-top">VISUAREALM · MEMBER ACCESS</div>
     <div class="auth-mid">
       <div class="auth-hgroup">CREATIVE<br><span>HOUSE</span></div>
-      <div class="auth-rotator" aria-hidden="true">
-        <b>Where emerging creators find their place.</b>
-        <b>Real films. Real sets. Real experience.</b>
-        <b>Not a school. Not an agency. A home.</b>
-        <b>The next generation of storytellers.</b>
+      <div class="auth-rotator">
+        <div class="auth-rotator-track">
+          <b>Whatever pulls you in, follow it.</b>
+          <b>You belong before you prove yourself.</b>
+          <b>Your beginning deserves to be seen.</b>
+          <b>Bring the idea you cannot let go of.</b>
+        </div>
       </div>
+      <div class="creative-fields" aria-label="Creative disciplines"><span>Film</span><span>Photography</span><span>Performance</span><span>Writing</span><span>Sound</span><span>Design</span><span>Editing</span><span>Production</span></div>
+      <div class="auth-promise"><strong>You belong.</strong><p>You do not need to have it all figured out.<br>You only need somewhere honest to begin.</p></div>
     </div>
-    <div class="auth-meta"><span>EST. 2026</span><span>TORONTO</span><span>BUILT TOGETHER</span></div>
+    <div class="auth-meta"><span>CH / 001</span><span>TORONTO</span><span>BUILT FOR THE BEGINNING</span></div>
   </aside>
 
   <main class="auth-formpane">
     <div class="auth-card">
-      <a href="https://visuarealmstudios.com" class="auth-back">&larr; Back to VISUAREALM</a>
+      <div class="auth-shortcuts"><a href="/creative-house/" class="auth-back">&larr; Back to Creative House</a><a href="/pricing/" class="auth-price">Pricing</a></div>
       <div style="margin-top:30px;">
         <div class="auth-kicker" id="kicker">Members</div>
         <h1 class="auth-title" id="auth-title">Welcome back</h1>
         <p class="auth-desc" id="tagline">Log in to your creative home.</p>
       </div>
       <div class="alert" id="alert"></div>
+      <div class="auth-modebar" aria-label="Choose sign in or create account"><button type="button" data-go="login">Sign in</button><button type="button" data-go="signup">Create account</button></div>
 
       <!-- SIGN UP (multi-step) -->
-      <form id="form-signup" class="auth-form" style="display:none;">
+      <form id="form-signup" class="auth-form" data-step="1" style="display:none;">
+        <section id="signup-closed" class="signup-closed" hidden aria-live="polite">
+          <span class="signup-closed-mark" aria-hidden="true">VR</span>
+          <span class="dialog-kicker">The guest list is resting</span>
+          <h2>New doors are paused.</h2>
+          <p id="signup-closed-message">We are taking a moment to care for the House. Existing members can still sign in.</p>
+          <p class="signup-reopen" id="signup-reopen" hidden></p>
+          <div class="signup-closed-actions"><button type="button" class="btn solid" data-go="login">Sign in</button><a class="btn ghost" href="/creative-house/">Visit Creative House</a></div>
+          <small>Your place is not gone. We are simply making the next arrival better.</small>
+        </section>
+        <div id="signup-flow">
+        <div class="signup-meter" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
         <!-- step 1: discipline -->
         <div id="su-step1">
           <p class="fieldset-title">1 / What do you do?</p>
@@ -44,26 +109,43 @@
           <div class="hint" style="margin-bottom:14px;">This shapes the listings you'll see. You can refine roles later.</div>
           <button type="button" class="btn full" id="su-next1" disabled>Continue</button>
         </div>
-        <!-- step 2: mode -->
+        <!-- step 2: specialization -->
+        <div id="su-step1b" style="display:none;">
+          <p class="fieldset-title">2 / Your main craft</p>
+          <div class="tags" id="spec-list" style="margin-bottom:14px;"></div>
+          <div class="hint" style="margin-bottom:14px;">Choose the closest starting point. You can add more roles from your profile.</div>
+          <div class="spread"><button type="button" class="btn ghost sm" id="su-back1b">Back</button><button type="button" class="btn sm" id="su-next1b" disabled>Continue</button></div>
+        </div>
+        <!-- step 3: mode -->
         <div id="su-step2" style="display:none;">
-          <p class="fieldset-title">2 / How will you mainly use Creative House?</p>
+          <p class="fieldset-title">3 / How will you mainly use Creative House?</p>
           <div class="modepick" id="mode-cards"></div>
           <div class="hint" style="margin:12px 0 14px;">You can switch modes anytime. Hiring lets you post listings.</div>
           <div class="spread"><button type="button" class="btn ghost sm" id="su-back2">Back</button><button type="button" class="btn sm" id="su-next2">Continue</button></div>
         </div>
-        <!-- step 3: details -->
+        <!-- step 4: details -->
         <div id="su-step3" style="display:none;">
-          <p class="fieldset-title">3 / Your details</p>
+          <p class="fieldset-title">4 / Your details</p>
           <label class="f"><span class="lab">Full name</span><input id="su-name" type="text" autocomplete="name" placeholder="Your name" required></label>
           <label class="f"><span class="lab">Email</span><input id="su-email" type="email" autocomplete="email" placeholder="you@email.com" required></label>
-          <label class="f"><span class="lab">Password</span><input id="su-pass" type="password" autocomplete="new-password" placeholder="At least 8 characters" minlength="8" required></label>
-          <div class="spread"><button type="button" class="btn ghost sm" id="su-back3">Back</button><button type="submit" class="btn solid" id="su-btn">Create Account</button></div>
+          <label class="f" id="su-invite-wrap" style="display:none;"><span class="lab">Invite code</span><input id="su-invite" type="text" autocomplete="off" placeholder="Your code"></label>
+          <label class="f"><span class="lab">Password</span><input id="su-pass" type="password" autocomplete="new-password" placeholder="A phrase of 12+ characters" minlength="12" maxlength="72" required></label>
+          <div class="pw-meter"><span id="pw-bar"></span></div>
+          <div class="pw-hint" id="pw-hint">Use 12 to 72 characters with upper and lowercase letters and a number.</div>
+          <label class="agree" style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 4px;cursor:pointer;"><input type="checkbox" id="su-agree" style="width:auto;margin-top:3px;flex:none;"><span class="hint" style="margin:0;">I agree to the <a href="/community-guidelines.html" target="_blank">Community Standards</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>.</span></label>
+          <div class="spread"><button type="button" class="btn ghost sm" id="su-back3">Back</button><button type="submit" class="btn solid" id="su-btn" disabled>Create Account</button></div>
+          <div class="or-split">or use a trusted account</div>
+          <button type="button" class="btn google full" id="g-signup"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.5 2.6 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.4 0-11.8-3.7-13.7-9.1l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+          <p class="oauth-note">Google shares only your basic account identity.</p>
         </div>
         <p class="auth-switch">Already part of the house? <button type="button" class="linkbtn" data-go="login">Log in</button></p>
+        </div>
       </form>
 
       <!-- LOG IN -->
       <form id="form-login" class="auth-form">
+        <button type="button" class="btn google full" id="g-login"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.5 2.6 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.4 0-11.8-3.7-13.7-9.1l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
+        <div class="or-split">or use email</div>
         <label class="f"><span class="lab">Email</span><input id="li-email" type="email" autocomplete="email" placeholder="you@email.com" required></label>
         <label class="f"><span class="lab">Password</span><input id="li-pass" type="password" autocomplete="current-password" placeholder="Your password" required></label>
         <button class="btn solid full" type="submit" id="li-btn" style="margin-top:8px;">Log In</button>
@@ -76,37 +158,71 @@
       <!-- RECOVERY -->
       <form id="form-recover" class="auth-form" style="display:none;">
         <p class="auth-desc" style="margin-top:-14px;">Choose a new password.</p>
-        <label class="f"><span class="lab">New password</span><input id="rc-pass" type="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="f"><span class="lab">New password</span><input id="rc-pass" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
         <button class="btn solid full" type="submit" id="rc-btn">Update Password</button>
       </form>
 
-      <p class="hint" style="margin-top:26px;">By continuing you agree to be a kind, collaborative member of Creative House.</p>
+      <!-- VERIFY EMAIL -->
+      <div id="form-verify" class="auth-form verify-panel" style="display:none;">
+        <div class="verify-signal" aria-hidden="true">✦</div>
+        <p class="auth-desc">We sent a confirmation link to <b id="verify-email"></b>. Open it, then come back and continue.</p>
+        <button class="btn solid full" id="verify-continue">I’ve verified, continue</button>
+        <div class="verify-actions"><button type="button" class="linkbtn" id="verify-resend">Resend email</button><button type="button" class="linkbtn" data-go="login">Back to sign in</button></div>
+      </div>
+
+      <div class="free-mark"><strong>Join for free.</strong><span>Upgrade anytime.</span></div>
+      <p class="auth-security">By continuing, you agree to be a kind, collaborative member of Creative House.</p>
     </div>
   </main>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/config.js"></script>
+<script src="/master-gate.js"></script>
 <script src="/app.js"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
-  const forms={signup:document.getElementById('form-signup'),login:document.getElementById('form-login'),recover:document.getElementById('form-recover')};
+  const forms={signup:document.getElementById('form-signup'),login:document.getElementById('form-login'),recover:document.getElementById('form-recover'),verify:document.getElementById('form-verify')};
   const tagline=document.getElementById('tagline'),title=document.getElementById('auth-title'),kicker=document.getElementById('kicker');
-  let chosenDiscipline=null, chosenMode='applicant';
+  const search=new URLSearchParams(window.location.search),opportunityEntry=search.get('view')==='opportunities';
+  let chosenDiscipline=null,chosenSpecialization=null,chosenMode='applicant',signupState={mode:'open'};
 
+  function signupGate(){
+    const closed=['paused','maintenance'].includes(signupState.mode),flow=document.getElementById('signup-flow'),gate=document.getElementById('signup-closed');
+    flow.hidden=closed;gate.hidden=!closed;
+    if(closed){
+      document.getElementById('signup-closed-message').textContent=signupState.message||'We are taking a moment to care for the House. Existing members can still sign in.';
+      const re=document.getElementById('signup-reopen');
+      if(signupState.reopens_at){re.hidden=false;re.textContent='Planned reopening · '+new Date(signupState.reopens_at).toLocaleString();}else re.hidden=true;
+      document.querySelectorAll('#signup-flow button,#signup-flow input,#signup-flow select').forEach(x=>x.disabled=true);
+    }
+  }
   function show(w){Object.values(forms).forEach(f=>f.style.display='none');forms[w].style.display='block';CH.clearToast(alertEl);
-    if(w==='signup'){kicker.textContent='Join';title.textContent='Create account';tagline.textContent='Find your place in the house.';}
-    if(w==='login'){kicker.textContent='Members';title.textContent='Welcome back';tagline.textContent='Log in to your creative home.';}
-    if(w==='recover'){kicker.textContent='Reset';title.textContent='New password';tagline.textContent='Secure your account.';}}
+    document.querySelectorAll('.auth-modebar [data-go]').forEach(b=>b.classList.toggle('active',b.dataset.go===w));
+    if(w==='signup'){document.title='Join Creative House | VISUAREALM';kicker.textContent=opportunityEntry?'Unlock opportunities':'Join the House';title.textContent='Create account';tagline.textContent=opportunityEntry?'Create your free account to preview the members-only board.':'Enter free. Build your place in the House.';signupGate();}
+    if(w==='login'){document.title='Sign In | Creative House';kicker.textContent=opportunityEntry?'Members-only board':'Member access';title.textContent='Welcome back';tagline.textContent=opportunityEntry?'Sign in to preview current opportunities.':'Log in to your creative home.';}
+    if(w==='recover'){document.title='Reset Password | Creative House';kicker.textContent='Reset';title.textContent='New password';tagline.textContent='Secure your account.';}
+    if(w==='verify'){document.title='Verify Email | Creative House';kicker.textContent='Almost there';title.textContent='Check your email';tagline.textContent='One click and you are in.';}}
+  function applyMasterAuth(state){if(!state||!state.active)return;document.documentElement.classList.add('master-auth-only');document.querySelectorAll('[data-go="signup"]').forEach(x=>x.hidden=true);if(forms.signup.style.display!=='none')show('login');kicker.textContent='Maintenance access';title.textContent='Member sign in';tagline.textContent='Existing members and administrators can still enter securely.';}
+  window.addEventListener('vr:master-state',e=>applyMasterAuth(e.detail));if(window.VR_MASTER_STATE)applyMasterAuth(window.VR_MASTER_STATE);
   document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>{show(b.dataset.go);step(1);}));
 
   // build discipline cards
-  const discDesc={Filmmaker:'Directing, producing, writing, development.',Crew:'Camera, lighting, grip, sound, edit, art dept.',Cast:'Acting — lead, supporting, background, voice.',Photographer:'Stills, BTS, unit photography.'};
-  document.getElementById('disc-cards').innerHTML=CH.DISCIPLINES.map(d=>`<button type="button" class="rolecard" data-d="${d}"><div class="rc-t">${d}</div><div class="rc-d">${discDesc[d]}</div></button>`).join('');
+  const discLabel={Filmmaker:'Film & Story',Crew:'Craft & Production',Cast:'Performance',Photographer:'Image Makers'};
+  const discDesc={Filmmaker:'Directing, producing, writing and development.',Crew:'Camera, lighting, sound, editing, design and set craft.',Cast:'Screen, stage, voice, movement and background performance.',Photographer:'Stills, portraiture, BTS, visual art and unit photography.'};
+  document.getElementById('disc-cards').innerHTML=CH.DISCIPLINES.map(d=>`<button type="button" class="rolecard" data-d="${d}"><div class="rc-t">${discLabel[d]||d}</div><div class="rc-d">${discDesc[d]||'Choose this as your starting point. You can refine it later.'}</div></button>`).join('');
   document.querySelectorAll('#disc-cards .rolecard').forEach(c=>c.addEventListener('click',()=>{
     document.querySelectorAll('#disc-cards .rolecard').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');
-    chosenDiscipline=c.dataset.d; document.getElementById('su-next1').disabled=false;}));
+    chosenDiscipline=c.dataset.d;chosenSpecialization=null;document.getElementById('su-next1').disabled=false;}));
+
+  function buildSpecs(){
+    const roles=CH.ROLES_BY_DISCIPLINE[chosenDiscipline]||[];
+    document.getElementById('spec-list').innerHTML=roles.map(r=>`<button type="button" class="chip" data-r="${CH.esc(r)}">${CH.esc(r)}</button>`).join('');
+    document.querySelectorAll('#spec-list .chip').forEach(ch=>ch.addEventListener('click',()=>{
+      document.querySelectorAll('#spec-list .chip').forEach(x=>x.classList.remove('on'));ch.classList.add('on');
+      chosenSpecialization=ch.dataset.r;document.getElementById('su-next1b').disabled=false;}));
+  }
 
   document.getElementById('mode-cards').innerHTML=`
     <button type="button" class="rolecard sel" data-m="applicant"><div class="rc-t">Apply</div><div class="rc-d">Find roles and apply to productions.</div></button>
@@ -114,28 +230,58 @@
   document.querySelectorAll('#mode-cards .rolecard').forEach(c=>c.addEventListener('click',()=>{
     document.querySelectorAll('#mode-cards .rolecard').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');chosenMode=c.dataset.m;}));
 
-  function step(n){['su-step1','su-step2','su-step3'].forEach((id,i)=>document.getElementById(id).style.display=(i===n-1)?'block':'none');}
-  document.getElementById('su-next1').addEventListener('click',()=>step(2));
-  document.getElementById('su-back2').addEventListener('click',()=>step(1));
-  document.getElementById('su-next2').addEventListener('click',()=>step(3));
-  document.getElementById('su-back3').addEventListener('click',()=>step(2));
+  const STEPS=['su-step1','su-step1b','su-step2','su-step3'];
+  function step(n){forms.signup.dataset.step=String(n);STEPS.forEach((id,i)=>document.getElementById(id).style.display=(i===n-1)?'block':'none');}
+  document.getElementById('su-next1').addEventListener('click',()=>{buildSpecs();step(2);});
+  document.getElementById('su-back1b').addEventListener('click',()=>step(1));
+  document.getElementById('su-next1b').addEventListener('click',()=>step(3));
+  document.getElementById('su-back2').addEventListener('click',()=>step(2));
+  document.getElementById('su-next2').addEventListener('click',()=>step(4));
+  document.getElementById('su-back3').addEventListener('click',()=>step(3));
+  document.getElementById('su-agree').addEventListener('change',(e)=>{document.getElementById('su-btn').disabled=!e.target.checked;});
+  (function(){const pw=document.getElementById('su-pass'),bar=document.getElementById('pw-bar'),hint=document.getElementById('pw-hint');
+    pw.addEventListener('input',()=>{const issue=CH.passwordIssue(pw.value);
+      if(!pw.value){bar.className='';hint.className='pw-hint';hint.textContent='Use 12 to 72 characters with upper and lowercase letters and a number.';return;}
+      if(issue){bar.className='mid';hint.className='pw-hint bad';hint.textContent=issue;}
+      else{bar.className='ok';hint.className='pw-hint ok';hint.textContent='Strong enough. You are good to go.';}
+    });
+  })();
 
   if(!CH.guardConfig('.auth-card')) return;
+  try{const {data}=await CH.sb.rpc('ch_signup_state');if(data)signupState=data;const invite=signupState.mode==='invite_only';document.getElementById('su-invite-wrap').style.display=invite?'block':'none';document.getElementById('su-invite').required=invite;if(invite||['paused','maintenance'].includes(signupState.mode)){document.getElementById('g-signup').style.display='none';document.querySelector('#form-signup .or-split').style.display='none';}}catch(e){}
   const hash=new URLSearchParams(window.location.hash.replace('#','?')||'');
   if(hash.get('type')==='recovery'){show('recover');}
   const session=await CH.getSession();
   if(session && hash.get('type')!=='recovery'){window.location.href=CH.routes.afterLogin||'/dashboard/';return;}
-  if(hash.get('type')!=='recovery') show('login');
+  if(hash.get('type')!=='recovery') show(search.get('mode')==='signup'?'signup':'login');
 
   forms.signup.addEventListener('submit',async(e)=>{
     e.preventDefault();
+    if(['paused','maintenance'].includes(signupState.mode)){signupGate();return;}
     const btn=document.getElementById('su-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
     const email=document.getElementById('su-email').value.trim(),password=document.getElementById('su-pass').value,full_name=document.getElementById('su-name').value.trim();
-    const {data,error}=await CH.sb.auth.signUp({email,password,options:{data:{full_name,discipline:chosenDiscipline||'Crew',primary_mode:chosenMode}}});
+    const pwIssue=CH.passwordIssue(password);
+    if(pwIssue){CH.toast(alertEl,pwIssue,'err');btn.disabled=false;btn.textContent='Create Account';return;}
+    const {data,error}=await CH.sb.auth.signUp({email,password,options:{data:{full_name,discipline:chosenDiscipline||'Crew',primary_department:chosenSpecialization||'',primary_mode:chosenMode,invite_code:document.getElementById('su-invite').value.trim()||undefined,agreed_guidelines:document.getElementById('su-agree').checked?'true':'false'}}});
     btn.disabled=false;btn.textContent='Create Account';
     if(error){CH.toast(alertEl,error.message,'err');return;}
     if(data.session){window.location.href=CH.routes.afterLogin||'/dashboard/';}
-    else{CH.toast(alertEl,'Account created. Check your email to confirm, then log in.','ok');show('login');}
+    else{document.getElementById('verify-email').textContent=email;window.__verifyEmail=email;show('verify');}
+  });
+  document.getElementById('verify-continue').addEventListener('click',async()=>{
+    const btn=document.getElementById('verify-continue');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    const s=await CH.getSession();
+    if(s){window.location.href=CH.routes.afterLogin||'/dashboard/';return;}
+    btn.disabled=false;btn.textContent='I’ve verified, continue';
+    CH.toast(alertEl,'Not verified yet, or you need to sign in. If you opened the link, sign in below.','err');show('login');
+  });
+  async function googleIn(mode){const {error}=await CH.signInWithGoogle(mode);if(error)CH.toast(alertEl,error.message,'err');}
+  document.getElementById('g-login').addEventListener('click',()=>googleIn(null));
+  document.getElementById('g-signup').addEventListener('click',()=>googleIn(chosenMode));
+  document.getElementById('verify-resend').addEventListener('click',async()=>{
+    const email=window.__verifyEmail;if(!email)return;
+    try{const {error}=await CH.sb.auth.resend({type:'signup',email});CH.toast(alertEl,error?error.message:'Sent again. Check your inbox and spam folder.',error?'err':'ok');}
+    catch(e){CH.toast(alertEl,'Could not resend right now. Try signing in.','err');}
   });
   forms.login.addEventListener('submit',async(e)=>{
     e.preventDefault();const btn=document.getElementById('li-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
