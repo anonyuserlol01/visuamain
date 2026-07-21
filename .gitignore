@@ -1,0 +1,48 @@
+# Private environment and secret files
+.env
+.env.*
+!.env.example
+config.local.js
+config.*.local.js
+supabase/.env
+supabase/.env.*
+
+# Supabase CLI local state (deployable functions remain tracked)
+supabase/.temp/
+supabase/.branches/
+
+# Local database installers and operational handoff files
+# Keep these in the downloaded package, but do not publish them with GitHub Pages.
+/database-private/
+/START-HERE-LAUNCH-V7.md
+/FINAL-LAUNCH-HANDOFF.md
+/MEMBERSHIP-START-HERE.md
+/READ-ME-FIRST.md
+/TEST-RESULTS*.md
+
+# Dependencies and generated output
+node_modules/
+dist/
+build/
+coverage/
+.cache/
+
+# Logs, temporary files and local archives
+*.log
+*.tmp
+*.temp
+*.bak
+*.zip
+*.tar
+*.gz
+*.swp
+*.swo
+
+# Operating-system and editor clutter
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/*
+!.vscode/settings.json
+

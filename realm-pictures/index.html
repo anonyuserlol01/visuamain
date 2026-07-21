@@ -1,14 +1,14 @@
 <!doctype html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#050505">
   <title>Realm Pictures | VISUAREALM</title>
   <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/public-nav.css">
+  <link rel="stylesheet" href="/public-nav.css?v=20260721-launch1">
   <meta name="description" content="REALM PICTURES is VISUAREALM's production house for original development, production services, emerging voices and films carried from first idea to audience.">
   <link rel="canonical" href="https://visuarealmstudios.com/realm-pictures/">
   <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
@@ -56,6 +56,6 @@
     const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.06,rootMargin:'0px 0px -25px'});document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
     document.querySelectorAll('.faq-q').forEach(button=>button.addEventListener('click',()=>{const item=button.closest('.faq-item'),open=!item.classList.contains('open');document.querySelectorAll('.faq-item').forEach(other=>{other.classList.remove('open');other.querySelector('.faq-q').setAttribute('aria-expanded','false')});if(open){item.classList.add('open');button.setAttribute('aria-expanded','true')}}));
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script><script src="/public-nav.js" defer></script>
+  <script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script><script src="/master-gate.js?v=20260721-launch1"></script><script src="/public-nav.js?v=20260721-launch1" defer></script>
 </body>
 </html>

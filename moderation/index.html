@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Moderation | Creative House</title>
 <meta name="robots" content="noindex">
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,500;1,500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch1">
 </head>
 <body class="app moderation-console">
 <div id="denied" class="gate" style="display:none;">
@@ -46,15 +46,15 @@
     </div>
     <div class="mod-workspace">
       <aside class="mod-rail"><div class="mod-rail-label">Workspaces</div><div class="segbar" id="segs"></div><div class="mod-rail-note"><i>!</i><p><b>Reports are signals.</b><span>They never change an account by themselves.</span></p></div><div class="mod-keys"><span><kbd>R</kbd> Refresh desk</span><span><kbd>/</kbd> Search queue</span></div></aside>
-      <main class="mod-stage"><div class="mod-stage-head"><div><span id="stage-kicker">Safety workspace</span><h2 id="stage-title">Case Queue</h2></div><a href="/community-guidelines.html" target="_blank">Standards ↗</a></div><div id="view"><div class="empty"><span class="loader"></span> Loading…</div></div></main>
+      <main class="mod-stage"><div class="mod-stage-head"><div><span id="stage-kicker">Safety workspace</span><h2 id="stage-title">Case Queue</h2></div><a href="/community-guidelines.html" target="_blank" rel="noopener noreferrer">Standards ↗</a></div><div id="view"><div class="empty"><span class="loader"></span> Loading…</div></div></main>
     </div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
@@ -124,7 +124,7 @@
     const c=d.case||{},subject=d.subject||{},listing=d.listing||{},events=d.events||[],evidence=(d.reports||[]).flatMap(r=>r.evidence||[]);
     bg.querySelector('.cdialog').innerHTML=`<div class="case-dossier-head"><div><span class="case-number">${CH.esc(c.case_number||'Case')}</span><h4>${CH.esc(listing.title||subject.full_name||subject.email||'Case review')}</h4><p>${CH.esc((c.category||'general').replaceAll('_',' '))} · ${c.report_count||1} report${(c.report_count||1)===1?'':'s'}</p></div><button class="case-close" data-x aria-label="Close">×</button></div>
       <div class="case-facts"><div><span>Status</span><b>${CH.esc((c.status||'open').replaceAll('_',' '))}</b></div><div><span>Priority</span><b>${CH.esc(c.priority||'normal')}</b></div><div><span>History</span><b>${(d.related_cases||[]).length} related</b></div><div><span>Evidence</span><b>${evidence.length} item${evidence.length===1?'':'s'}</b></div></div>
-      ${(d.reports||[]).map(r=>`<article class="case-report"><span>${CH.fmtDate(r.created_at)} · ${CH.esc(r.reason||c.category||'Report')}</span><p>${CH.esc(r.details||'No additional context was provided.')}</p>${(r.evidence||[]).map(e=>`<a href="${CH.esc(e.value)}" target="_blank" rel="noopener">${CH.esc(e.kind||'Evidence')} ↗</a>`).join('')}</article>`).join('')}
+      ${(d.reports||[]).map(r=>`<article class="case-report"><span>${CH.fmtDate(r.created_at)} · ${CH.esc(r.reason||c.category||'Report')}</span><p>${CH.esc(r.details||'No additional context was provided.')}</p>${(r.evidence||[]).map(e=>CH.safeUrl(e.value)?`<a href="${CH.esc(CH.safeUrl(e.value))}" target="_blank" rel="noopener noreferrer">${CH.esc(e.kind||'Evidence')} ↗</a>`:`<span class="evidence-text">${CH.esc(e.value||'')}</span>`).join('')}</article>`).join('')}
       <div class="case-workbench"><label class="f"><span class="lab">Case priority</span><select id="case-priority">${['low','normal','high','critical'].map(x=>`<option ${c.priority===x?'selected':''}>${x}</option>`).join('')}</select></label><label class="f"><span class="lab">Move case</span><select id="case-status">${['open','triage','investigating','awaiting_info','resolved','dismissed'].map(x=>`<option value="${x}" ${c.status===x?'selected':''}>${x.replaceAll('_',' ')}</option>`).join('')}</select></label><label class="f case-note"><span class="lab">Decision note</span><textarea id="case-note" placeholder="What did you check, decide, or need next?"></textarea></label></div>
       <div class="case-timeline"><span class="dialog-kicker">Accountable trail</span>${events.length?events.slice().reverse().map(e=>`<div><i></i><p><b>${CH.esc((e.action||'update').replaceAll('_',' '))}</b><small>${CH.esc(e.actor||'System')} · ${CH.fmtDate(e.created_at)}</small>${e.note?`<span>${CH.esc(e.note)}</span>`:''}</p></div>`).join(''):'<p class="hint">No staff actions yet.</p>'}</div>
       <div class="cd-actions"><button class="btn ghost sm" data-claim>${c.assigned_to===me.id?'Release case':'Claim case'}</button><button class="btn solid sm" data-save>Save case update</button></div>`;

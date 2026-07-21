@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Settings | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch2">
 </head>
 <body class="app">
 <div class="grain" aria-hidden="true"></div>
@@ -25,16 +25,18 @@
       <button data-s="account" class="on">Account</button>
       <button data-s="privacy">Privacy</button>
       <button data-s="notifications">Notifications</button>
+      <button data-s="legal">Privacy, Age & Data</button>
+      <button data-s="appeals">Safety & Appeals</button>
       <button data-s="danger">Delete Account</button>
     </nav>
     <div id="spanel"></div>
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
@@ -44,13 +46,16 @@
   document.getElementById('logout').addEventListener('click',()=>CH.signOut());
   let profile=await CH.profile();
   if(!CH.enforceAccount(profile)) return;
+  let legalStatus=null,privacyRequests=[];
+  try{const [ls,pr]=await Promise.all([CH.sb.rpc('ch_my_legal_status'),CH.sb.from('ch_privacy_requests').select('*').eq('user_id',uid).order('created_at',{ascending:false})]);legalStatus=ls.data||null;privacyRequests=pr.data||[];}catch(e){}
   try{const {data:cfg}=await CH.sb.from('app_settings').select('maintenance_active,maintenance_message').eq('id',1).maybeSingle(); if(!CH.enforceMaintenance(profile,cfg||{})) return;}catch(e){}
   document.getElementById('app').style.display='block';
 
-  let sec='account';
+  let sec=new URLSearchParams(location.search).get('section')||'account';if(!['account','privacy','notifications','legal','appeals','danger'].includes(sec))sec='account';
   document.querySelectorAll('#snav button').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.s;document.querySelectorAll('#snav button').forEach(x=>x.classList.toggle('on',x.dataset.s===sec));draw();}));
+  document.querySelectorAll('#snav button').forEach(x=>x.classList.toggle('on',x.dataset.s===sec));
 
-  function draw(){({account:acct,privacy:priv,notifications:notif,danger:danger}[sec])();}
+  function draw(){({account:acct,privacy:priv,notifications:notif,legal:legalData,appeals:appeals,danger:danger}[sec])();}
 
   function acct(){
     document.getElementById('spanel').innerHTML=`
@@ -117,7 +122,25 @@
     });
   }
 
+  function legalData(){
+    const complete=!!legalStatus?.complete,marketing=!!legalStatus?.marketing_consent,minor=!!legalStatus?.is_minor;
+    document.getElementById('spanel').innerHTML=`
+      <div class="panel" style="margin-bottom:18px"><div class="spread"><div><p class="fieldset-title">Age & agreement record</p><p class="lead" style="margin-top:0">${complete?'Your current agreements are recorded.':'One short check is still needed for this account.'}</p></div><span class="membership-era-chip ${complete?'open':'paid'}">${complete?'CURRENT':'ACTION NEEDED'}</span></div>
+      ${complete?`<div class="age-status ${minor?'minor':''}"><span>${minor?'UNDER 18':'18 OR OLDER'}</span><div><b>${minor?'Guardian involvement required':'Adult member'}</b><p>${minor?'A parent or guardian must be involved before contracts, releases, paid work, travel or in-person meetings. This status clears automatically when you turn 18.':'No guardian step is required. Your exact date of birth remains private.'}</p></div></div><p class="hint">Accepted ${CH.fmtDate(legalStatus.accepted_at)} · Terms, Privacy and Standards version ${CH.esc(legalStatus.terms_version||'2026-07-21')}. Your date of birth is never shown on your public profile.</p>`:`<label class="f"><span class="lab">Date of birth <small>Private · 16+ only</small></span><input id="legal-birth" type="date" required></label><label class="agree" id="legal-guardian-wrap" hidden style="display:none;gap:10px;align-items:flex-start"><input id="legal-guardian" type="checkbox" style="width:auto"><span>I am under 18 and confirm that a parent or guardian knows I use Creative House and will be involved before contracts, releases, paid work, travel or in-person meetings.</span></label><label class="agree" style="display:flex;gap:10px;align-items:flex-start"><input id="legal-agree" type="checkbox" style="width:auto"><span>I accept the current <a href="/terms.html" target="_blank">Terms</a>, <a href="/privacy.html" target="_blank">Privacy Policy</a> and <a href="/community-guidelines.html" target="_blank">Community Standards</a>.</span></label><button id="legal-save" class="btn solid sm">Record agreement</button>`}</div>
+      <div class="panel" style="margin-bottom:18px"><p class="fieldset-title">Optional marketing</p><label class="agree" style="display:flex;gap:12px;align-items:flex-start"><input type="checkbox" id="legal-marketing" ${marketing?'checked':''} style="width:auto"><span><b>VISUAREALM news and offers</b><br><span class="hint">Optional. Account security and application updates are not affected.</span></span></label><button class="btn ghost sm" id="legal-marketing-save" style="margin-top:14px">Save marketing choice</button></div>
+      <div class="panel"><div class="spread"><div><p class="fieldset-title">Your data</p><h3>Take a copy or ask for help.</h3></div><span class="privacy-lock">PRIVATE</span></div><p class="hint">The secure download is prepared only after your signed-in session is verified. It contains JSON records inside a ZIP and is never public.</p><div class="privacy-request-actions"><button class="btn solid sm" id="download-data">Download my data (.zip)</button><button class="btn ghost sm" data-request="access">Request an assisted copy</button><button class="btn ghost sm" data-request="correction">Correct my data</button><button class="btn ghost sm" data-request="privacy_complaint">Raise a concern</button></div><div class="privacy-request-list">${privacyRequests.length?privacyRequests.map(r=>`<article><b>${CH.esc(r.request_type.replaceAll('_',' '))}</b><span>${CH.esc(r.status)} · ${r.delivery_method==='secure_download'?'downloaded':'received'} ${CH.fmtDate(r.exported_at||r.created_at)}</span></article>`).join(''):'<p class="hint">No privacy requests yet.</p>'}</div></div>`;
+    const birth=document.getElementById('legal-birth');if(birth){birth.max=new Date().toISOString().slice(0,10);const gw=document.getElementById('legal-guardian-wrap'),g=document.getElementById('legal-guardian');birth.addEventListener('change',()=>{const d=new Date(birth.value+'T12:00:00'),n=new Date();let age=n.getFullYear()-d.getFullYear();if(n<new Date(n.getFullYear(),d.getMonth(),d.getDate()))age--;gw.hidden=age>=18;gw.style.display=age<18?'flex':'none';});document.getElementById('legal-save').addEventListener('click',async()=>{if(!document.getElementById('legal-agree').checked){CH.toast(alertEl,'Read and accept the current documents first.','err');return;}const {data,error}=await CH.sb.rpc('ch_record_legal_consent',{p_birth_date:birth.value||null,p_guardian_acknowledged:g.checked,p_terms_version:'2026-07-21',p_privacy_version:'2026-07-21',p_guidelines_version:'2026-07-21',p_marketing_consent:document.getElementById('legal-marketing').checked,p_source:'settings'});if(error){CH.toast(alertEl,error.message,'err');return;}legalStatus={...legalStatus,...data,complete:true,accepted_at:new Date().toISOString(),terms_version:'2026-07-21'};CH.toast(alertEl,'Your agreement record is current.','ok');legalData();});}
+    document.getElementById('legal-marketing-save').addEventListener('click',async()=>{const consent=document.getElementById('legal-marketing').checked,{error}=await CH.sb.rpc('ch_set_marketing_consent',{p_consent:consent});if(error){CH.toast(alertEl,error.message,'err');return;}legalStatus={...(legalStatus||{}),marketing_consent:consent};CH.toast(alertEl,consent?'Optional updates enabled.':'Optional marketing withdrawn.','ok');});
+    document.getElementById('download-data').addEventListener('click',async e=>{const btn=e.currentTarget;btn.disabled=true;btn.innerHTML='<span class="loader"></span> Preparing private ZIP';try{const {data:{session:active}}=await CH.sb.auth.getSession();if(!active?.access_token)throw new Error('Sign in again before downloading.');const base=window.VISUAREALM_CONFIG.SUPABASE_URL.replace(/\/$/,'');const response=await fetch(`${base}/functions/v1/export-my-data`,{method:'POST',headers:{Authorization:`Bearer ${active.access_token}`,apikey:window.VISUAREALM_CONFIG.SUPABASE_ANON_KEY}});if(!response.ok){let message='We could not prepare your export.';try{message=(await response.json()).error||message;}catch(_){}throw new Error(message);}const blob=await response.blob(),url=URL.createObjectURL(blob),link=document.createElement('a');link.href=url;link.download=`visuarealm-data-${new Date().toISOString().slice(0,10)}.zip`;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);CH.toast(alertEl,'Your private data ZIP is downloaded. Store it somewhere safe.','ok');const {data}=await CH.sb.from('ch_privacy_requests').select('*').eq('user_id',uid).order('created_at',{ascending:false});privacyRequests=data||privacyRequests;}catch(error){CH.toast(alertEl,error.message||'We could not prepare your export.','err');}finally{btn.disabled=false;btn.textContent='Download my data (.zip)';}});
+    document.querySelectorAll('[data-request]').forEach(b=>b.addEventListener('click',async()=>{const details=await CH.prompt({title:'Start a privacy request',message:'Tell the privacy lead what you need. Do not include passwords or payment card details.',placeholder:'A short explanation…',ok:'Send request'});if(details===null)return;const {error}=await CH.sb.rpc('ch_submit_privacy_request',{p_type:b.dataset.request,p_details:details});if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Request received. You can track it here.','ok');const {data}=await CH.sb.from('ch_privacy_requests').select('*').eq('user_id',uid).order('created_at',{ascending:false});privacyRequests=data||privacyRequests;legalData();}));
+  }
+
+  function appeals(){
+    document.getElementById('spanel').innerHTML=`<div class="panel" style="margin-bottom:18px"><p class="fieldset-title">Human review</p><h3>Think we got something wrong?</h3><p class="lead">A warning, restriction, suspension or report outcome can be reviewed by a person. Explain the decision, what context may be missing and any safe evidence that helps.</p><a class="btn solid sm" href="mailto:support@visuarealmstudios.com?subject=Account%20Appeal">Email an appeal</a><p class="hint">Include your account email. Never send passwords, full ID documents or payment card details.</p></div><div class="panel"><p class="fieldset-title">Immediate safety</p><p class="lead">Creative House reporting is not an emergency service. If someone is in immediate danger, contact local emergency services. You can also use Support inside the dashboard to privately report a member or listing.</p><a class="btn ghost sm" href="/community-guidelines.html">Read safety standards</a></div>`;
+  }
+
   function danger(){
+    if(profile.is_admin||profile.is_protected_founder){document.getElementById('spanel').innerHTML=`<div class="panel founder-protection"><span class="privacy-lock">PROTECTED</span><h3>Founder administrator account</h3><p class="lead">This account cannot be deleted or demoted. That protection exists in the dashboard, the deletion service and the database itself.</p><p class="hint">If ownership ever needs to change, use a reviewed migration and recovery plan with your developer. Do not remove the protection during normal account management.</p></div>`;return;}
     document.getElementById('spanel').innerHTML=`
       <div class="danger-zone">
         <h3>Delete account</h3>

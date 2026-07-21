@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#050505">
   <title>VISUAREALM | Three Creative Worlds</title>
   <meta name="description" content="VISUAREALM is an independent creative company made of Realm Pictures, Realm Music and Creative House. We make stories, develop artists and help emerging creatives grow.">
@@ -12,17 +12,17 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/public-nav.css">
+  <link rel="stylesheet" href="/public-nav.css?v=20260721-launch1">
   <meta property="og:type" content="website">
   <meta property="og:title" content="VISUAREALM | One Studio. Three Worlds.">
   <meta property="og:description" content="Original pictures, a creative home for emerging people and a future music label built around artist development.">
   <meta property="og:url" content="https://visuarealmstudios.com/">
-  <meta property="og:image" content="https://visuarealmstudios.com/og-banner.png">
+  <meta property="og:image" content="https://visuarealmstudios.com/Images/og-banner.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"VISUAREALM","alternateName":"VISUAREALM Studios","url":"https://visuarealmstudios.com/","logo":"https://visuarealmstudios.com/logo.png","description":"An independent creative company spanning film production, emerging creative opportunity and artist development.","sameAs":["https://instagram.com/visuarealmstudios","https://www.imdb.com/search/title/?companies=co1181231"]}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"VISUAREALM","alternateName":"VISUAREALM Studios","url":"https://visuarealmstudios.com/","logo":"https://visuarealmstudios.com/Images/mark-ivory-1024-transparent.png","description":"An independent creative company spanning film production, emerging creative opportunity and artist development.","sameAs":["https://instagram.com/visuarealmstudios","https://www.imdb.com/search/title/?companies=co1181231"]}</script>
   <style>
     :root{--black:#050505;--bone:#e8e3dd;--ember:#d95a2b;--violet:#8273d6;--ash:#151412;--muted:#9f9891;--line:rgba(232,227,221,.15);--impact:"Anton","Archivo Black",sans-serif;--tall:"Bebas Neue",sans-serif;--serif:"Playfair Display",serif;--mono:"Space Mono",monospace;--ease:cubic-bezier(.16,1,.3,1)}
     *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth;background:var(--black)}body{background:var(--black);color:var(--bone);font-family:var(--mono);overflow-x:hidden;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button{font:inherit}::selection{background:var(--ember);color:var(--black)}
@@ -79,11 +79,11 @@
 
   <script>
     const loader=document.getElementById('loader'),loaderWord=document.getElementById('loader-word'),loaderCount=document.getElementById('loader-count');const frames=[['VISUAREALM',''],['REALM PICTURES','ember'],['REALM MUSIC','violet'],['CREATIVE HOUSE','serif'],['ONE STUDIO','']];let index=0,timer;
-    function finishLoader(){clearTimeout(timer);loader?.classList.add('done');setTimeout(()=>loader?.remove(),850)}function play(){if(!loader||matchMedia('(prefers-reduced-motion: reduce)').matches){finishLoader();return}const frame=frames[index];loaderWord.textContent=frame[0];loaderWord.className='loader-word '+frame[1];loaderCount.textContent=String(index+1).padStart(2,'0')+' / 05';index++;timer=setTimeout(index<frames.length?play:finishLoader,index===frames.length?520:180)}loader?.addEventListener('click',finishLoader);addEventListener('keydown',event=>{if(['Escape','Enter',' '].includes(event.key))finishLoader()});play();
+    let loaderFinished=false;function finishLoader(){if(loaderFinished)return;loaderFinished=true;clearTimeout(timer);loader?.classList.add('done');setTimeout(()=>loader?.remove(),300)}function play(){if(!loader||matchMedia('(prefers-reduced-motion: reduce)').matches){finishLoader();return}const frame=frames[index];loaderWord.textContent=frame[0];loaderWord.className='loader-word '+frame[1];loaderCount.textContent=String(index+1).padStart(2,'0')+' / 05';index++;timer=setTimeout(index<frames.length?play:finishLoader,index===frames.length?160:85)}loader?.addEventListener('click',finishLoader);addEventListener('keydown',event=>{if(['Escape','Enter',' '].includes(event.key))finishLoader()});let homeLoaderSeen=false;try{homeLoaderSeen=sessionStorage.getItem('vr-home-loader-v2')==='seen';sessionStorage.setItem('vr-home-loader-v2','seen')}catch(e){}if(homeLoaderSeen)finishLoader();else{play();setTimeout(finishLoader,1100)}
     const progress=document.querySelector('.progress'),nav=document.getElementById('nav'),orbs=document.querySelectorAll('.orb');let frame;
     function paint(){const max=document.documentElement.scrollHeight-innerHeight,p=max?scrollY/max:0;progress.style.transform=`scaleX(${p})`;nav.classList.toggle('compact',scrollY>30);orbs[0].style.transform=`translate3d(${p*38}vw,${p*105}vh,0)`;orbs[1].style.transform=`translate3d(${-p*35}vw,${p*95}vh,0)`;orbs[2].style.transform=`translate3d(${Math.sin(p*Math.PI)*20}vw,${p*80}vh,0)`;frame=null}addEventListener('scroll',()=>{if(!frame)frame=requestAnimationFrame(paint)},{passive:true});paint();
     const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.08,rootMargin:'0px 0px -35px'});document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script><script src="/public-nav.js" defer></script>
+  <script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script><script src="/master-gate.js?v=20260721-launch1"></script><script src="/public-nav.js?v=20260721-launch1" defer></script>
 </body>
 </html>

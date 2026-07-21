@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sign In | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch1">
 <style>
 /* Creative House auth: editorial projection room */
 .auth-rework{background:var(--obsidian);--ease:cubic-bezier(.16,1,.3,1)}
@@ -91,6 +91,7 @@
 
       <!-- SIGN UP (multi-step) -->
       <form id="form-signup" class="auth-form" data-step="1" style="display:none;">
+        <div class="launch-access-note"><span>Open-house access</span><strong>The whole platform is yours while we are new.</strong><p>Join free. No card, no countdown and no automatic charge later.</p></div>
         <section id="signup-closed" class="signup-closed" hidden aria-live="polite">
           <span class="signup-closed-mark" aria-hidden="true">VR</span>
           <span class="dialog-kicker">The guest list is resting</span>
@@ -128,11 +129,14 @@
           <p class="fieldset-title">4 / Your details</p>
           <label class="f"><span class="lab">Full name</span><input id="su-name" type="text" autocomplete="name" placeholder="Your name" required></label>
           <label class="f"><span class="lab">Email</span><input id="su-email" type="email" autocomplete="email" placeholder="you@email.com" required></label>
+          <label class="f"><span class="lab">Date of birth <small>Private · 16+ only</small></span><input id="su-birth" type="date" autocomplete="bday" required><small>Used only to confirm eligibility. It never appears on your profile.</small></label>
+          <label class="agree" id="su-guardian-wrap" hidden style="display:none;gap:10px;align-items:flex-start;margin:6px 0 4px;cursor:pointer;"><input type="checkbox" id="su-guardian" style="width:auto;margin-top:3px;flex:none;"><span class="hint" style="margin:0;">I am under 18 and confirm that a parent or guardian knows I am joining. I will involve them before contracts, paid work, releases, travel or in-person meetings.</span></label>
           <label class="f" id="su-invite-wrap" style="display:none;"><span class="lab">Invite code</span><input id="su-invite" type="text" autocomplete="off" placeholder="Your code"></label>
           <label class="f"><span class="lab">Password</span><input id="su-pass" type="password" autocomplete="new-password" placeholder="A phrase of 12+ characters" minlength="12" maxlength="72" required></label>
           <div class="pw-meter"><span id="pw-bar"></span></div>
           <div class="pw-hint" id="pw-hint">Use 12 to 72 characters with upper and lowercase letters and a number.</div>
-          <label class="agree" style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 4px;cursor:pointer;"><input type="checkbox" id="su-agree" style="width:auto;margin-top:3px;flex:none;"><span class="hint" style="margin:0;">I agree to the <a href="/community-guidelines.html" target="_blank">Community Standards</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>.</span></label>
+          <label class="agree" style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 4px;cursor:pointer;"><input type="checkbox" id="su-agree" style="width:auto;margin-top:3px;flex:none;"><span class="hint" style="margin:0;">I agree to the <a href="/terms.html" target="_blank" rel="noopener noreferrer">Terms of Service</a>, <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href="/community-guidelines.html" target="_blank" rel="noopener noreferrer">Community Standards</a> (versions 2026-07-21).</span></label>
+          <label class="agree" style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 4px;cursor:pointer;"><input type="checkbox" id="su-marketing" style="width:auto;margin-top:3px;flex:none;"><span class="hint" style="margin:0;"><b>Optional:</b> Send me occasional VISUAREALM news and membership updates. I can unsubscribe at any time. Account and application messages are separate.</span></label>
           <div class="spread"><button type="button" class="btn ghost sm" id="su-back3">Back</button><button type="submit" class="btn solid" id="su-btn" disabled>Create Account</button></div>
           <div class="or-split">or use a trusted account</div>
           <button type="button" class="btn google full" id="g-signup"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.5 2.6 30.1 0 24 0 14.6 0 6.4 5.4 2.5 13.2l7.8 6.1C12.2 13.2 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.2-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.3 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.5 10.8l7.8-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.4 0-11.8-3.7-13.7-9.1l-7.8 6.1C6.4 42.6 14.6 48 24 48z"/></svg>Continue with Google</button>
@@ -176,16 +180,17 @@
   </main>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
   const forms={signup:document.getElementById('form-signup'),login:document.getElementById('form-login'),recover:document.getElementById('form-recover'),verify:document.getElementById('form-verify')};
   const tagline=document.getElementById('tagline'),title=document.getElementById('auth-title'),kicker=document.getElementById('kicker');
   const search=new URLSearchParams(window.location.search),opportunityEntry=search.get('view')==='opportunities';
+  const afterAuth=search.get('next')==='pricing'?'/pricing/':(CH.routes.afterLogin||'/dashboard/');
   let chosenDiscipline=null,chosenSpecialization=null,chosenMode='applicant',signupState={mode:'open'};
 
   function signupGate(){
@@ -238,7 +243,10 @@
   document.getElementById('su-back2').addEventListener('click',()=>step(2));
   document.getElementById('su-next2').addEventListener('click',()=>step(4));
   document.getElementById('su-back3').addEventListener('click',()=>step(3));
-  document.getElementById('su-agree').addEventListener('change',(e)=>{document.getElementById('su-btn').disabled=!e.target.checked;});
+  const birth=document.getElementById('su-birth'),guardian=document.getElementById('su-guardian'),guardianWrap=document.getElementById('su-guardian-wrap'),agree=document.getElementById('su-agree'),signupBtn=document.getElementById('su-btn');
+  const ageOn=(value)=>{if(!value)return null;const d=new Date(value+'T12:00:00'),n=new Date();let age=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))age--;return age;};
+  function signupReady(){const age=ageOn(birth.value),minor=age!==null&&age<18;guardianWrap.hidden=!minor;guardianWrap.style.display=minor?'flex':'none';guardian.required=minor;signupBtn.disabled=!agree.checked||age===null||age<16||(minor&&!guardian.checked);}
+  [birth,guardian,agree].forEach(el=>el.addEventListener('change',signupReady));birth.max=new Date().toISOString().slice(0,10);
   (function(){const pw=document.getElementById('su-pass'),bar=document.getElementById('pw-bar'),hint=document.getElementById('pw-hint');
     pw.addEventListener('input',()=>{const issue=CH.passwordIssue(pw.value);
       if(!pw.value){bar.className='';hint.className='pw-hint';hint.textContent='Use 12 to 72 characters with upper and lowercase letters and a number.';return;}
@@ -252,54 +260,61 @@
   const hash=new URLSearchParams(window.location.hash.replace('#','?')||'');
   if(hash.get('type')==='recovery'){show('recover');}
   const session=await CH.getSession();
-  if(session && hash.get('type')!=='recovery'){window.location.href=CH.routes.afterLogin||'/dashboard/';return;}
+  if(session && hash.get('type')!=='recovery'){window.location.href=afterAuth;return;}
   if(hash.get('type')!=='recovery') show(search.get('mode')==='signup'?'signup':'login');
 
   forms.signup.addEventListener('submit',async(e)=>{
     e.preventDefault();
     if(['paused','maintenance'].includes(signupState.mode)){signupGate();return;}
     const btn=document.getElementById('su-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-    const email=document.getElementById('su-email').value.trim(),password=document.getElementById('su-pass').value,full_name=document.getElementById('su-name').value.trim();
+    const email=document.getElementById('su-email').value.trim(),password=document.getElementById('su-pass').value,full_name=document.getElementById('su-name').value.trim(),birth_date=birth.value,age=ageOn(birth_date);
+    if(age===null||age<16){CH.toast(alertEl,'Creative House is currently for members aged 16 and older.','err');btn.disabled=false;btn.textContent='Create Account';return;}
+    if(age<18&&!guardian.checked){CH.toast(alertEl,'A parent or guardian acknowledgement is required for members under 18.','err');btn.disabled=false;btn.textContent='Create Account';return;}
     const pwIssue=CH.passwordIssue(password);
     if(pwIssue){CH.toast(alertEl,pwIssue,'err');btn.disabled=false;btn.textContent='Create Account';return;}
-    const {data,error}=await CH.sb.auth.signUp({email,password,options:{data:{full_name,discipline:chosenDiscipline||'Crew',primary_department:chosenSpecialization||'',primary_mode:chosenMode,invite_code:document.getElementById('su-invite').value.trim()||undefined,agreed_guidelines:document.getElementById('su-agree').checked?'true':'false'}}});
+    const legal={birth_date,guardian_acknowledged:age<18&&guardian.checked,terms_version:'2026-07-21',privacy_version:'2026-07-21',guidelines_version:'2026-07-21',marketing_consent:document.getElementById('su-marketing').checked};
+    let data,error;try{({data,error}=await CH.withTimeout(CH.sb.auth.signUp({email,password,options:{data:{full_name,discipline:chosenDiscipline||'Crew',primary_department:chosenSpecialization||'',primary_mode:chosenMode,invite_code:document.getElementById('su-invite').value.trim()||undefined,agreed_guidelines:'true',...legal}}}),20000));}catch(x){error=x;}
     btn.disabled=false;btn.textContent='Create Account';
     if(error){CH.toast(alertEl,error.message,'err');return;}
-    if(data.session){window.location.href=CH.routes.afterLogin||'/dashboard/';}
+    if(data.session){window.location.href=afterAuth;}
     else{document.getElementById('verify-email').textContent=email;window.__verifyEmail=email;show('verify');}
   });
   document.getElementById('verify-continue').addEventListener('click',async()=>{
     const btn=document.getElementById('verify-continue');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
     const s=await CH.getSession();
-    if(s){window.location.href=CH.routes.afterLogin||'/dashboard/';return;}
+    if(s){window.location.href=afterAuth;return;}
     btn.disabled=false;btn.textContent='I’ve verified, continue';
     CH.toast(alertEl,'Not verified yet, or you need to sign in. If you opened the link, sign in below.','err');show('login');
   });
-  async function googleIn(mode){const {error}=await CH.signInWithGoogle(mode);if(error)CH.toast(alertEl,error.message,'err');}
+  async function googleIn(mode,creating=false){let legal=null;if(creating){const age=ageOn(birth.value);if(age===null||age<16||!agree.checked||(age<18&&!guardian.checked)){CH.toast(alertEl,'Complete the age and agreement checks before continuing with Google.','err');return;}legal={birth_date:birth.value,guardian_acknowledged:age<18&&guardian.checked,terms_version:'2026-07-21',privacy_version:'2026-07-21',guidelines_version:'2026-07-21',marketing_consent:document.getElementById('su-marketing').checked,full_name:document.getElementById('su-name').value.trim()||undefined};}const {error}=await CH.signInWithGoogle(mode,legal);if(error)CH.toast(alertEl,error.message,'err');}
   document.getElementById('g-login').addEventListener('click',()=>googleIn(null));
-  document.getElementById('g-signup').addEventListener('click',()=>googleIn(chosenMode));
+  document.getElementById('g-signup').addEventListener('click',()=>googleIn(chosenMode,true));
   document.getElementById('verify-resend').addEventListener('click',async()=>{
     const email=window.__verifyEmail;if(!email)return;
-    try{const {error}=await CH.sb.auth.resend({type:'signup',email});CH.toast(alertEl,error?error.message:'Sent again. Check your inbox and spam folder.',error?'err':'ok');}
+    const btn=document.getElementById('verify-resend');if(btn.disabled)return;btn.disabled=true;
+    try{const {error}=await CH.withTimeout(CH.sb.auth.resend({type:'signup',email}),20000);CH.toast(alertEl,error?CH.friendlyError(error):'Sent again. Check your inbox and spam folder.',error?'err':'ok');}
     catch(e){CH.toast(alertEl,'Could not resend right now. Try signing in.','err');}
+    finally{setTimeout(()=>{btn.disabled=false;},30000);}
   });
   forms.login.addEventListener('submit',async(e)=>{
     e.preventDefault();const btn=document.getElementById('li-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-    const {error}=await CH.sb.auth.signInWithPassword({email:document.getElementById('li-email').value.trim(),password:document.getElementById('li-pass').value});
+    let error;try{({error}=await CH.withTimeout(CH.sb.auth.signInWithPassword({email:document.getElementById('li-email').value.trim(),password:document.getElementById('li-pass').value}),20000));}catch(x){error=x;}
     btn.disabled=false;btn.textContent='Log In';
     if(error){CH.toast(alertEl,error.message,'err');return;}
-    window.location.href=CH.routes.afterLogin||'/dashboard/';
+    window.location.href=afterAuth;
   });
   document.getElementById('forgot').addEventListener('click',async()=>{
     const email=document.getElementById('li-email').value.trim();
     if(!email){CH.toast(alertEl,'Enter your email above first, then tap Forgot password.','err');return;}
-    const {error}=await CH.sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href.split('#')[0]});
+    let error;try{({error}=await CH.withTimeout(CH.sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href.split('#')[0]}),20000));}catch(x){error=x;}
     if(error){CH.toast(alertEl,error.message,'err');return;}
     CH.toast(alertEl,'Password reset link sent. Check your email.','ok');
   });
   forms.recover.addEventListener('submit',async(e)=>{
     e.preventDefault();const btn=document.getElementById('rc-btn');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-    const {error}=await CH.sb.auth.updateUser({password:document.getElementById('rc-pass').value});
+    const password=document.getElementById('rc-pass').value,issue=CH.passwordIssue(password);
+    if(issue){CH.toast(alertEl,issue,'err');btn.disabled=false;btn.textContent='Update Password';return;}
+    let error;try{({error}=await CH.withTimeout(CH.sb.auth.updateUser({password}),20000));}catch(x){error=x;}
     btn.disabled=false;btn.textContent='Update Password';
     if(error){CH.toast(alertEl,error.message,'err');return;}
     CH.toast(alertEl,'Password updated. Redirecting…','ok');setTimeout(()=>window.location.href=CH.routes.afterLogin||'/dashboard/',900);

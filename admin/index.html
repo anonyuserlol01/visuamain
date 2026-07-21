@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Mission Control | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-admin-v9">
 </head>
-<body class="app admin-console">
+<body class="app admin-console admin-v9">
 <div class="grain" aria-hidden="true"></div>
 <header class="appbar">
   <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="/creative-house" class="brand">VISUA<span>REALM</span></a><span class="sub">Mission Control</span></div>
@@ -20,16 +20,17 @@
   <button type="button" data-admin-dock="dashboard"><span aria-hidden="true">◎</span><b>Control</b></button>
   <a href="/moderation/" aria-label="Open live case desk"><span aria-hidden="true">!</span><b>Cases</b></a>
   <button type="button" data-admin-dock="security"><span aria-hidden="true">◇</span><b>Guard</b></button>
+  <button type="button" data-admin-dock="membership"><span aria-hidden="true">+</span><b>Plans</b></button>
   <button type="button" id="dock-logout"><span aria-hidden="true">↗</span><b>Exit</b></button>
 </nav>
 
 <div class="wrap" id="app" style="display:none;">
   <div class="alert" id="alert"></div>
-  <div class="admin-ribbon"><div><i></i><span>Mission Control</span><b id="admin-date"></b></div><nav><a href="/moderation/">Open Case Desk</a><a href="/creative-house/" target="_blank">View public site ↗</a><button type="button" id="admin-refresh">Refresh data</button></nav></div>
+  <div class="admin-ribbon"><div><i></i><span>Operations console</span><b id="admin-date"></b></div><nav><a href="/moderation/">Case Desk</a><a href="/creative-house/" target="_blank" rel="noopener noreferrer">Public site ↗</a><button type="button" id="admin-refresh">Refresh</button></nav></div>
   <div class="mc-shell">
     <aside class="mc-side" id="mc-side"></aside>
     <main>
-      <div class="mc-head"><div><span class="mc-overline">VISUAREALM operations</span><h2 id="sec-title">Dashboard</h2><div class="sub" id="sec-sub">Platform overview</div></div><div class="mc-head-tools"><span class="mc-system"><i></i>Systems live</span><div id="sec-action"></div></div></div>
+      <div class="mc-head"><div><span class="mc-overline">VISUAREALM / OPERATIONS</span><h2 id="sec-title">Today</h2><div class="sub" id="sec-sub">What needs you, what can wait</div></div><div class="mc-head-tools"><span class="mc-system"><i></i>Live</span><div id="sec-action"></div></div></div>
       <div id="view"></div>
     </main>
   </div>
@@ -124,10 +125,10 @@
   <div class="spread"><button type="button" class="btn ghost sm" id="memm-cancel">Close</button><button type="button" class="btn solid" id="memm-save">Save changes</button></div>
 </div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
@@ -150,7 +151,7 @@
   try{ CH.sb.rpc('delete_expired_listings'); }catch(e){}
   if(IS_MOD){ document.querySelector('.mc-head .sub')?.setAttribute('data-mod','1'); }
 
-  let profiles=[],openings=[],apps=[],badges=[],reports=[],peer=[],modlog=[],settings={},health=null,signals=[],pMap={},oMap={};
+  let profiles=[],openings=[],apps=[],badges=[],reports=[],peer=[],modlog=[],settings={},health=null,signals=[],membershipOverview=null,foundingMembers=[],privacyRequests=[],incidents=[],marketingSubscribers=[],pMap={},oMap={};
 
   // shared select fills for modals
   document.getElementById('l-dept').innerHTML=Object.entries(CH.ROLES_BY_DISCIPLINE).map(([g,rs])=>`<optgroup label="${g}">${rs.map(r=>`<option>${r}</option>`).join('')}</optgroup>`).join('');
@@ -182,31 +183,33 @@
 
   // ---------- sections ----------
   const SECTIONS=[
-    {k:'dashboard',g:'Overview',label:'Dashboard',admin:true},
-    {k:'members',g:'Community',label:'Members',count:()=>profiles.length},
+    {k:'dashboard',g:'Overview',label:'Today',admin:true},
+    {k:'members',g:'Community',label:'Members',count:()=>profiles.filter(p=>['flagged','suspended'].includes(p.status)||p.warning_active).length},
     {k:'moderation',g:'Community',label:'Moderation',count:()=>modAlerts(),alert:true},
-    {k:'security',g:'Safety',label:'Security Guard',count:()=>signals.filter(x=>x.status==='open'||x.status==='reviewing').length,alert:true,admin:true},
-    {k:'listings',g:'Content',label:'Listings',count:()=>openings.length,admin:true},
-    {k:'applications',g:'Content',label:'Applications',count:()=>apps.length,admin:true},
+    {k:'security',g:'Safety',label:'Safety & Security',count:()=>signals.filter(x=>x.status==='open'||x.status==='reviewing').length,alert:true,admin:true},
+    {k:'listings',g:'Content',label:'Listings',count:()=>openings.filter(x=>x.flagged||x.review_state==='hidden').length,admin:true},
+    {k:'applications',g:'Content',label:'Applications',count:()=>apps.filter(x=>x.status==='submitted').length,admin:true},
     {k:'analytics',g:'Insight',label:'Analytics',admin:true},
+    {k:'membership',g:'Business',label:'Membership',admin:true},
+    {k:'launch',g:'Business',label:'Compliance',count:()=>privacyRequests.filter(x=>!['completed','declined'].includes(x.status)).length,alert:true,admin:true},
     {k:'updates',g:'System',label:'Changelog',admin:true},
     {k:'settings',g:'System',label:'Settings',admin:true}
   ].filter(s=>IS_ADMIN||!s.admin);
-  const SUBTITLES={dashboard:'Platform overview',members:'Member management',moderation:'Safety & audit log',security:'Database-observable risks and system care',listings:'Listing administration',applications:'Review & respond',analytics:'Growth & activity',updates:'Release notes & member updates',settings:'Platform configuration'};
-  const SECTION_ICONS={dashboard:'⌂',members:'○',moderation:'!',security:'◇',listings:'□',applications:'↗',analytics:'⌁',updates:'✦',settings:'·'};
+  const SUBTITLES={dashboard:'What needs you, what can wait',members:'People, access and account status',moderation:'Reports, decisions and audit history',security:'Risks, cases and system care',listings:'Live work, review state and expiry',applications:'New submissions and outcomes',analytics:'Growth and activity',membership:'Access, plans and Founding Roster',launch:'Privacy, consent and launch readiness',updates:'Release notes and member updates',settings:'Platform access and configuration'};
+  const SECTION_ICONS={dashboard:'⌂',members:'○',moderation:'!',security:'◇',listings:'□',applications:'↗',analytics:'⌁',membership:'+',launch:'✓',updates:'✦',settings:'·'};
   let sec=IS_ADMIN?'dashboard':'members';try{const saved=localStorage.getItem('vr-admin-section');if(SECTIONS.some(s=>s.k===saved))sec=saved;}catch(e){}
   function renderSidebar(){
     let html='',lastG='';
     SECTIONS.forEach(s=>{ if(s.g!==lastG){html+=`<div class="mc-group">${s.g}</div>`;lastG=s.g;}
       const c=s.count?s.count():null;
-      html+=`<button data-k="${s.k}" class="${s.k===sec?'on':''}"><span class="mc-nav-label"><i>${SECTION_ICONS[s.k]||'·'}</i>${s.label}</span>${c!==null?`<span class="cnt ${c===0?'zero':''}">${c}</span>`:''}</button>`;});
+      html+=`<button data-k="${s.k}" class="${s.k===sec?'on':''}"><span class="mc-nav-label"><i>${SECTION_ICONS[s.k]||'·'}</i>${s.label}</span>${c>0?`<span class="cnt">${c}</span>`:''}</button>`;});
     html+=`<div class="mc-side-foot"><span>${IS_ADMIN?'Administrator':'Moderator'}</span><b>${CH.esc(me.full_name||me.email||'Staff')}</b><a href="/dashboard/">Leave Mission Control ↗</a></div>`;document.getElementById('mc-side').innerHTML=html;
     document.querySelectorAll('#mc-side button').forEach(b=>b.addEventListener('click',()=>{sec=b.dataset.k;go();}));
   }
   function go(){try{localStorage.setItem('vr-admin-section',sec);}catch(e){}renderSidebar();document.querySelectorAll('[data-admin-dock]').forEach(b=>b.classList.toggle('on',b.dataset.adminDock===sec));document.getElementById('sec-title').textContent=SECTIONS.find(s=>s.k===sec).label;document.getElementById('sec-sub').textContent=SUBTITLES[sec];
     document.getElementById('sec-action').innerHTML = sec==='listings'?'<button class="btn solid sm" id="new-top">+ New Listing</button>':sec==='moderation'?'<a class="btn solid sm" href="/moderation/">Open Case Desk</a>':'';
     const nt=document.getElementById('new-top'); if(nt) nt.addEventListener('click',()=>openListing(null));
-    ({dashboard:secDashboard,members:secMembers,moderation:secModeration,security:secSecurity,listings:secListings,applications:secApplications,analytics:secAnalytics,updates:secUpdates,settings:secSettings}[sec])();}
+    ({dashboard:secDashboard,members:secMembers,moderation:secModeration,security:secSecurity,listings:secListings,applications:secApplications,analytics:secAnalytics,membership:secMembership,launch:secLaunch,updates:secUpdates,settings:secSettings}[sec])();}
   document.querySelectorAll('[data-admin-dock]').forEach(b=>b.addEventListener('click',()=>{const target=b.dataset.adminDock;if(SECTIONS.some(s=>s.k===target)){sec=target;go();scrollTo({top:0,behavior:'smooth'});}}));
 
   function openAdminCommand(){
@@ -220,7 +223,7 @@
   document.getElementById('admin-refresh').addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Refreshing…';await loadAll();b.disabled=false;b.textContent='Refresh data';CH.toast(alertEl,'Mission Control is up to date.','ok');});
 
   async function loadAll(){
-    const [p,o,a,b,f,pf,ml,st,h,sg]=await Promise.all([
+    const [p,o,a,b,f,pf,ml,st,h,sg,mo,fg,pr,ir,ms]=await Promise.all([
       CH.sb.from('profiles').select('*').order('created_at',{ascending:false}),
       CH.sb.from('openings').select('*').order('created_at',{ascending:false}),
       CH.sb.from('applications').select('*').order('created_at',{ascending:false}),
@@ -230,9 +233,14 @@
       CH.sb.from('moderation_log').select('*').order('created_at',{ascending:false}),
       CH.sb.from('app_settings').select('*').eq('id',1).maybeSingle(),
       IS_ADMIN?CH.sb.rpc('ch_mission_control_health'):Promise.resolve({data:null}),
-      IS_ADMIN?CH.sb.from('ch_security_signals').select('*').order('created_at',{ascending:false}).limit(100):Promise.resolve({data:[]})
+      IS_ADMIN?CH.sb.from('ch_security_signals').select('*').order('created_at',{ascending:false}).limit(100):Promise.resolve({data:[]}),
+      IS_ADMIN?CH.sb.rpc('ch_membership_overview'):Promise.resolve({data:null}),
+      IS_ADMIN?CH.sb.from('ch_access_grants').select('user_id').eq('grant_type','founding_roster').is('revoked_at',null):Promise.resolve({data:[]}),
+      IS_ADMIN?CH.sb.from('ch_privacy_requests').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[]}),
+      IS_ADMIN?CH.sb.from('ch_incident_register').select('*').order('created_at',{ascending:false}):Promise.resolve({data:[]}),
+      IS_ADMIN?CH.sb.rpc('ch_admin_marketing_subscribers'):Promise.resolve({data:[]})
     ]);
-    profiles=p.data||[];openings=o.data||[];apps=a.data||[];badges=b.data||[];reports=f.data||[];peer=pf.data||[];modlog=ml.data||[];settings=st.data||{};health=h.data||null;signals=sg.data||[];
+    profiles=p.data||[];openings=o.data||[];apps=a.data||[];badges=b.data||[];reports=f.data||[];peer=pf.data||[];modlog=ml.data||[];settings=st.data||{};health=h.data||null;signals=sg.data||[];membershipOverview=mo.data||null;foundingMembers=[...new Set((fg.data||[]).map(x=>x.user_id))];privacyRequests=pr.data||[];incidents=ir.data||[];marketingSubscribers=ms.data||[];
     pMap={};profiles.forEach(x=>pMap[x.id]=x);oMap={};openings.forEach(x=>oMap[x.id]=x);
     document.getElementById('mem-badgesel').innerHTML=badges.map(b=>`<option value="${b.code}">${b.emoji} ${b.label}</option>`).join('');
     go();
@@ -255,6 +263,13 @@
         <div class="statcard"><div class="sv">${apps.length}</div><div class="sl">Applications</div>${delta(aThis[1],aThis[0])}</div>
         <div class="statcard ${newReports?'alert-card':''}"><div class="sv">${newReports}</div><div class="sl">New Reports</div><div class="sd ${newReports?'down':'flat'}">${newReports?'needs review':'all clear'}</div></div>
       </div>
+      <div class="mc-sectionline"><div><span>Operating rooms</span><small>Go to the work, not another menu</small></div></div>
+      <section class="admin-workspaces">
+        <button class="goto" data-s="members"><span>Community</span><b>${activeCount()} active members</b><small>Profiles, access, mentors and member history</small><i>Open people desk →</i></button>
+        <button class="goto" data-s="moderation"><span>Safety</span><b>${newReports+restricted} items in view</b><small>Reports, restrictions and the human decision trail</small><i>Open safety desk →</i></button>
+        <button class="goto" data-s="listings"><span>Content</span><b>${openings.filter(x=>x.status==='open').length} live listings</b><small>Projects, expiry windows and listing standards</small><i>Open content desk →</i></button>
+        <button class="goto" data-s="membership"><span>Access</span><b>${foundingMembers.length} Founding Roster</b><small>Open House, plans and selected permanent access</small><i>Open access desk →</i></button>
+      </section>
       <div class="chart-grid">
         <div class="chart-card"><h3>Member growth</h3><div class="ch-sub">New members · last 8 weeks</div>${areaChart(cumulative(memW),'m')}</div>
         <div class="chart-card"><h3>Applications</h3><div class="ch-sub">Per week · last 8 weeks</div>${barChart(appW)}</div>
@@ -291,18 +306,27 @@
     const h=health||{},s=h.signals||{},c=h.cases||{},l=h.listings||{},ac=h.accounts||{},m=h.maintenance||{};
     const open=signals.filter(x=>x.status==='open'||x.status==='reviewing');
     const tone=h.overall==='action'?'danger':h.overall==='watch'?'watch':'good';
-    v.innerHTML=`<section class="guard-hero ${tone}"><div><span class="mc-overline">Your quiet security guard</span><h2>${h.overall==='action'?'Something needs you.':h.overall==='watch'?'A few things deserve a look.':'The House looks steady.'}</h2><p>${CH.esc(h.plain_english||'The health check could not be read. Refresh once, then verify the Phase 2 migration if it stays unavailable.')}</p></div><div class="guard-orb"><i></i><b>${h.overall==='action'?'Action':h.overall==='watch'?'Watch':'Clear'}</b><span>${h.checked_at?CH.fmtDate(h.checked_at):'Not checked'}</span></div></section>
-      <div class="guard-grid">
-        <article><span>Security signals</span><b>${(s.critical||0)+(s.watch||0)}</b><small>${s.critical||0} critical · ${s.watch||0} watch</small></article>
+    const state=h.overall==='action'?'Action needed':h.overall==='watch'?'Review advised':'All clear';
+    const lanes=[
+      ['Moderation cases',c.open||0,(c.stale||0)?`${c.stale} waiting more than 7 days`:'No stale cases',(c.open||0)||(c.stale||0)?'watch':'clear'],
+      ['Evidence protection',l.evidence_holds||0,(l.overdue_cleanup||0)?`${l.overdue_cleanup} cleanup item overdue`:'Cleanup timing is current',(l.overdue_cleanup||0)?'watch':'clear'],
+      ['Account return watch',ac.possible_rejoins||0,`${ac.tombstones||0} privacy-safe tombstones available`,(ac.possible_rejoins||0)?'watch':'clear'],
+      ['Listing maintenance',l.overdue_cleanup||0,m.last_run?`Last run ${CH.fmtDate(m.last_run)}`:'No maintenance run recorded',(l.overdue_cleanup||0)||!m.last_run?'watch':'clear']
+    ];
+    v.innerHTML=`<section class="security-observatory ${tone}">
+        <div class="security-command-copy"><span class="mc-overline">Security observatory</span><h2>${h.overall==='action'?'Your attention is needed.':h.overall==='watch'?'There are a few things to review.':'The House is steady.'}</h2><p>${CH.esc(h.plain_english||'The health check could not be read. Refresh once, then verify the Phase 2 migration if it stays unavailable.')}</p><div class="security-principles"><span>Human reviewed</span><span>No automatic punishment</span><span>Privacy safe</span></div></div>
+        <aside class="security-status-card"><span>Current posture</span><i aria-hidden="true"></i><b>${state}</b><small>${h.checked_at?`Checked ${CH.fmtDate(h.checked_at)}`:'Awaiting first check'}</small><button class="btn ghost sm" id="guard-refresh">Run a fresh check</button></aside>
+      </section>
+      <section class="security-pulse-grid" aria-label="Security overview">
+        <article><span>Signals to review</span><b>${(s.critical||0)+(s.watch||0)}</b><small>${s.critical||0} critical · ${s.watch||0} watch</small></article>
         <article><span>Open cases</span><b>${c.open||0}</b><small>${c.stale||0} waiting over 7 days</small></article>
         <article><span>Evidence holds</span><b>${l.evidence_holds||0}</b><small>${l.overdue_cleanup||0} overdue cleanup</small></article>
-        <article><span>Account watch</span><b>${ac.possible_rejoins||0}</b><small>${ac.tombstones||0} privacy-safe tombstones</small></article>
-      </div>
-      <section class="panel guard-queue"><div class="spread"><div><span class="mc-overline">Human review queue</span><h3>Signals</h3></div><button class="btn ghost sm" id="guard-refresh">Refresh</button></div>
-        <p class="hint">A signal is a reason to look, never an automatic punishment.</p>
-        <div class="signal-list">${open.length?open.map(x=>`<article class="signal ${CH.esc(x.severity)}"><div><span class="signal-sev">${CH.esc(x.severity)}</span><h4>${CH.esc(x.title)}</h4><p>${CH.esc(x.detail||'No additional detail.')}</p><small>${CH.fmtDate(x.created_at)} · ${CH.esc(x.status)}</small></div><div class="signal-actions"><button class="btn ghost sm" data-review="${x.id}">Reviewing</button><button class="btn solid sm" data-resolve="${x.id}">Resolve</button></div></article>`).join(''):'<div class="empty">Nothing waiting. Quiet is good.</div>'}</div>
+        <article><span>Possible returns</span><b>${ac.possible_rejoins||0}</b><small>${ac.tombstones||0} protected records</small></article>
       </section>
-      <section class="panel guard-note"><h3>What this can actually see</h3><p>Open moderation cases, evidence holds, overdue listing cleanup, restricted accounts and privacy-safe possible returns. It does not pretend to read Supabase Auth logs, network attacks or storage health when those sources are not connected.</p><div class="guard-maint">Last listing maintenance: <b>${m.last_run?CH.fmtDate(m.last_run):'Not recorded yet'}</b></div></section>`;
+      <section class="security-lanes"><header><div><span class="mc-overline">Coverage map</span><h3>What the guard is watching</h3></div><p>Every lane names a real source. Nothing here is decorative or invented.</p></header><div>${lanes.map(([name,value,note,laneTone],index)=>`<article class="${laneTone}"><span class="security-lane-index">0${index+1}</span><div><b>${name}</b><small>${note}</small></div><strong>${value}</strong><em>${laneTone==='clear'?'Clear':'Review'}</em></article>`).join('')}</div></section>
+      <div class="security-workspace"><section class="security-queue"><header><div><span class="mc-overline">Human review queue</span><h3>Signals needing context</h3></div><span>${open.length} open</span></header><p class="hint">A signal is a reason to look. It never changes a member's status by itself.</p><div class="signal-list">${open.length?open.map(x=>`<article class="signal ${CH.esc(x.severity)}"><div><span class="signal-sev">${CH.esc(x.severity)}</span><h4>${CH.esc(x.title)}</h4><p>${CH.esc(x.detail||'No additional detail.')}</p><small>${CH.fmtDate(x.created_at)} · ${CH.esc(x.status)}</small></div><div class="signal-actions"><button class="btn ghost sm" data-review="${x.id}">Mark reviewing</button><button class="btn solid sm" data-resolve="${x.id}">Resolve</button></div></article>`).join(''):'<div class="security-empty"><i></i><b>No signals are waiting.</b><span>Quiet is good. The next check will appear here automatically.</span></div>'}</div></section>
+        <aside class="security-context"><span class="mc-overline">Guard notes</span><h3>Honest coverage</h3><p>This view reads moderation cases, evidence holds, listing cleanup, restricted accounts and privacy-safe possible returns.</p><div><b>Connected</b><span>Database-observable safety events</span></div><div><b>Not claimed</b><span>Auth logs, network attacks or storage health until those sources are connected</span></div><footer>Last listing maintenance <b>${m.last_run?CH.fmtDate(m.last_run):'Not recorded yet'}</b></footer></aside>
+      </div>`;
     document.getElementById('guard-refresh').addEventListener('click',loadAll);
     v.querySelectorAll('[data-review]').forEach(b=>b.addEventListener('click',async()=>{const {error}=await CH.sb.rpc('ch_resolve_security_signal',{p_signal:b.dataset.review,p_status:'reviewing',p_note:null});if(error)CH.toast(alertEl,error.message,'err');else loadAll();}));
     v.querySelectorAll('[data-resolve]').forEach(b=>b.addEventListener('click',async()=>{const note=await CH.prompt({title:'Resolve this signal',message:'Write what you checked and why this is resolved.',placeholder:'Checked account history…',ok:'Resolve'});if(!note)return;const {error}=await CH.sb.rpc('ch_resolve_security_signal',{p_signal:b.dataset.resolve,p_status:'resolved',p_note:note});if(error)CH.toast(alertEl,error.message,'err');else{CH.toast(alertEl,'Signal resolved and logged.','ok');loadAll();}}));
@@ -480,6 +504,55 @@
     document.getElementById('up-unpublish').addEventListener('click',async()=>{const {error}=await CH.sb.from('app_settings').update({announcement_active:false,updated_at:new Date().toISOString()}).eq('id',1);if(error){CH.toast(alertEl,error.message,'err');return;}settings.announcement_active=false;CH.toast(alertEl,'Update taken down.','ok');secUpdates();});
   }
 
+  // ===== MEMBERSHIP CONTROL =====
+  function secMembership(){
+    const v=document.getElementById('view');
+    if(!membershipOverview){v.innerHTML=`<section class="panel membership-unavailable"><span class="mc-overline">Membership control</span><h2>We could not verify the commercial state.</h2><p class="hint">Nothing was changed. Refresh the data before using the launch switch. The platform will never guess whether the paywall is on.</p><button class="btn solid sm" id="membership-retry">Try again</button></section>`;document.getElementById('membership-retry').addEventListener('click',loadAll);return;}
+    const m=membershipOverview,open=(m.era||'open_house')==='open_house',prices=m.prices||[],connected=prices.filter(p=>/^price_[A-Za-z0-9]+$/.test(p.price_id||'')).length;
+    v.innerHTML=`
+      <section class="membership-command ${open?'open':'paid'}"><div><span class="mc-overline">Commercial state</span><h2>${open?'The whole House is open.':'The paid era is live.'}</h2><p>${open?'Every new and existing member receives House+ or Hiring Studio automatically. Nobody is charged, no trial clock runs and Founding Roster choices remain recorded separately.':'Free limits are enforced. House+ and Hiring Studio are granted only by a verified subscription, trial or founder-issued access grant.'}</p></div><div class="membership-command-state"><i></i><b>${open?'OPEN HOUSE':'PAID ERA'}</b><span>${m.checkout_enabled?'Checkout connected':'Checkout closed'}</span></div></section>
+      <div class="guard-grid membership-stats"><article><span>Members</span><b>${m.members||profiles.length}</b><small>${open?'all receive full launch access':'free and subscribed'}</small></article><article><span>Founding Roster</span><b>${m.founding_roster||foundingMembers.length}</b><small>hand-picked permanent access</small></article><article><span>Paid or trialing</span><b>${m.active_paid||0}</b><small>verified subscription records</small></article><article><span>Stripe readiness</span><b>${m.ready?'Ready':'Setup'}</b><small>${m.ready?'all four prices connected':'price ids still needed'}</small></article></div>
+      <section class="membership-runway"><header><div><span class="mc-overline">Launch runway</span><h3>${open?'Test freely now. Charge only when ready.':'The paywall is enforcing free limits.'}</h3></div><button class="btn ghost sm" id="mem-preview">Preview the change</button></header><div class="runway-steps"><article class="done"><i>1</i><div><b>Open House</b><span>New and existing users receive every paid feature for free.</span></div></article><article class="${connected===4?'done':'wait'}"><i>2</i><div><b>Stripe catalogue</b><span>${connected}/4 recurring prices connected.</span></div></article><article class="${m.checkout_enabled?'done':'wait'}"><i>3</i><div><b>Checkout</b><span>${m.checkout_enabled?'Subscription buttons are allowed to open.':'Checkout remains safely closed.'}</span></div></article><article class="${!open?'done':'wait'}"><i>4</i><div><b>Paid era</b><span>${!open?'Free limits apply to new and existing users.':'No user is behind a paywall.'}</span></div></article></div></section>
+      <section class="panel membership-launch-panel"><div class="spread"><div><span class="mc-overline">Launch switch</span><h3>One deliberate move</h3></div><span class="membership-era-chip ${open?'open':'paid'}">${open?'Full access for everyone':'Free limits active'}</span></div><p class="hint">Changing eras never charges an existing member. It changes feature access. Stripe checkout creates a subscription only when that member chooses a plan.</p><div class="grid two"><label class="agree membership-check"><input type="checkbox" id="mem-checkout" ${m.checkout_enabled?'checked':''}><span><b>Enable Stripe checkout</b><small>Subscribe buttons can open only after all Price IDs are ready.</small></span></label><label class="f"><span class="lab">Free trial</span><select id="mem-trial">${[0,7,14].map(n=>`<option value="${n}" ${Number(m.trial_days)===n?'selected':''}>${n?`${n} days`:'No trial'}</option>`).join('')}</select></label></div><label class="f"><span class="lab">Member message (optional)</span><input id="mem-message" value="${CH.esc(m.message||'')}" placeholder="A short note shown with membership access."></label><div class="spread"><button class="btn ghost sm" id="mem-save-config">Save without changing era</button><button class="btn ${open?'master-danger':'solid'}" id="mem-era-toggle">${open?'Start the paid era':'Return to open house'}</button></div></section>
+      <section class="panel"><div class="spread"><div><span class="mc-overline">Stripe catalogue</span><h3>Four Price IDs</h3></div><span class="hint">Stripe Dashboard → Product catalogue</span></div><p class="hint">Use recurring CAD prices. Price IDs begin with <b>price_</b>. Never paste a Stripe secret key here.</p><div class="membership-price-grid">${prices.map(p=>`<label class="f"><span class="lab">${CH.esc(p.plan==='house_plus'?'House+':'Hiring Studio')} · ${CH.esc(p.interval)}</span><input data-price-plan="${CH.esc(p.plan)}" data-price-interval="${CH.esc(p.interval)}" value="${CH.esc(p.price_id||'')}" placeholder="price_..."><small>$${(Number(p.amount||0)/100).toFixed(2)} CAD</small></label>`).join('')}</div><button class="btn solid sm" id="mem-save-prices">Save Stripe Price IDs</button></section>
+      <section class="panel roster-studio"><div class="spread"><div><span class="mc-overline">Chosen by you</span><h3>Founding Roster</h3></div><span class="membership-era-chip">Permanent full platform</span></div><p class="hint">This is not automatic and it is not based on signup date. You personally decide who belongs here.</p><input class="searchbox" id="roster-q" placeholder="Find a member by name or email…"><div id="roster-list" class="roster-admin-list"></div></section>`;
+
+    const config=()=>({p_era:m.era||'open_house',p_checkout_enabled:document.getElementById('mem-checkout').checked,p_trial_days:Number(document.getElementById('mem-trial').value),p_message:document.getElementById('mem-message').value.trim()||null});
+    document.getElementById('mem-save-config').addEventListener('click',async()=>{const {error}=await CH.sb.rpc('ch_set_membership_config',{...config(),p_confirmation:''});if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Membership settings saved. The access era did not change.','ok');loadAll();});
+    document.getElementById('mem-preview').addEventListener('click',()=>CH.alert({title:open?'What happens when paid starts':'What happens if Open House returns',message:open?'Existing and new users without a subscription, trial or Founding Roster grant move to Free. Accounts, applications, profiles and safety access remain. Nobody is charged automatically.':'Paid feature locks pause for everyone. Subscriptions and Founding Roster records stay recorded, but all members receive full launch access.'}));
+    document.getElementById('mem-era-toggle').addEventListener('click',async()=>{const target=open?'paid':'open_house',phrase=open?'START PAID ERA':'OPEN THE HOUSE';if(open&&(!m.ready||!document.getElementById('mem-checkout').checked)){await CH.alert({title:'Paid launch is not ready',message:'Connect all four Stripe Price IDs and enable checkout first. This prevents members from being placed behind a paywall with no working way to subscribe.'});return;}if(!(await CH.typeConfirm({title:open?'Start the paid era?':'Give everyone full access again?',message:open?'Existing members without a subscription or Roster grant will move to Free immediately. Nobody is charged automatically.':'Free limits will pause and every member will receive full launch access again.',phrase,ok:open?'Start paid era':'Open the House'})))return;const payload={...config(),p_era:target,p_confirmation:phrase};const {error}=await CH.sb.rpc('ch_set_membership_config',payload);if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,open?'Paid era started. Free limits are now active.':'Open House restored. Full access is live for everyone.','ok');loadAll();});
+    document.getElementById('mem-save-prices').addEventListener('click',async()=>{const inputs=[...document.querySelectorAll('[data-price-plan]')];for(const input of inputs){const {error}=await CH.sb.rpc('ch_set_stripe_price',{p_plan:input.dataset.pricePlan,p_interval:input.dataset.priceInterval,p_price_id:input.value.trim()||null});if(error){CH.toast(alertEl,error.message,'err');return;}}CH.toast(alertEl,'Stripe Price IDs saved. Readiness refreshed.','ok');loadAll();});
+    const drawRoster=()=>{const q=document.getElementById('roster-q').value.toLowerCase().trim();const rows=profiles.filter(p=>!q||[p.full_name,p.email].some(x=>(x||'').toLowerCase().includes(q))).slice(0,30);document.getElementById('roster-list').innerHTML=rows.map(p=>{const on=foundingMembers.includes(p.id);return `<article><div><b>${CH.esc(p.full_name||p.email||'Member')}</b><span>${CH.esc(p.email||'')} · ${CH.esc(p.discipline||'Member')}</span></div><button class="btn ${on?'solid':'ghost'} sm" data-roster="${p.id}" data-on="${on?'1':'0'}">${on?'On the Roster ✓':'Add to Roster'}</button></article>`;}).join('')||'<div class="empty">No matching member.</div>';document.querySelectorAll('[data-roster]').forEach(b=>b.addEventListener('click',async()=>{const active=b.dataset.on!=='1';let note=null;if(active)note=await CH.prompt({title:'Add to the Founding Roster',message:'Optional private note about why you chose them.',placeholder:'Early tester, advisor, collaborator…',ok:'Add'});const {error}=await CH.sb.rpc('ch_set_founding_roster',{p_user:b.dataset.roster,p_active:active,p_note:note});if(error){CH.toast(alertEl,error.message,'err');return;}if(active)foundingMembers.push(b.dataset.roster);else foundingMembers=foundingMembers.filter(id=>id!==b.dataset.roster);CH.toast(alertEl,active?'Founding Roster access granted.':'Founding Roster access removed.','ok');drawRoster();}));};
+    document.getElementById('roster-q').addEventListener('input',drawRoster);drawRoster();
+  }
+
+  // ===== LAUNCH & COMPLIANCE =====
+  function secLaunch(){
+    const v=document.getElementById('view'),m=membershipOverview||{},open=(m.era||'open_house')==='open_house';
+    const checks=[
+      ['Terms, Privacy and Billing pages',true,'Published in this build'],
+      ['16+ eligibility and consent log',true,'Database-backed after migration'],
+      ['Privacy request workflow',true,`${privacyRequests.filter(x=>!['completed','declined'].includes(x.status)).length} open request(s)`],
+      ['Payment catalogue and webhook',!!m.ready,m.ready?'Stripe reports ready':'Finish Stripe test-mode setup'],
+      ['Ontario legal review',!!settings.legal_review_complete,'Founder confirmation'],
+      ['Privacy/incident owner',!!settings.incident_owner_confirmed,'A named person watches incidents'],
+      ['Support inbox owner',!!settings.support_owner_confirmed,'A named person watches appeals and billing'],
+      ['Real-device mobile QA',!!settings.mobile_qa_complete,'iPhone and Android journey complete']
+    ],done=checks.filter(x=>x[1]).length;
+    v.innerHTML=`<section class="mc-brief"><div class="mc-brief-copy"><span class="mc-overline">Launch control</span><h2>${done===checks.length?'The operational doors are ready.':'The product is close. The human system still matters.'}</h2><p>This room separates code-complete work from founder, legal and operational confirmations. Ticking a box records readiness; it does not replace professional review.</p></div><div class="mc-brief-signal ${done===checks.length?'clear':'watch'}"><i></i><b>${done}/${checks.length}</b><span>launch controls ready</span></div></section>
+    <div class="launch-check-grid">${checks.map(([label,on,note],i)=>`<article class="${on?'done':''}"><i>${on?'✓':String(i+1).padStart(2,'0')}</i><div><b>${CH.esc(label)}</b><span>${CH.esc(note)}</span></div></article>`).join('')}</div>
+    <section class="panel" style="margin-top:18px"><div class="spread"><div><span class="mc-overline">Founder confirmations</span><h3>Human-owned launch work</h3></div><span class="membership-era-chip ${open?'open':'paid'}">${open?'OPEN HOUSE':'PAID ERA'}</span></div><div class="launch-confirm-list"><label class="agree"><input type="checkbox" data-launch="legal_review_complete" ${settings.legal_review_complete?'checked':''}><span><b>Ontario legal review complete</b><small>Terms, youth rules, privacy and billing language reviewed.</small></span></label><label class="agree"><input type="checkbox" data-launch="incident_owner_confirmed" ${settings.incident_owner_confirmed?'checked':''}><span><b>Privacy and incident owner assigned</b><small>Someone checks and records every suspected breach.</small></span></label><label class="agree"><input type="checkbox" data-launch="support_owner_confirmed" ${settings.support_owner_confirmed?'checked':''}><span><b>Support inbox actively owned</b><small>Appeals, safety, billing and privacy messages have a response owner.</small></span></label><label class="agree"><input type="checkbox" data-launch="mobile_qa_complete" ${settings.mobile_qa_complete?'checked':''}><span><b>Real-device QA complete</b><small>Applicant and hirer journeys passed on iPhone and Android.</small></span></label></div><button class="btn solid sm" id="launch-save">Save confirmations</button></section>
+    <section class="panel" style="margin-top:18px"><div class="spread"><div><span class="mc-overline">Privacy desk</span><h3>Member requests</h3></div><span class="cnt">${privacyRequests.length}</span></div><p class="hint">Self-service ZIP exports close automatically. Assisted requests remain here until a person verifies and completes them.</p><div class="compliance-list">${privacyRequests.length?privacyRequests.map(r=>`<article><div><b>${CH.esc((r.request_type||'request').replaceAll('_',' '))}</b><span>${CH.esc(nm(r.user_id))} · ${r.delivery_method==='secure_download'?'secure download '+CH.fmtDate(r.exported_at):'due '+CH.fmtDate(r.due_at)}</span>${r.details?`<small>${CH.esc(r.details)}</small>`:''}</div><select data-privacy-status="${r.id}" ${r.delivery_method==='secure_download'?'disabled':''}>${['received','verifying','working','completed','declined'].map(s=>`<option ${s===r.status?'selected':''}>${s}</option>`).join('')}</select></article>`).join(''):'<div class="empty">No privacy requests yet.</div>'}</div></section>
+    <section class="panel subscriber-desk" style="margin-top:18px"><div class="spread"><div><span class="mc-overline">VISUAREALM news & offers</span><h3>Email consent list</h3></div><button class="btn ghost sm" id="subscriber-export">Export active CSV</button></div><div class="subscriber-stats"><article><b>${marketingSubscribers.filter(x=>x.marketing_consent).length}</b><span>Active subscribers</span></article><article><b>${marketingSubscribers.filter(x=>!x.marketing_consent&&x.withdrawn_at).length}</b><span>Withdrawn</span></article><article><b>${marketingSubscribers.length}</b><span>Consent records</span></article></div><label class="subscriber-search">⌕<input id="subscriber-q" placeholder="Search name or email"></label><div id="subscriber-list" class="subscriber-list"></div><p class="hint">Only send promotional email to active subscribers. Every message still needs your sender details and an unsubscribe link.</p></section>
+    <section class="panel" style="margin-top:18px"><div class="spread"><div><span class="mc-overline">Breach record</span><h3>Security incidents</h3></div><button class="btn ghost sm" id="incident-new">Record an incident</button></div><p class="hint">Record every suspected safeguard breach, even when the final risk is low. Do not put passwords, full IDs or payment card details here.</p><div class="compliance-list">${incidents.length?incidents.map(i=>`<article><div><b>${CH.esc(i.title)}</b><span>${CH.esc(i.risk_level)} · ${CH.esc(i.status)} · ${CH.fmtDate(i.discovered_at)}</span></div></article>`).join(''):'<div class="empty">No recorded incidents.</div>'}</div></section>`;
+    document.getElementById('launch-save').addEventListener('click',async()=>{const payload={};document.querySelectorAll('[data-launch]').forEach(c=>payload[c.dataset.launch]=c.checked);payload.updated_at=new Date().toISOString();const {error}=await CH.sb.from('app_settings').update(payload).eq('id',1);if(error){CH.toast(alertEl,error.message,'err');return;}settings={...settings,...payload};CH.toast(alertEl,'Launch confirmations saved.','ok');secLaunch();});
+    document.querySelectorAll('[data-privacy-status]').forEach(s=>s.addEventListener('change',async()=>{const payload={status:s.value,updated_at:new Date().toISOString(),completed_at:['completed','declined'].includes(s.value)?new Date().toISOString():null};const {error}=await CH.sb.from('ch_privacy_requests').update(payload).eq('id',s.dataset.privacyStatus);if(error){CH.toast(alertEl,error.message,'err');return;}const row=privacyRequests.find(x=>x.id===s.dataset.privacyStatus);if(row)Object.assign(row,payload);CH.toast(alertEl,'Privacy request updated.','ok');renderSidebar();}));
+    const drawSubscribers=()=>{const q=(document.getElementById('subscriber-q').value||'').toLowerCase().trim(),rows=marketingSubscribers.filter(x=>!q||[x.full_name,x.email].some(v=>String(v||'').toLowerCase().includes(q)));document.getElementById('subscriber-list').innerHTML=rows.length?rows.map(x=>`<article><div><b>${CH.esc(x.full_name||'Member')}</b><span>${CH.esc(x.email||'')}</span></div><div>${x.marketing_consent?'<span class="consent-on">SUBSCRIBED</span>':'<span class="consent-off">WITHDRAWN</span>'}<small>${CH.fmtDate(x.marketing_consent?x.consented_at:x.withdrawn_at)}</small></div></article>`).join(''):'<div class="empty">No consent records match.</div>';};
+    document.getElementById('subscriber-q').addEventListener('input',drawSubscribers);drawSubscribers();
+    document.getElementById('subscriber-export').addEventListener('click',()=>{const rows=marketingSubscribers.filter(x=>x.marketing_consent),table=[['Name','Email','Consent recorded','Account status'],...rows.map(x=>[x.full_name||'',x.email||'',x.consented_at||'',x.account_status||'active'])],csv=table.map(r=>r.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`visuarealm-active-email-list-${new Date().toISOString().slice(0,10)}.csv`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
+    document.getElementById('incident-new').addEventListener('click',async()=>{const title=await CH.prompt({title:'Record a suspected incident',message:'Use a short operational title. You can investigate and update details in Supabase. Every suspected breach deserves a record.',placeholder:'Example: unintended profile exposure',ok:'Create record'});if(!title)return;const {error}=await CH.sb.from('ch_incident_register').insert({opened_by:me.id,title});if(error){CH.toast(alertEl,error.message,'err');return;}CH.toast(alertEl,'Incident record opened. Assess containment and notification next.','ok');await loadAll();});
+  }
+
   // ===== SETTINGS =====
   function secSettings(){
     const v=document.getElementById('view');const s=settings||{};
@@ -548,7 +621,7 @@
   const appModal=document.getElementById('app-modal');
   function review(id){const a=apps.find(x=>x.id===id);const p=pMap[a.applicant_id]||{},o=oMap[a.opening_id]||{},L=p.links||{};
     document.getElementById('app-id').value=id;document.getElementById('app-meta').textContent=(o.title||'')+' · '+CH.fmtDate(a.created_at);
-    document.getElementById('app-body').innerHTML=`<div class="row" style="padding-top:0;"><div><div class="t">${CH.esc(p.full_name||'')}</div><div class="m">${CH.esc(p.email||'')} · ${CH.esc(p.discipline||'')} · ${CH.esc(p.experience_level||'')}</div></div></div>${a.cover_note?`<p style="margin-top:12px;line-height:1.7;">${CH.esc(a.cover_note)}</p>`:''}<div class="tags" style="margin-top:12px;">${a.portfolio_link?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(a.portfolio_link)}">Portfolio</a>`:''}${L.imdb?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.imdb)}">IMDb</a>`:''}${L.reel?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.reel)}">Reel</a>`:''}${L.website?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.website)}">Website</a>`:''}</div>`;
+    document.getElementById('app-body').innerHTML=`<div class="row" style="padding-top:0;"><div><div class="t">${CH.esc(p.full_name||'')}</div><div class="m">${CH.esc(p.email||'')} · ${CH.esc(p.discipline||'')} · ${CH.esc(p.experience_level||'')}</div></div></div>${a.cover_note?`<p style="margin-top:12px;line-height:1.7;">${CH.esc(a.cover_note)}</p>`:''}<div class="tags" style="margin-top:12px;">${CH.safeUrl(a.portfolio_link)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(a.portfolio_link))}">Portfolio</a>`:''}${CH.safeUrl(L.imdb)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.imdb))}">IMDb</a>`:''}${CH.safeUrl(L.reel)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.reel))}">Reel</a>`:''}${CH.safeUrl(L.website)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.website))}">Website</a>`:''}</div>`;
     document.getElementById('app-status').value=a.status;document.getElementById('app-notes').value=a.admin_notes||'';CH.clearToast(document.getElementById('appm-alert'));appModal.classList.add('show');}
   document.getElementById('appm-cancel').addEventListener('click',()=>appModal.classList.remove('show'));
   document.getElementById('app-x').addEventListener('click',()=>appModal.classList.remove('show'));
@@ -556,10 +629,11 @@
   document.getElementById('appm-save').addEventListener('click',async()=>{const id=document.getElementById('app-id').value;const {error}=await CH.sb.from('applications').update({status:document.getElementById('app-status').value,admin_notes:document.getElementById('app-notes').value.trim()}).eq('id',id);if(error){CH.toast(document.getElementById('appm-alert'),error.message,'err');return;}appModal.classList.remove('show');CH.toast(alertEl,'Updated.','ok');loadAll();});
 
   const memModal=document.getElementById('mem-modal');let memBadges=[],memOrigStatus='active';
-  async function openMember(id){const p=pMap[id],L=p.links||{};document.getElementById('mem-id').value=id;document.getElementById('mem-name').innerHTML=`${p.is_mentor?CH.mentorStar()+' ':''}${CH.esc(p.full_name||'Member')}`;document.getElementById('mem-meta').textContent=[p.email,p.city].filter(Boolean).join(' · ');
-    document.getElementById('mem-body').innerHTML=`${p.headline?`<p class="lead" style="margin-top:0;">${CH.esc(p.headline)}</p>`:''}${p.bio?`<p style="margin-top:8px;">${CH.esc(p.bio)}</p>`:''}<div class="tags" style="margin-top:10px;">${L.imdb?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.imdb)}">IMDb</a>`:''}${L.website?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.website)}">Website</a>`:''}${L.reel?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.reel)}">Reel</a>`:''}</div>`;
+  async function openMember(id){const p=pMap[id],L=p.links||{};document.getElementById('mem-id').value=id;document.getElementById('mem-name').innerHTML=`${p.is_mentor?CH.mentorStar()+' ':''}${CH.esc(p.full_name||'Member')} ${p.is_protected_founder?'<span class="privacy-lock">PROTECTED FOUNDER</span>':''}`;document.getElementById('mem-meta').textContent=[p.email,p.city].filter(Boolean).join(' · ');
+    document.getElementById('mem-body').innerHTML=`${p.is_protected_founder?'<div class="founder-inline-note">This administrator cannot be deleted, demoted, suspended, banned or unprotected through normal operations.</div>':''}${p.headline?`<p class="lead" style="margin-top:0;">${CH.esc(p.headline)}</p>`:''}${p.bio?`<p style="margin-top:8px;">${CH.esc(p.bio)}</p>`:''}<div class="tags" style="margin-top:10px;">${CH.safeUrl(L.imdb)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.imdb))}">IMDb</a>`:''}${CH.safeUrl(L.website)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.website))}">Website</a>`:''}${CH.safeUrl(L.reel)?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(CH.safeUrl(L.reel))}">Reel</a>`:''}</div>`;
     document.getElementById('mem-disc').value=p.discipline||'Crew';document.getElementById('mem-status').value=p.status||'active';memOrigStatus=p.status||'active';document.getElementById('mem-hire').value=p.can_hire?'true':'false';document.getElementById('mem-admin').value=p.is_admin?'true':'false';document.getElementById('mem-flagnote').value=p.flag_note||'';
     document.getElementById('mem-mod').value=p.is_moderator?'true':'false';document.getElementById('mem-verified').value=p.id_verified?'true':'false';
+    document.getElementById('mem-admin').disabled=!!p.is_protected_founder;document.getElementById('mem-status').disabled=!!p.is_protected_founder;
     document.querySelectorAll('.admin-only-ctl').forEach(el=>el.style.display=IS_ADMIN?'':'none');
     document.getElementById('mem-warn').value=p.warning_active?'true':'false';document.getElementById('mem-warnnote').value=p.warning_note||'';
     document.getElementById('mem-mentor').value=p.is_mentor?'true':'false';document.getElementById('mem-contact').value=p.contact_pref||'Email';document.getElementById('mem-mbio').value=p.mentor_bio||'';document.getElementById('mem-mspec').value=(p.mentor_specialties||[]).join(', ');document.getElementById('mem-avail').value=p.availability||'';

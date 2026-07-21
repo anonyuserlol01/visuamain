@@ -41,6 +41,8 @@
       if (!client) return null;
       const { data } = await client.auth.getSession();
       if (!data.session) { window.location.href = this.routes.afterLogout || "/create-account/"; return null; }
+      const meta=data.session.user.user_metadata||{},syncKey=`vr_legal_sync_${data.session.user.id}_${meta.terms_version||''}`;
+      try{if(meta.birth_date&&meta.terms_version&&!sessionStorage.getItem(syncKey)){client.rpc('ch_record_legal_consent',{p_birth_date:meta.birth_date,p_guardian_acknowledged:!!meta.guardian_acknowledged,p_terms_version:meta.terms_version,p_privacy_version:meta.privacy_version,p_guidelines_version:meta.guidelines_version,p_marketing_consent:!!meta.marketing_consent,p_source:'signup_metadata'}).then(({error})=>{if(!error)sessionStorage.setItem(syncKey,'1');}).catch(()=>{});}}catch(e){}
       return data.session;
     },
     async getSession() { if (!client) return null; const { data } = await client.auth.getSession(); return data.session; },
@@ -51,9 +53,89 @@
       if (error) return { id: s.user.id, email: s.user.email };
       return data;
     },
+    async mountLegalReminder(){
+      if(!client||location.pathname==='/settings.html'||document.getElementById('legal-reminder'))return;
+      try{const {data,error}=await this.withTimeout(client.rpc('ch_my_legal_status'),2500);if(error||!data||data.complete)return;const bar=document.createElement('aside');bar.id='legal-reminder';bar.className='legal-reminder';bar.setAttribute('role','status');bar.innerHTML='<div><b>One account check remains.</b><span>Confirm age eligibility and the current community agreements.</span></div><a href="/settings.html?section=legal">Complete in Settings</a>';document.body.appendChild(bar);}catch(e){}
+    },
     async signOut() { if (client) await client.auth.signOut(); window.location.href = this.routes.afterLogout || "/create-account/"; },
 
+    // ---- membership: the database is the source of truth ----
+    membershipFallback(audience,era='paid'){
+      const hiring=audience==='hiring',open=era==='open_house';
+      return {
+        membership_era:era,source:open?'launch_access':'free',
+        is_premium:open,name:hiring?(open?'Hiring Studio':'Hiring Free'):(open?'House+':'House Free'),
+        badge:open?'OPEN HOUSE':'FREE',checkout_available:false,
+        entitlements:{fit_notes:open,application_export:open,hiring_analytics:open,applicant_export:open,talent_lists_limit:open?100:0}
+      };
+    },
+    async membership(audience){
+      if(!client) return this.membershipFallback(audience,'paid');
+      try{
+        const {data,error}=await this.withTimeout(client.rpc('ch_my_entitlements',{p_audience:audience||null}),8000);
+        if(error)throw error;
+        if(data)return data;
+      }catch(error){console.warn('Membership service unavailable:',error?.message||error);}
+      // A failed entitlement call must not freeze the dashboard. Full access
+      // is granted only when the public setting explicitly confirms Open House.
+      try{
+        const {data}=await this.withTimeout(client.from('app_settings').select('membership_era').eq('id',1).maybeSingle(),2500);
+        return this.membershipFallback(audience,data?.membership_era==='open_house'?'open_house':'paid');
+      }catch(error){return this.membershipFallback(audience,'paid');}
+    },
+    membershipLimit(access,key,fallback=0){
+      const raw=access&&access.entitlements?access.entitlements[key]:undefined;
+      const n=Number(raw);return Number.isFinite(n)?n:fallback;
+    },
+    hasMembershipFeature(access,key){return !!(access&&access.entitlements&&access.entitlements[key]);},
+    paidMark(label='PAID'){return `<span class="paid-feature-mark"><i></i>${this.esc(label)}</span>`;},
+    membershipCard(access,audience){
+      if(!access)return '';
+      const launch=access.source==='launch_access',roster=access.source==='founding_roster',trial=access.source==='trial';
+      const label=roster?'Founding Roster':launch?'Launch access':trial?'7-day trial':(access.badge||'FREE');
+      const copy=roster?'Chosen by VISUAREALM. Your full access does not expire.':launch?'You have the whole platform while Creative House is new. No card, no countdown.':trial?`Your trial is active${access.trial_end?' until '+this.fmtDate(access.trial_end):''}.`:(access.is_premium?'Your paid membership is active.':'The free House keeps opportunity, applications and safety open.');
+      return `<section class="membership-card ${access.is_premium?'is-plus':'is-free'}"><div class="membership-card-copy"><span class="membership-overline">${this.esc(audience==='hiring'?'Hiring membership':'Creative House membership')}</span><h3>${this.esc(access.name||'House Free')} ${access.is_premium?this.paidMark():''}</h3><p>${this.esc(copy)}</p></div><div class="membership-state"><i></i><b>${this.esc(label)}</b><span>${access.membership_era==='open_house'?'The House is open':'Membership era live'}</span></div></section>`;
+    },
+    async startCheckout(plan,interval='month'){
+      if(!client)return false;
+      const prices={house_plus:{month:'$6.99 CAD each month',year:'$59 CAD each year'},hiring_studio:{month:'$19 CAD each month',year:'$190 CAD each year'}},price=prices[plan]?.[interval]||'the price shown in Stripe Checkout';
+      const accepted=await this.confirm({title:'Review before Stripe',message:`You are choosing ${price}, plus applicable tax. The membership renews automatically until cancelled. Any trial and first charge date will appear in Checkout. Open House never converts automatically. By continuing, you accept the Membership & Billing Terms.`,ok:'Continue to Stripe'});if(!accepted)return false;
+      try{const {error}=await client.rpc('ch_record_billing_acceptance',{p_version:'2026-07-21'});if(error){await this.alert({title:'Billing agreement not recorded',message:'We could not safely record the billing terms acceptance. Nothing was charged. Refresh and try again.'});return false;}}catch(e){await this.alert({title:'Billing agreement unavailable',message:'Nothing was charged. Install the launch legal migration before testing Checkout.'});return false;}
+      const {data,error}=await client.functions.invoke('stripe-checkout',{body:{plan,interval}});
+      const target=this.safePaymentUrl(data?.url,'checkout');
+      if(error||!target){await this.alert({title:'Checkout is not ready',message:data?.error||this.friendlyError(error,'We could not open checkout. Nothing was charged.')});return false;}
+      location.href=target;return true;
+    },
+    async openBillingPortal(){
+      if(!client)return false;
+      const {data,error}=await client.functions.invoke('stripe-portal');
+      const target=this.safePaymentUrl(data?.url,'portal');
+      if(error||!target){await this.alert({title:'Billing settings unavailable',message:data?.error||this.friendlyError(error,'We could not open billing settings.')});return false;}
+      location.href=target;return true;
+    },
+
     esc(v){ if(v==null) return ""; return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); },
+    safeUrl(value,kind='link'){
+      let raw=String(value||'').trim();if(!raw)return '';
+      if(kind==='instagram'&&/^@?[a-z0-9._]{1,30}$/i.test(raw))raw='https://instagram.com/'+raw.replace(/^@/,'');
+      try{
+        const url=new URL(raw,location.origin),same=url.origin===location.origin;
+        if(url.protocol==='https:'||(url.protocol==='http:'&&(same||['localhost','127.0.0.1'].includes(location.hostname))))return url.href;
+        return '';
+      }catch(e){return '';}
+    },
+    safeImageUrl(value){return this.safeUrl(value,'image');},
+    safeAppPath(value,fallback='/dashboard/'){
+      try{const url=new URL(String(value||''),location.origin);return url.origin===location.origin&&['http:','https:'].includes(url.protocol)?url.pathname+url.search+url.hash:fallback;}catch(e){return fallback;}
+    },
+    safePaymentUrl(value,kind){
+      try{const url=new URL(String(value||''));const allowed=kind==='portal'?['billing.stripe.com']:['checkout.stripe.com'];return url.protocol==='https:'&&allowed.includes(url.hostname)?url.href:'';}catch(e){return '';}
+    },
+    withTimeout(promise,ms=20000,message='This is taking longer than expected. Check your connection and try again.'){
+      let timer;
+      const timeout=new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(message)),ms);});
+      return Promise.race([Promise.resolve(promise),timeout]).finally(()=>clearTimeout(timer));
+    },
     pill(s){ s=(s||"").toLowerCase(); return `<span class="pill ${s}">${this.esc(s.charAt(0).toUpperCase()+s.slice(1))}</span>`; },
     fmtDate(ts){ if(!ts) return "—"; try{return new Date(ts).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});}catch(e){return "—";} },
     toast(el,msg,kind){ if(!el){alert(msg);return;} el.textContent=msg; el.className="alert show "+(kind==="ok"?"ok":"err"); },
@@ -298,7 +380,7 @@
           <div class="report-dialog-head"><span class="report-mark" aria-hidden="true">VR</span><div><span class="dialog-kicker">Safety desk · private</span><h4>${this.esc(opts.title)}</h4><p>A person reads every report.</p></div></div>
           <div class="report-trust"><span><i>1</i><b>Tell us what</b><small>Choose the closest concern</small></span><span><i>2</i><b>Add context</b><small>Give the reviewer a clear start</small></span><span><i>3</i><b>Human review</b><small>No automatic punishment</small></span></div>
           <fieldset class="report-reasons"><legend>What should we look at?</legend><div id="rp-reasons">${reasons.map(([code,label])=>`<button type="button" data-reason="${code}">${this.esc(label)}</button>`).join('')}</div></fieldset>
-          <label class="f"><span class="lab">What happened?</span><textarea id="rp-details" placeholder="Share what happened, when it happened, and anything a reviewer should check."></textarea><span class="hint">Write plainly. Useful links can be included here.</span></label>
+          <label class="f"><span class="lab">What happened?</span><textarea id="rp-details" minlength="15" maxlength="4000" placeholder="Share what happened, when it happened, and anything a reviewer should check."></textarea><span class="hint">Write plainly. Useful links can be included here. Up to 4,000 characters.</span></label>
           <div class="report-privacy"><b>Your name stays with the safety team.</b><span>The person you report is not shown who sent it. A report creates a case, not a penalty.</span></div>
           <div class="cd-actions"><button class="btn ghost sm" data-x>Not now</button><button class="btn solid sm" data-o disabled>Send privately</button></div>
         </div>`;
@@ -312,7 +394,9 @@
           const btn=e.target; btn.disabled=true; btn.innerHTML='<span class="loader"></span>';
           const details=bg.querySelector('#rp-details').value.trim();
           if(['safety','harassment','discrimination','sexual','fraud','impersonation','other'].includes(category)&&details.length<15){btn.disabled=false;btn.textContent='Send privately';this.alert({title:'A little more context',message:'Please add at least one clear sentence so a moderator has enough to act on.'});return;}
-          const {data,error}=await this.sb.rpc('ch_file_report',{p_target_kind:opts.kind,p_category:category,p_details:details||null,p_listing:opts.listing||null,p_member:opts.member||null,p_evidence:[],p_context_application:opts.contextApplication||null});
+          let data,error;
+          try{({data,error}=await this.withTimeout(this.sb.rpc('ch_file_report',{p_target_kind:opts.kind,p_category:category,p_details:details||null,p_listing:opts.listing||null,p_member:opts.member||null,p_evidence:[],p_context_application:opts.contextApplication||null}),20000));}
+          catch(networkError){error=networkError;}
           close(!error);
           if(error){
             this.alert({
@@ -345,22 +429,23 @@
       const age=!since?'—':months<1?'New this month':months<12?`${months} month${months===1?'':'s'} on Creative House`:`${Math.floor(months/12)} year${months>=24?'s':''} on Creative House`;
       const bg=document.createElement('div'); bg.className='cdialog-bg';
       bg.innerHTML=`<div class="cdialog hirer-card" role="dialog" aria-modal="true">
-        <div class="hp-cover"><span>Hiring profile</span></div>
+        <div class="hp-cover"><span>VISUAREALM CASTING / HIRER PROFILE</span><b>The room behind the role.</b><i></i></div>
         <div class="hp-head">
-          ${p.company_logo?`<img class="hp-logo" src="${this.esc(p.company_logo)}" alt="">`:`<div class="hp-logo ph">${this.esc((p.company_name||p.full_name||'?').slice(0,1).toUpperCase())}</div>`}
-          <div><h4>${this.esc(p.company_name||p.full_name||'Hiring member')}</h4><div class="hp-sub">${this.esc([p.full_name&&p.company_name?p.full_name:null,p.city].filter(Boolean).join(' · '))||'Creative House'}</div></div>
+          ${this.safeImageUrl(p.company_logo)?`<img class="hp-logo" src="${this.esc(this.safeImageUrl(p.company_logo))}" alt="${this.esc(p.company_name||p.full_name||'Hiring team')} logo">`:`<div class="hp-logo ph">${this.esc((p.company_name||p.full_name||'?').slice(0,1).toUpperCase())}</div>`}
+          <div><span class="hp-kicker">Applicant-facing company profile</span><h4>${this.esc(p.company_name||p.full_name||'Hiring member')}</h4><div class="hp-sub">${this.esc([p.full_name&&p.company_name?p.full_name:null,p.city].filter(Boolean).join(' · '))||'Creative House'}</div></div>
         </div>
         <div class="hp-badges">${p.id_verified?'<span class="hp-b ok">Verified identity</span>':'<span class="hp-b">Verification pending</span>'}${p.is_mentor?'<span class="hp-b mentor">Mentor</span>':''}</div>
-        ${p.company_about?`<p class="hp-about">${this.esc(p.company_about)}</p>`:''}
+        <div class="hp-trust"><span><i>01</i><b>Real identity</b><small>${p.id_verified?'Verified by the House':'Verification in progress'}</small></span><span><i>02</i><b>Visible history</b><small>${p.listings_posted||0} listing${(p.listings_posted||0)===1?'':'s'} posted</small></span><span><i>03</i><b>Reportable</b><small>Safety tools stay available</small></span></div>
+        <section class="hp-story"><span>ABOUT THIS ROOM</span><p class="hp-about">${this.esc(p.company_about||'This hirer has not added their full company story yet. Read the listing carefully and use the reporting tools if anything feels unclear.')}</p></section>
         <div class="hp-stats">
           <div><span class="n">${p.listings_posted||0}</span><span class="l">Listings posted</span></div>
           <div><span class="n">${p.people_hired||0}</span><span class="l">People hired</span></div>
           <div><span class="n">${p.company_founded?this.esc(p.company_founded):'—'}</span><span class="l">Founded</span></div>
           <div><span class="n">${p.company_size?this.esc(p.company_size):'—'}</span><span class="l">Team size</span></div>
         </div>
-        <div class="hp-age">${this.esc(age)}</div>
-        ${p.company_site?`<a class="btn ghost sm full" href="${this.esc(p.company_site)}" target="_blank" rel="noopener">Visit website</a>`:''}
-        <div class="cd-actions"><button class="report-btn" data-report-hirer>Report this hirer</button><button class="btn ghost sm" data-x>Close profile</button></div>
+        <div class="hp-age"><i></i>${this.esc(age)}</div>
+        <div class="hp-profile-actions">${this.safeUrl(p.company_site)?`<a class="btn solid" href="${this.esc(this.safeUrl(p.company_site))}" target="_blank" rel="noopener noreferrer">Visit their website</a>`:''}<button class="btn ghost" data-x>Return to the listing</button></div>
+        <div class="cd-actions"><span>Something does not feel right?</span><button class="report-btn" data-report-hirer>Report this hirer privately</button></div>
       </div>`;
       document.body.appendChild(bg); requestAnimationFrame(()=>bg.classList.add('show'));
       const close=()=>{ bg.classList.remove('show'); setTimeout(()=>bg.remove(),200); };
@@ -370,11 +455,11 @@
     },
 
     // ---- google oauth ----
-    async signInWithGoogle(mode){
+    async signInWithGoogle(mode,legal){
       const redirect=location.origin+(this.routes&&this.routes.afterLogin?this.routes.afterLogin:'/dashboard/');
       return this.sb.auth.signInWithOAuth({
         provider:'google',
-        options:{ redirectTo:redirect, queryParams:{ access_type:'offline', prompt:'consent' }, data: mode?{primary_mode:mode}:undefined }
+        options:{ redirectTo:redirect, queryParams:{ access_type:'offline', prompt:'consent' }, data:(mode||legal)?{primary_mode:mode||'applicant',...(legal||{})}:undefined }
       });
     },
 
@@ -481,7 +566,7 @@
       panel.innerHTML=`<div class="fab-head"><div><span class="fab-eyebrow">A direct line to the house</span><h4>How can we help?</h4></div><button class="fab-close" id="vr-fbclose" aria-label="Close">&times;</button></div>
         <p class="fab-intro">Share an idea, flag something that does not feel right, or tell us when the site gets in your way. Reports stay private with the team.</p>
         <div class="seg" aria-label="Message type"><button data-k="feedback" class="on">Idea</button><button data-k="report">Report</button><button data-k="bug">Site issue</button></div>
-        <label class="fab-label" for="vr-fbmsg">Your note</label><textarea id="vr-fbmsg" placeholder="Give us the details that would help us understand."></textarea>
+        <label class="fab-label" for="vr-fbmsg">Your note</label><textarea id="vr-fbmsg" maxlength="4000" placeholder="Give us the details that would help us understand."></textarea>
         <div class="alert" id="vr-fbalert"></div>
         <button class="btn solid full sm" id="vr-fbsend">Send privately</button>
         <p class="fab-email">Prefer email? <a href="mailto:${SUPPORT_EMAIL}">${SUPPORT_EMAIL}</a></p>`;
@@ -498,9 +583,9 @@
         // client-side speed bump; the database holds the real line
         const wait=Math.ceil((20000-(Date.now()-this.lsGet("last_feedback",0)))/1000);
         if(wait>0){ this.toast(al,`Give it ${wait} more second${wait===1?"":"s"}. We got the last one.`,"err"); return; }
-        let user_id=null,email=null; const s=await this.getSession(); if(s){ user_id=s.user.id; email=s.user.email; }
+        const s=await this.getSession();if(!s){this.toast(al,"Sign in before sending. This protects the support line from spam.","err");return;}const user_id=s.user.id,email=s.user.email;
         btn.disabled=true; const label=btn.textContent; btn.innerHTML='<span class="loader"></span>';
-        const { error }=await client.from("feedback").insert({ user_id, email, kind, page:location.pathname, message:msg });
+        let error;try{({error}=await this.withTimeout(client.from("feedback").insert({user_id,email,kind,page:location.pathname,message:msg}),20000));}catch(x){error=x;}
         btn.disabled=false; btn.textContent=label;
         if(error){ this.toast(al,this.friendlyError(error,"That didn\u2019t send. Try again in a moment."),"err"); return; }
         this.lsSet("last_feedback",Date.now());
@@ -558,6 +643,8 @@
           <a href="/creative-house/">The House</a>
           <a href="/pricing/">Pricing</a>
           <a href="/community-guidelines.html">Community Standards</a>
+          <a href="/terms.html">Terms</a>
+          <a href="/billing-terms.html">Billing</a>
           <a href="/privacy.html">Privacy</a>
           <button type="button" data-privacy>Cookie choices</button>
           <a href="mailto:${SUPPORT_EMAIL}">Contact</a>
@@ -618,7 +705,7 @@
             <li><b>Keep opportunities honest.</b><span>No scams, fake productions, surprise fees or hidden expectations.</span></li>
             <li><b>Communicate.</b><span>If plans change, say so. People are making real decisions around you.</span></li>
           </ul>
-          <p class="rules-links">Read the full <a href="/community-guidelines.html" target="_blank">Community Standards</a> and <a href="/privacy.html" target="_blank">Privacy Policy</a>.</p>
+          <p class="rules-links">Read the full <a href="/community-guidelines.html" target="_blank" rel="noopener noreferrer">Community Standards</a> and <a href="/privacy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>
           <label class="agree rules-agree">
             <input type="checkbox" id="rg-check" style="width:auto;margin-top:3px;flex:none;">
             <span>I understand what this community asks of me, and I agree to show up with care.</span>
@@ -714,7 +801,7 @@
         }));
         // opening one marks that one read — not the whole panel
         list.querySelectorAll('.bell-item.clickable').forEach(x=>{
-          const go=async()=>{ await client.from('notifications').update({is_read:true}).eq('id',x.dataset.id); location.href=x.dataset.link; };
+          const go=async()=>{ await client.from('notifications').update({is_read:true}).eq('id',x.dataset.id); location.href=this.safeAppPath(x.dataset.link); };
           x.addEventListener('click',go);
           x.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } });
         });

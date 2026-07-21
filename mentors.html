@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Mentors | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch1">
 </head>
 <body class="app">
 <div class="grain" aria-hidden="true"></div>
@@ -39,15 +39,16 @@
   <div id="m-body"></div>
 </div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
   if(!CH.guardConfig('body')) return;
   const session=await CH.requireAuth(); if(!session) return;
+  CH.mountLegalReminder();
   document.getElementById('logout').addEventListener('click',()=>CH.signOut());
   const me=await CH.profile(); if(!CH.enforceAccount(me)) return;
   try{const {data:cfg}=await CH.sb.from('app_settings').select('maintenance_active,maintenance_message').eq('id',1).maybeSingle(); if(!CH.enforceMaintenance(me,cfg||{})) return;}catch(e){}
@@ -87,8 +88,8 @@
   const modal=document.getElementById('m-modal');
   function openMentor(id){
     const m=mMap[id],L=m.links||{};
-    const contact=m.contact_pref||'Email';
-    const contactLink = contact==='Instagram'&&L.instagram ? L.instagram : contact==='Website'&&L.website ? L.website : `mailto:${m.email}`;
+    const contact=m.contact_pref||'Email',imdb=CH.safeUrl(L.imdb),website=CH.safeUrl(L.website),reel=CH.safeUrl(L.reel),instagram=CH.safeUrl(L.instagram,'instagram');
+    const contactLink = contact==='Instagram'&&instagram ? instagram : contact==='Website'&&website ? website : `mailto:${encodeURIComponent(m.email||'')}`;
     document.getElementById('m-body').innerHTML=`
       <span class="mentor-chip">${CH.mentorStar()} Community Mentor</span>
       <h3 style="margin:14px 0 2px;">${CH.esc(m.full_name||'Mentor')}</h3>
@@ -96,9 +97,9 @@
       ${m.mentor_bio||m.bio?`<p style="margin-top:16px;line-height:1.75;">${CH.esc(m.mentor_bio||m.bio)}</p>`:''}
       ${(m.mentor_specialties||[]).length?`<p class="fieldset-title" style="margin-top:20px;">Specialties</p><div class="tags">${(m.mentor_specialties||[]).map(s=>`<span class="tag">${CH.esc(s)}</span>`).join('')}</div>`:''}
       <p class="fieldset-title" style="margin-top:20px;">Portfolio</p>
-      <div class="tags">${L.imdb?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.imdb)}">IMDb</a>`:''}${L.website?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.website)}">Website</a>`:''}${L.reel?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.reel)}">Reel</a>`:''}${L.instagram?`<a class="tag" target="_blank" rel="noopener" href="${CH.esc(L.instagram)}">Instagram</a>`:''}${!(L.imdb||L.website||L.reel||L.instagram)?'<span class="muted mono" style="font-size:.66rem;">No links shared.</span>':''}</div>
+      <div class="tags">${imdb?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(imdb)}">IMDb</a>`:''}${website?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(website)}">Website</a>`:''}${reel?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(reel)}">Reel</a>`:''}${instagram?`<a class="tag" target="_blank" rel="noopener noreferrer" href="${CH.esc(instagram)}">Instagram</a>`:''}${!(imdb||website||reel||instagram)?'<span class="muted mono" style="font-size:.66rem;">No links shared.</span>':''}</div>
       <div class="split"></div>
-      <a class="btn solid" href="${CH.esc(contactLink)}" target="_blank" rel="noopener">Reach out via ${CH.esc(contact)}</a>
+      <a class="btn solid" href="${CH.esc(contactLink)}" target="_blank" rel="noopener noreferrer">Reach out via ${CH.esc(contact)}</a>
       <p class="hint" style="margin-top:12px;">Be respectful of their time. A clear, kind message goes a long way.</p>`;
     modal.classList.add('show');
   }

@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="theme-color" content="#050505">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <title>Realm Music | VISUAREALM</title>
@@ -12,7 +12,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/public-nav.css">
+  <link rel="stylesheet" href="/public-nav.css?v=20260721-launch1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -96,7 +96,7 @@
     <section class="note"><div class="note-inner reveal"><span class="tag" style="color:#050505">06 / An honest opening note</span><h2 style="margin-top:2rem">We will open this slowly, and only when it can hold artists well.</h2><p>Realm Music is a label vision in development. We are not taking music submissions yet. Creative House is where you can join us now, build your profile and be part of the wider community as this future department takes shape.</p><a class="button" href="/create-account/?mode=signup">Join Creative House now <span>↗</span></a></div></section>
   </main>
 
-  <footer class="footer"><div class="footer-top"><h2>Somewhere, the first song is still a <em>voice note.</em></h2><div class="footer-links"><a href="/">VISUAREALM</a><a href="/realm-pictures/">Realm Pictures</a><a href="/creative-house/">Creative House</a><a href="/create-account/">Sign in</a><a href="/pricing/">Pricing</a><a href="/privacy.html">Privacy Policy</a><a href="mailto:support@visuarealmstudios.com">Support</a></div></div><div class="wordmark">REALMMUSIC</div><div class="footer-meta"><span>© 2026 VISUAREALM / REALM MUSIC</span><span>Label opening later</span><a href="https://www.visuarealmstudios.com">VISUAREALM Studios ↑</a></div></footer>
+  <footer class="footer"><div class="footer-top"><h2>Somewhere, the first song is still a <em>voice note.</em></h2><div class="footer-links"><a href="/">VISUAREALM</a><a href="/realm-pictures/">Realm Pictures</a><a href="/creative-house/">Creative House</a><a href="/create-account/">Sign in</a><a href="/pricing/">Pricing</a><a href="/privacy.html">Privacy Policy</a><a href="mailto:support@visuarealmstudios.com">Support</a></div></div><div class="wordmark">REALMMUSIC</div><div class="footer-meta"><span>© 2026 VISUAREALM / REALM MUSIC</span><span>Label opening later</span><a href="/">VISUAREALM Studios ↑</a></div></footer>
 
   <script>
     const progress=document.querySelector('.progress'),orbs=document.querySelectorAll('.orb');let frame;
@@ -104,6 +104,6 @@
     addEventListener('scroll',()=>{if(!frame)frame=requestAnimationFrame(paint)},{passive:true});paint();
     const observer=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('in');observer.unobserve(entry.target)}}),{threshold:.1,rootMargin:'0px 0px -30px'});document.querySelectorAll('.reveal').forEach(el=>observer.observe(el));
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script><script src="/public-nav.js" defer></script>
+  <script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script><script src="/master-gate.js?v=20260721-launch1"></script><script src="/public-nav.js?v=20260721-launch1" defer></script>
 </body>
 </html>

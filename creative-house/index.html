@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
   <title>Creative House | VISUAREALM</title>
   <meta name="description" content="Creative House is VISUAREALM's home for the next generation of storytellers. Build a profile, find your people and grow through real creative work.">
   <meta name="theme-color" content="#050505">
@@ -18,7 +18,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/public-nav.css">
+  <link rel="stylesheet" href="/public-nav.css?v=20260721-launch1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,600;0,900;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -291,9 +291,9 @@
     const loader=document.querySelector('#loader'),loaderWord=document.querySelector('#loader-word'),loaderCount=document.querySelector('#loader-count'),loaderMessage=document.querySelector('#loader-message');
     const frames=[['BEGIN','', 'You do not have to arrive finished.'],['SHOW UP','tall','Bring the work, the question or the first attempt.'],['BE SEEN','ember','Your point of view deserves a clear place to live.'],['FIND PEOPLE','tall','One introduction can become a crew.'],['MAKE PROOF','', 'One real room can become the next invitation.'],['YOU BELONG','mono','Before the credit. Before the permission.'],['CREATIVE HOUSE','ember','The first generation is now forming.']];
     let frameIndex=0,loaderTimer;
-    const finishLoader=()=>{clearTimeout(loaderTimer);loader?.classList.add('done');setTimeout(()=>loader?.remove(),850)};
-    const playLoader=()=>{if(!loader||matchMedia('(prefers-reduced-motion: reduce)').matches){finishLoader();return}const frame=frames[frameIndex];loaderWord.textContent=frame[0];loaderWord.className=`loader-word ${frame[1]}`;loaderMessage.textContent=frame[2];loaderCount.textContent=`${String(frameIndex+1).padStart(2,'0')} / 07`;frameIndex++;loaderTimer=setTimeout(frameIndex<frames.length?playLoader:finishLoader,frameIndex===frames.length?700:245)};
-    loader?.addEventListener('click',finishLoader);addEventListener('keydown',e=>{if(['Escape','Enter',' '].includes(e.key))finishLoader()});playLoader();
+    let loaderFinished=false;const finishLoader=()=>{if(loaderFinished)return;loaderFinished=true;clearTimeout(loaderTimer);loader?.classList.add('done');setTimeout(()=>loader?.remove(),300)};
+    const playLoader=()=>{if(!loader||matchMedia('(prefers-reduced-motion: reduce)').matches){finishLoader();return}const frame=frames[frameIndex];loaderWord.textContent=frame[0];loaderWord.className=`loader-word ${frame[1]}`;loaderMessage.textContent=frame[2];loaderCount.textContent=`${String(frameIndex+1).padStart(2,'0')} / 07`;frameIndex++;loaderTimer=setTimeout(frameIndex<frames.length?playLoader:finishLoader,frameIndex===frames.length?150:80)};
+    loader?.addEventListener('click',finishLoader);addEventListener('keydown',e=>{if(['Escape','Enter',' '].includes(e.key))finishLoader()});let houseLoaderSeen=false;try{houseLoaderSeen=sessionStorage.getItem('vr-house-loader-v2')==='seen';sessionStorage.setItem('vr-house-loader-v2','seen')}catch(e){}if(houseLoaderSeen)finishLoader();else{playLoader();setTimeout(finishLoader,1200)}
 
     const nav=document.querySelector('#site-nav'),progress=document.querySelector('.scroll-progress'),hero=document.querySelector('.hero');
     const ember=document.querySelector('.atmo-ember'),bone=document.querySelector('.atmo-bone'),deep=document.querySelector('.atmo-deep');
@@ -311,6 +311,6 @@
     const flicker=()=>{if(!letters.length||matchMedia('(prefers-reduced-motion: reduce)').matches)return;const letter=letters[Math.floor(Math.random()*letters.length)];letter.classList.add('signal');setTimeout(()=>letter.classList.remove('signal'),260);setTimeout(flicker,1300+Math.random()*4300)};
     setTimeout(flicker,1900+Math.random()*1700);
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script><script src="/public-nav.js" defer></script>
+  <script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script><script src="/master-gate.js?v=20260721-launch1"></script><script src="/public-nav.js?v=20260721-launch1" defer></script>
 </body>
 </html>

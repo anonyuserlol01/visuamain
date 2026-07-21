@@ -16,7 +16,8 @@ window.VISUAREALM_CONFIG = {
         afterLogin:  "/dashboard/",
         afterLogout: "/create-account/",
         admin:       "/admin/",
-        // Your main marketing site (used by the "back" / brand links)
-        home:        "https://visuarealmstudios.com"
+        // Origin-relative so production, localhost and LAN testing all stay
+        // on the same host and protocol.
+        home:        "/"
     }
 };

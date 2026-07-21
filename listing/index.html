@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Opportunity | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch1">
 </head>
 <body class="app">
 <div class="grain" aria-hidden="true"></div>
 
 <header class="appbar">
-  <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="https://visuarealmstudios.com" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
+  <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="/" class="brand">VISUA<span>REALM</span></a><span class="sub">Creative House</span></div>
   <nav><a href="/creative-house/" class="navlink">The House</a><a href="/pricing/" class="navlink">Pricing</a><a href="/dashboard/" class="navlink" id="dash-link" style="display:none;">Dashboard</a><a href="/create-account/" class="navlink solid" id="auth-link">Sign in</a></nav>
 </header>
 
@@ -29,16 +29,16 @@
   <p class="mono muted" id="apply-meta" style="font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;margin-bottom:18px;"></p>
   <div class="alert" id="apply-alert"></div>
   <form id="apply-form">
-    <label class="f"><span class="lab">Why you? (cover note)</span><textarea id="a-note" required placeholder="A few honest lines about why this role."></textarea></label>
-    <label class="f"><span class="lab">Portfolio link (optional)</span><input id="a-link" type="url"></label>
+    <label class="f"><span class="lab">Why you? (cover note)</span><textarea id="a-note" required minlength="15" maxlength="5000" placeholder="A few honest lines about why this role."></textarea></label>
+    <label class="f"><span class="lab">Portfolio link (optional)</span><input id="a-link" type="url" inputmode="url" maxlength="500"></label>
     <div class="spread"><button type="button" class="btn ghost sm" id="apply-cancel">Cancel</button><button type="submit" class="btn solid" id="apply-submit">Submit Application</button></div>
   </form>
 </div></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/config.js"></script>
-<script src="/master-gate.js"></script>
-<script src="/app.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script>
+<script src="/config.js?v=20260721-launch1"></script>
+<script src="/master-gate.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch1"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert'), content=document.getElementById('content');
@@ -48,7 +48,7 @@
   if(session){document.getElementById('auth-link').style.display='none';document.getElementById('dash-link').style.display='inline-block';}
 
   if(!slug){CH.go404('missing-listing');return;}
-  const {data:o,error}=await CH.sb.from('openings').select('*').eq('share_slug',slug).maybeSingle();
+  const {data:o,error}=await CH.sb.rpc('ch_public_listing',{p_slug:slug});
   if(error||!o){CH.go404('listing-not-found');return;}
   document.title=((o.title||'Opportunity').slice(0,38))+' | Creative House';
   // enough separate people flagged this listing that it is off the board while a moderator reads it
@@ -57,7 +57,7 @@
   const tl=CH.timeLeft(o.expires_at);
   const expired=(o.status!=='open')||(o.expires_at && new Date(o.expires_at)<new Date());
   content.innerHTML=`
-    ${o.poster_url?`<div class="listing-poster"><img src="${CH.esc(o.poster_url)}" alt="${CH.esc(o.title)} poster" loading="lazy"></div>`:''}
+    ${CH.safeImageUrl(o.poster_url)?`<div class="listing-poster"><img src="${CH.esc(CH.safeImageUrl(o.poster_url))}" alt="${CH.esc(o.title)} poster" loading="lazy"></div>`:''}
     <span class="eyebrow">${CH.esc(o.department||o.kind||'Role')} · ${CH.esc(o.city||'Toronto')}${o.company?' · '+CH.esc(o.company):''}</span>
     <h1 class="page" style="margin-bottom:14px;">${CH.esc(o.title)}</h1>
     <div class="tags" style="margin-bottom:14px;">${CH.pill(o.status)}<span class="expiry ${tl.cls}">${tl.text}</span>${o.production_title?`<span class="tag">${CH.esc(o.production_title)}</span>`:''}${o.genre?`<span class="tag">${CH.esc(o.genre)}</span>`:''}${o.commitment?`<span class="tag">${CH.esc(o.commitment)}</span>`:''}${o.location?`<span class="tag">${CH.esc(o.location)}</span>`:''}</div>
@@ -65,8 +65,8 @@
     ${o.synopsis?`<div class="panel showcase" style="margin-bottom:16px;"><p class="fieldset-title">Synopsis</p><p style="line-height:1.8;font-size:1.02rem;">${CH.esc(o.synopsis)}</p></div>`:''}
     ${o.description?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">The Role</p><p style="line-height:1.75;">${CH.esc(o.description)}</p></div>`:''}
     ${o.requirements?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Looking For</p><p style="line-height:1.75;">${CH.esc(o.requirements)}</p></div>`:''}
-    ${(o.gallery&&o.gallery.length)?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Gallery</p><div class="listing-gallery">${o.gallery.map(g=>`<a href="${CH.esc(g)}" target="_blank" rel="noopener"><img src="${CH.esc(g)}" alt="Still" loading="lazy"></a>`).join('')}</div></div>`:''}
-    ${o.script_url?`<div class="panel" style="margin-bottom:16px;"><div class="spread"><p class="fieldset-title" style="margin:0;">Script / sides</p><a class="btn ghost sm" href="${CH.esc(o.script_url)}" target="_blank" rel="noopener">Open document</a></div></div>`:''}
+    ${(o.gallery&&o.gallery.some(g=>CH.safeImageUrl(g)))?`<div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Gallery</p><div class="listing-gallery">${o.gallery.map(g=>CH.safeImageUrl(g)?`<a href="${CH.esc(CH.safeImageUrl(g))}" target="_blank" rel="noopener noreferrer"><img src="${CH.esc(CH.safeImageUrl(g))}" alt="Production still" loading="lazy"></a>`:'').join('')}</div></div>`:''}
+    ${CH.safeUrl(o.script_url)?`<div class="panel" style="margin-bottom:16px;"><div class="spread"><p class="fieldset-title" style="margin:0;">Script / sides</p><a class="btn ghost sm" href="${CH.esc(CH.safeUrl(o.script_url))}" target="_blank" rel="noopener noreferrer">Open document</a></div></div>`:''}
     <div class="panel apply-cta"><div class="spread">
       <button class="share-btn" id="share" aria-label="Copy link to this listing">Share this listing</button>
       <div id="cta"></div>
@@ -79,7 +79,7 @@
 
   // suspended users cannot apply
   const meProf=await CH.profile();
-  if(meProf && meProf.status==='suspended'){ cta.innerHTML=`<a class="btn ghost" href="mailto:${CH.SUPPORT_EMAIL}?subject=Account%20Suspension%20Appeal">Account suspended — contact support</a>`; return; }
+  if(meProf&&!CH.enforceAccount(meProf))return;
 
   // logged in — check existing application
   const {data:existing}=await CH.sb.from('applications').select('status,status_announced_at').eq('opening_id',o.id).eq('applicant_id',session.user.id).maybeSingle();
@@ -92,10 +92,10 @@
   document.getElementById('apply-x').addEventListener('click',()=>modal.classList.remove('show'));
   modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
   document.getElementById('apply-form').addEventListener('submit',async(e)=>{
-    e.preventDefault();const a=document.getElementById('apply-alert');const btn=document.getElementById('apply-submit');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
-    const {error}=await CH.sb.from('applications').insert({opening_id:o.id,applicant_id:session.user.id,cover_note:document.getElementById('a-note').value.trim(),portfolio_link:document.getElementById('a-link').value.trim()||null});
+    e.preventDefault();const a=document.getElementById('apply-alert'),portfolioRaw=document.getElementById('a-link').value.trim(),portfolio=CH.safeUrl(portfolioRaw);if(portfolioRaw&&!portfolio){CH.toast(a,'Use a complete https:// portfolio link.','err');return;}const btn=document.getElementById('apply-submit');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
+    let error;try{({error}=await CH.withTimeout(CH.sb.from('applications').insert({opening_id:o.id,applicant_id:session.user.id,cover_note:document.getElementById('a-note').value.trim(),portfolio_link:portfolio||null}),20000));}catch(x){error=x;}
     btn.disabled=false;btn.textContent='Submit Application';
-    if(error){CH.toast(a,error.code==='23505'?'You already applied.':error.message,'err');return;}
+    if(error){CH.toast(a,error.code==='23505'?'You already applied.':CH.friendlyError(error,'The application could not be sent. Check your connection and try again.'),'err');return;}
     modal.classList.remove('show');CH.toast(alertEl,'Application submitted. Good luck.','ok');
     cta.innerHTML='<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · submitted</span>';
     // the badge itself is awarded by the database on insert — this shows it off

@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<style>html.master-checking body{visibility:hidden!important}</style><script>document.documentElement.classList.add('master-checking');setTimeout(()=>document.documentElement.classList.remove('master-checking'),6000)</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex">
 <title>404 | Creative House</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
-<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/app.css?v=20260721-launch1">
 </head>
 <body class="error-page">
   <main class="error-shell">
@@ -26,6 +26,6 @@
   <script>
   (function(){const reason=new URLSearchParams(location.search).get('reason');if(reason==='listing-not-found'||reason==='missing-listing'||reason==='project-not-found'){document.getElementById('error-title').textContent='That listing has left the room.';document.getElementById('error-copy').textContent='It may have closed, expired, or moved while you were looking. Your next opportunity is still inside the house.';}document.getElementById('error-back').addEventListener('click',()=>{if(history.length>1)history.back();else location.href='/dashboard/';});})();
   </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="/config.js"></script><script src="/master-gate.js"></script>
+<script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script><script src="/master-gate.js?v=20260721-launch1"></script>
 </body>
 </html>
