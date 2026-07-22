@@ -13,7 +13,7 @@
 <div class="grain" aria-hidden="true"></div>
 <header class="appbar">
   <div class="brand-wrap"><button class="backbtn" title="Go back"><span class="ar">&larr;</span> Back</button><a href="/creative-house" class="brand">VISUA<span>REALM</span></a><span class="sub">Mission Control</span></div>
-  <nav><button id="admin-command" class="admin-command-trigger" type="button" aria-label="Quick jump"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>Quick jump</span><kbd>⌘K</kbd></button><button id="admin-mobile-toggle" class="mobile-console-toggle" type="button" aria-pressed="false" title="Toggle mobile console"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect><path d="M10 18.5h4"></path></svg><span>Mobile view</span></button><a href="/creative-house/" class="navlink">The House</a><a href="/pricing/" class="navlink">Pricing</a><a href="/dashboard/" class="navlink">My Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
+  <nav><button id="admin-command" class="admin-command-trigger" type="button" aria-label="Quick jump"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg><span>Quick jump</span><kbd>⌘K</kbd></button><button id="admin-mobile-toggle" class="mobile-console-toggle" type="button" aria-pressed="false" title="Toggle mobile console"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"></rect><path d="M10 18.5h4"></path></svg><span>Mobile view</span></button><a href="/creative-house/" class="navlink">The House</a><a href="/dashboard/?tab=Membership" class="navlink">Plans &amp; access</a><a href="/dashboard/" class="navlink">My Dashboard</a><button id="logout" class="navlink">Log out</button></nav>
 </header>
 <nav class="admin-mobile-dock" aria-label="Mission Control mobile navigation">
   <a href="/dashboard/" aria-label="Back to member dashboard"><span aria-hidden="true">⌂</span><b>Dashboard</b></a>
@@ -128,7 +128,7 @@
 <script src="/vendor/supabase-2.110.7.js"></script>
 <script src="/config.js?v=20260721-launch1"></script>
 <script src="/master-gate.js?v=20260721-launch1"></script>
-<script src="/app.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch-v12"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
@@ -570,12 +570,9 @@
         <div class="grid two"><label class="f"><span class="lab">Signup mode</span><select id="st-signup-mode">${[['open','Open'],['paused','Paused'],['invite_only','Invite only'],['maintenance','Maintenance']].map(([v,l])=>`<option value="${v}" ${v===(s.signup_mode||'open')?'selected':''}>${l}</option>`).join('')}</select></label><label class="f"><span class="lab">Reopens (optional)</span><input id="st-signup-date" type="datetime-local" value="${s.signup_reopens_at?new Date(s.signup_reopens_at).toISOString().slice(0,16):''}"></label></div>
         <label class="f"><span class="lab">Message shown to new members</span><input id="st-signup-msg" value="${CH.esc(s.signup_message||'')}" placeholder="We are opening the doors again soon."></label>
       </div>
-      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Community configuration</p>
-        <label class="agree" style="display:flex;gap:10px;align-items:center;cursor:pointer;padding:8px 0;"><input type="checkbox" id="st-music" ${s.music_waitlist!==false?'checked':''} style="width:auto;flex:none;"> <span>Music waitlist teaser visible</span></label>
-      </div>
-      <div class="panel" style="margin-bottom:16px;"><p class="fieldset-title">Email templates <span class="mono muted" style="font-size:.6rem;">(stored for future SMTP)</span></p>
-        <label class="f"><span class="lab">Welcome email</span><textarea id="st-welcome" placeholder="Welcome to Creative House…">${CH.esc(s.email_welcome||'')}</textarea></label>
-        <label class="f"><span class="lab">Suspension email</span><textarea id="st-suspend" placeholder="Regarding your account…">${CH.esc(s.email_suspend||'')}</textarea></label>
+      <div class="panel email-operations" style="margin-bottom:16px;"><div class="spread"><div><p class="fieldset-title">Transactional email</p><h3>Authentication and welcome delivery</h3></div><span class="membership-era-chip open">PROVIDER MANAGED</span></div>
+        <p class="hint">Confirmation, password-reset and one-time welcome emails are delivered through the authenticated mail provider. Their live designs are managed in Supabase and the deployed welcome function, so Mission Control never pretends that an unused text box changes production email.</p>
+        <div class="subscriber-stats"><article><b>01</b><span>Confirm signup</span></article><article><b>01</b><span>Welcome after verification</span></article><article><b>ONCE</b><span>Delivery guard</span></article></div>
       </div>
       <div class="panel"><p class="fieldset-title">Support</p><p class="lead" style="margin-top:0;">Members are directed to <a href="mailto:support@visuarealmstudios.com">support@visuarealmstudios.com</a> for account issues, appeals, and help. Rule management lives in the <a href="/community-guidelines.html">Community Standards</a>.</p></div>
       <button class="btn solid" id="st-save" style="margin-top:18px;">Save settings</button>`;
@@ -591,7 +588,7 @@
     document.getElementById('st-save').addEventListener('click',async()=>{
       const mode=document.getElementById('st-signup-mode').value,msg=document.getElementById('st-signup-msg').value.trim()||null,date=document.getElementById('st-signup-date').value;
       const gate=await CH.sb.rpc('ch_set_signup_mode',{p_mode:mode,p_message:msg,p_reopens_at:date?new Date(date).toISOString():null});if(gate.error){CH.toast(alertEl,gate.error.message,'err');return;}
-      const payload={maintenance_message:document.getElementById('st-maint-msg').value.trim()||null,music_waitlist:document.getElementById('st-music').checked,email_welcome:document.getElementById('st-welcome').value.trim()||null,email_suspend:document.getElementById('st-suspend').value.trim()||null,updated_at:new Date().toISOString()};
+      const payload={maintenance_message:document.getElementById('st-maint-msg').value.trim()||null,updated_at:new Date().toISOString()};
       const {error}=await CH.sb.from('app_settings').update(payload).eq('id',1);
       if(error){CH.toast(alertEl,error.message,'err');return;}
       settings={...settings,...payload,signup_mode:mode,signup_message:msg,signup_reopens_at:date?new Date(date).toISOString():null};CH.toast(alertEl,'Settings saved. The signup door is enforced.','ok');

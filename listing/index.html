@@ -38,7 +38,7 @@
 <script src="/vendor/supabase-2.110.7.js"></script>
 <script src="/config.js?v=20260721-launch1"></script>
 <script src="/master-gate.js?v=20260721-launch1"></script>
-<script src="/app.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch-v12"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert'), content=document.getElementById('content');
@@ -46,6 +46,16 @@
   const slug=new URLSearchParams(location.search).get('id');
   const session=await CH.getSession();
   if(session){document.getElementById('auth-link').style.display='none';document.getElementById('dash-link').style.display='inline-block';}
+  const modal=document.getElementById('apply-modal');
+  const closeApply=()=>modal.classList.remove('show');
+  document.getElementById('apply-cancel').addEventListener('click',closeApply);
+  document.getElementById('apply-x').addEventListener('click',closeApply);
+  modal.addEventListener('click',e=>{if(e.target===modal)closeApply();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('show'))closeApply();});
+  CH.mountFeedback();
+  if(session)CH.mountNotifications();
+  CH.mountFooter();
+  CH.wireBack('/creative-house/');
 
   if(!slug){CH.go404('missing-listing');return;}
   const {data:o,error}=await CH.sb.rpc('ch_public_listing',{p_slug:slug});
@@ -85,12 +95,8 @@
   const {data:existing}=await CH.sb.from('applications').select('status,status_announced_at').eq('opening_id',o.id).eq('applicant_id',session.user.id).maybeSingle();
   if(existing){ cta.innerHTML=`<span class="mono muted" style="font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;">Applied · ${CH.esc(CH.visibleApplicationStatus(existing))}</span>`; return; }
   cta.innerHTML=`<button class="btn solid" id="applybtn">Apply now</button>`;
-  const modal=document.getElementById('apply-modal');
   document.getElementById('apply-meta').textContent=[o.department,o.production_title,o.location].filter(Boolean).join(' · ');
   document.getElementById('applybtn').addEventListener('click',()=>modal.classList.add('show'));
-  document.getElementById('apply-cancel').addEventListener('click',()=>modal.classList.remove('show'));
-  document.getElementById('apply-x').addEventListener('click',()=>modal.classList.remove('show'));
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('show');});
   document.getElementById('apply-form').addEventListener('submit',async(e)=>{
     e.preventDefault();const a=document.getElementById('apply-alert'),portfolioRaw=document.getElementById('a-link').value.trim(),portfolio=CH.safeUrl(portfolioRaw);if(portfolioRaw&&!portfolio){CH.toast(a,'Use a complete https:// portfolio link.','err');return;}const btn=document.getElementById('apply-submit');btn.disabled=true;btn.innerHTML='<span class="loader"></span>';
     let error;try{({error}=await CH.withTimeout(CH.sb.from('applications').insert({opening_id:o.id,applicant_id:session.user.id,cover_note:document.getElementById('a-note').value.trim(),portfolio_link:portfolio||null}),20000));}catch(x){error=x;}
@@ -102,10 +108,6 @@
     await CH.celebrateFirstApplication();
     await CH.showProgressReward();
   });
-  CH.mountFeedback();
-  CH.mountNotifications();
-  CH.mountFooter();
-  CH.wireBack('/creative-house');
 })();
 </script>
 </body>

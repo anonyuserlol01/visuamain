@@ -1,12 +1,20 @@
 /* =====================================================================
-   VISUAREALM · CREATIVE HOUSE — SHARED HELPERS (v4, Phase 2)
+   VISUAREALM · CREATIVE HOUSE — SHARED HELPERS (Launch v10)
    ===================================================================== */
 (function () {
   const CFG = window.VISUAREALM_CONFIG || {};
-  const configured = CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY &&
-    !CFG.SUPABASE_URL.includes("PASTE_") && !CFG.SUPABASE_ANON_KEY.includes("PASTE_");
+  const configured = !!(CFG.SUPABASE_URL && CFG.SUPABASE_ANON_KEY &&
+    !CFG.SUPABASE_URL.includes("PASTE_") && !CFG.SUPABASE_ANON_KEY.includes("PASTE_"));
   let client = null;
-  if (configured && window.supabase) client = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+  let clientInitError = null;
+  if (configured && window.supabase && typeof window.supabase.createClient === "function") {
+    try {
+      client = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+    } catch (error) {
+      clientInitError = error;
+      console.error("Supabase client initialization failed", error);
+    }
+  }
 
   const SUPPORT_EMAIL = "support@visuarealmstudios.com";
   const MODE_SWITCH_COOLDOWN_DAYS = 0;   // approved hirers can move between workspaces freely
@@ -43,9 +51,23 @@
       if (!data.session) { window.location.href = this.routes.afterLogout || "/create-account/"; return null; }
       const meta=data.session.user.user_metadata||{},syncKey=`vr_legal_sync_${data.session.user.id}_${meta.terms_version||''}`;
       try{if(meta.birth_date&&meta.terms_version&&!sessionStorage.getItem(syncKey)){client.rpc('ch_record_legal_consent',{p_birth_date:meta.birth_date,p_guardian_acknowledged:!!meta.guardian_acknowledged,p_terms_version:meta.terms_version,p_privacy_version:meta.privacy_version,p_guidelines_version:meta.guidelines_version,p_marketing_consent:!!meta.marketing_consent,p_source:'signup_metadata'}).then(({error})=>{if(!error)sessionStorage.setItem(syncKey,'1');}).catch(()=>{});}}catch(e){}
+      // Fire-and-forget. The Edge Function verifies the JWT and the database
+      // guarantees a newly verified member can receive this message only once.
+      this.maybeSendWelcomeEmail(data.session).catch(()=>{});
       return data.session;
     },
     async getSession() { if (!client) return null; const { data } = await client.auth.getSession(); return data.session; },
+    async maybeSendWelcomeEmail(session){
+      if(!client||!session?.user?.id||!session.user.email_confirmed_at)return false;
+      const key=`vr_welcome_email_${session.user.id}`;
+      try{if(sessionStorage.getItem(key)==='1')return true;}catch(e){}
+      try{
+        const {data,error}=await this.withTimeout(client.functions.invoke('send-welcome-email'),12000);
+        if(error||!data?.ok)return false;
+        try{sessionStorage.setItem(key,'1');}catch(e){}
+        return true;
+      }catch(e){return false;}
+    },
     async profile() {
       if (!client) return null;
       const s = await this.getSession(); if (!s) return null;
@@ -140,9 +162,16 @@
     fmtDate(ts){ if(!ts) return "—"; try{return new Date(ts).toLocaleDateString(undefined,{year:"numeric",month:"short",day:"numeric"});}catch(e){return "—";} },
     toast(el,msg,kind){ if(!el){alert(msg);return;} el.textContent=msg; el.className="alert show "+(kind==="ok"?"ok":"err"); },
     clearToast(el){ if(el) el.className="alert"; },
-    guardConfig(sel){ if(configured) return true; const host=document.querySelector(sel)||document.body;
+    guardConfig(sel){ if(client&&client.auth) return true; const host=document.querySelector(sel)||document.body;
       const b=document.createElement("div"); b.className="alert err show"; b.style.cssText="margin:20px auto;max-width:560px";
-      b.innerHTML="Setup needed: open <b>config.js</b> and paste your Supabase URL and key. See the README.";
+      if(!configured){
+        b.innerHTML="Setup needed: <b>config.js</b> is missing its Supabase URL or public key.";
+      }else if(!window.supabase||typeof window.supabase.createClient!=="function"){
+        b.innerHTML="Creative House could not load its secure sign-in library. Refresh the page. If this continues, confirm <b>/vendor/supabase-2.110.7.js</b> was published with the website.";
+      }else{
+        b.textContent="Creative House could not start secure sign-in. Refresh and try again.";
+      }
+      if(clientInitError) b.title=clientInitError.message||"Supabase initialization failed";
       host.prepend(b); return false; },
 
     // ---- expiry / renewal ----
@@ -455,8 +484,8 @@
     },
 
     // ---- google oauth ----
-    async signInWithGoogle(mode,legal){
-      const redirect=location.origin+(this.routes&&this.routes.afterLogin?this.routes.afterLogin:'/dashboard/');
+    async signInWithGoogle(mode,legal,redirectPath){
+      const redirect=location.origin+this.safeAppPath(redirectPath||(this.routes&&this.routes.afterLogin?this.routes.afterLogin:'/dashboard/'));
       return this.sb.auth.signInWithOAuth({
         provider:'google',
         options:{ redirectTo:redirect, queryParams:{ access_type:'offline', prompt:'consent' }, data:(mode||legal)?{primary_mode:mode||'applicant',...(legal||{})}:undefined }
@@ -641,7 +670,7 @@
         <span class="sf-brand">VISUA<b>REALM</b> · Creative House</span>
         <nav class="sf-links">
           <a href="/creative-house/">The House</a>
-          <a href="/pricing/">Pricing</a>
+          <a href="/dashboard/?tab=Membership">Plans &amp; access</a>
           <a href="/community-guidelines.html">Community Standards</a>
           <a href="/terms.html">Terms</a>
           <a href="/billing-terms.html">Billing</a>
@@ -710,6 +739,7 @@
             <input type="checkbox" id="rg-check" style="width:auto;margin-top:3px;flex:none;">
             <span>I understand what this community asks of me, and I agree to show up with care.</span>
           </label>
+          <div class="alert" id="rg-alert" role="status" aria-live="polite"></div>
           <button class="btn solid full" id="rg-go" disabled>Enter the Creative House</button>
         </div>`;
         document.body.appendChild(bg);
@@ -717,8 +747,15 @@
         chk.addEventListener('change',()=>{ go.disabled=!chk.checked; });
         go.addEventListener('click', async ()=>{
           go.disabled=true; go.innerHTML='<span class="loader"></span>';
-          try{ await client.from('profiles').update({agreed_guidelines_at:new Date().toISOString()}).eq('id',profile.id); }catch(e){}
-          profile.agreed_guidelines_at=new Date().toISOString();
+          const acceptedAt=new Date().toISOString();
+          let error=null;
+          try{({error}=await this.withTimeout(client.from('profiles').update({agreed_guidelines_at:acceptedAt}).eq('id',profile.id),20000));}catch(e){error=e;}
+          if(error){
+            go.disabled=!chk.checked;go.textContent='Enter the Creative House';
+            this.toast(bg.querySelector('#rg-alert'),this.friendlyError(error,'We could not record your agreement. Check your connection and try again.'),'err');
+            return;
+          }
+          profile.agreed_guidelines_at=acceptedAt;
           bg.remove(); resolve(true);
         });
       });

@@ -7,18 +7,24 @@ config.*.local.js
 supabase/.env
 supabase/.env.*
 
-# Supabase CLI local state (deployable functions remain tracked)
-supabase/.temp/
-supabase/.branches/
+# Supabase backend source and CLI state
+# Edge Functions are deployed through Supabase, not GitHub Pages.
+/supabase/
 
 # Local database installers and operational handoff files
 # Keep these in the downloaded package, but do not publish them with GitHub Pages.
 /database-private/
+/email-templates/
 /START-HERE-LAUNCH-V7.md
 /FINAL-LAUNCH-HANDOFF.md
 /MEMBERSHIP-START-HERE.md
 /READ-ME-FIRST.md
+/EMAIL-SETUP-START-HERE.md
+/START-HERE-ADMIN-UI-V9.md
+/START-HERE-LAUNCH-COMPLETION.md
 /TEST-RESULTS*.md
+
+# Keep the pinned browser client: /vendor/ is a required website asset.
 
 # Dependencies and generated output
 node_modules/
@@ -45,4 +51,3 @@ Desktop.ini
 .idea/
 .vscode/*
 !.vscode/settings.json
-

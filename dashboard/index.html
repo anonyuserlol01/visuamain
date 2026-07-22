@@ -148,6 +148,7 @@
 .portal-ui .alert.ok{background:#e4efe5;color:#315b38;border-color:#b9d2bd;}
 .portal-ui .alert.err{background:#f6e3df;color:#853622;border-color:#e5b9ae;}
 .portal-ui .review-banner{z-index:120;}
+.membership-room{display:grid;gap:18px}.membership-room-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:32px;align-items:end;padding:34px;background:#151412;color:#f5eee5;border-radius:8px}.membership-room-hero::after{content:'ACCESS';position:absolute;right:-12px;bottom:-24px;color:rgba(255,255,255,.045);font:400 7rem/1 var(--font-impact);pointer-events:none}.membership-room-hero>div,.membership-room-hero>aside{position:relative;z-index:1}.membership-room-hero span{color:#e47a50;font:600 .54rem/1 var(--font-mono);letter-spacing:.17em;text-transform:uppercase}.membership-room-hero h2{margin:14px 0 12px!important;color:#fff!important;font:500 clamp(2.3rem,4.6vw,4.8rem)/.9 var(--font-serif)!important;letter-spacing:-.055em}.membership-room-hero p{max-width:680px;margin:0;color:#bbb3a9;font-size:.92rem;line-height:1.65}.membership-room-hero aside{padding:18px;border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.04)}.membership-room-hero aside b{display:block;color:#fff;font:500 2rem/1 var(--font-serif)}.membership-room-hero aside small{display:block;margin-top:8px;color:#999188;font:.53rem/1.5 var(--font-mono);letter-spacing:.1em;text-transform:uppercase}.membership-room .membership-card{margin:0}.membership-plan-grid{display:grid;grid-template-columns:.82fr 1.18fr;gap:12px}.membership-plan{position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:390px;padding:25px;border:1px solid var(--portal-line);border-radius:7px;background:var(--portal-card)}.membership-plan.future{background:#1d1a17;color:#f4ede4;border-color:#1d1a17}.membership-plan.future::after{content:attr(data-mark);position:absolute;right:-5px;bottom:-24px;color:rgba(255,255,255,.04);font:400 7rem/1 var(--font-impact)}.membership-plan header{position:relative;z-index:1;display:flex;justify-content:space-between;gap:15px}.membership-plan header span{color:#787169;font:.52rem/1 var(--font-mono);letter-spacing:.15em;text-transform:uppercase}.membership-plan.future header span{color:#a89f96}.membership-plan header b{padding:6px 8px;border:1px solid currentColor;color:#54745c;font:.46rem/1 var(--font-mono);letter-spacing:.1em;text-transform:uppercase}.membership-plan.future header b{color:#e47a50}.membership-plan h3{position:relative;z-index:1;margin:42px 0 10px!important;font:500 clamp(2rem,3.5vw,3.7rem)/.95 var(--font-serif)!important}.membership-plan.future h3{color:#fff!important}.membership-plan>p{position:relative;z-index:1;color:var(--portal-muted);font-size:.85rem;line-height:1.6}.membership-plan.future>p{color:#aaa198}.membership-plan ul{position:relative;z-index:1;list-style:none;margin:auto 0 0;padding:24px 0 0}.membership-plan li{padding:9px 0;border-top:1px solid var(--portal-line);color:#5f5952;font:.59rem/1.45 var(--font-mono);letter-spacing:.04em;text-transform:uppercase}.membership-plan.future li{border-color:rgba(255,255,255,.1);color:#b9b0a6}.membership-plan li::before{content:'✓';margin-right:9px;color:var(--portal-orange)}.membership-checkout{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px}.membership-checkout .btn{justify-content:center}.membership-checkout small{grid-column:1/-1;color:#8f867d;font-size:.53rem;line-height:1.5}.membership-fairness{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;padding:20px;background:#df6536;color:#151412;border-radius:7px}.membership-fairness b{font:500 2.2rem/1 var(--font-serif)}.membership-fairness p{margin:0;font-size:.85rem;line-height:1.55}.membership-back{justify-self:start}
 /* Hiring studio: a quieter, cool-neutral workspace with restrained brand colour. */
 .portal-ui.hiring-mode{--hire-bg:#dfe3e2;--hire-card:#f5f6f4;--hire-ink:#17201f;--hire-muted:#66706d;--hire-line:rgba(23,32,31,.13);--hire-deep:#101617;--hire-accent:#667c75;background:var(--hire-bg);}
 .portal-ui.hiring-mode .appbar{background:rgba(13,18,19,.98);border-bottom-color:rgba(255,255,255,.08);}
@@ -299,6 +300,7 @@
 @media(max-width:900px){.applicant-command,.opportunity-command{grid-template-columns:1fr}.applicant-command>aside{justify-items:start;text-align:left}.opportunity-command>aside{justify-self:start}.application-trail-list>article{grid-template-columns:28px minmax(0,1fr) auto}.trail-state{grid-column:2/-1}.trail-date{text-align:right}}
 @media(max-width:760px){.portal-ui.hiring-mode .hero-band{min-height:100px}.portal-ui #mode-badge{display:none}.portal-ui .portal-sidebar .tab{display:flex;justify-content:center;padding:11px 4px!important;text-align:center}.portal-ui .portal-sidebar .tab>i,.portal-ui .portal-sidebar .tab small{display:none}.portal-ui .portal-sidebar .tab b{font-size:.58rem}.casting-future{display:block;min-height:470px;padding:30px 22px}.casting-future h2{font-size:3.5rem}.casting-orbit{width:130px;margin:35px 0 0}.casting-metrics{grid-template-columns:1fr 1fr}.casting-home-grid{display:block}.casting-home-grid>main,.casting-home-grid>aside{margin-bottom:12px}.production-ledger>article{grid-template-columns:30px 1fr auto}.ledger-counts{grid-column:2/-1}.production-ledger em{grid-column:3;grid-row:1}.production-masthead,.talent-room-hero,.company-command{display:block;padding:25px 21px}.production-masthead h2,.talent-room-hero h2,.company-command h2{font-size:3rem}.production-masthead .btn,.company-command .btn{width:100%;margin-top:22px}.talent-room-hero>div:last-child{width:110px;margin-top:25px}.talent-stage-strip{display:flex;overflow-x:auto}.talent-stage-strip button{min-width:115px}.talent-room-tools{grid-template-columns:1fr}.talent-wall{grid-template-columns:1fr}.company-profile-layout{display:block}.company-preview{margin-top:12px}.candidate-credentials{grid-template-columns:1fr}.casting-flow>div{padding:12px;gap:5px}.casting-flow article{padding:12px}.workspace-note{font-size:.67rem}.opportunity-wall{grid-template-columns:1fr}.opportunity-result-head{display:grid;gap:4px}}
 @media(max-width:760px){.applicant-command,.opportunity-command,.application-trail-command{display:block;padding:27px 21px}.applicant-command h2,.opportunity-command h2,.application-trail-command h2{font-size:3rem}.applicant-command>aside,.opportunity-command>aside{margin-top:27px}.applicant-command .btn,.application-trail-command>.btn{width:100%;justify-content:center}.application-trail-command>.btn{margin-top:22px}.applicant-pulse,.application-trail-pulse{grid-template-columns:1fr 1fr}.application-trail-pulse article:last-child{grid-column:1/-1}.application-trail-filter{overflow-x:auto}.application-trail-filter button{flex:none}.application-trail-list>article{grid-template-columns:25px minmax(0,1fr);padding:16px}.trail-date{grid-column:2;text-align:left}.trail-state{grid-column:2}.home-grid{display:block}.home-grid aside{margin-top:12px}}
+@media(max-width:760px){.membership-room-hero,.membership-plan-grid{grid-template-columns:1fr}.membership-room-hero{padding:26px 21px}.membership-room-hero aside{max-width:220px}.membership-plan{min-height:0}.membership-checkout{grid-template-columns:1fr}.membership-checkout small{grid-column:auto}.membership-fairness{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="app portal-ui">
@@ -313,8 +315,8 @@
       <button data-mode="hiring" id="hire-btn">Hire</button>
     </div>
     <a href="/admin/" id="admin-link" class="navlink" style="display:none;">Admin</a>
-    <a href="/pricing/" class="navlink">Pricing</a>
-    <span class="avatar" id="nav-avatar">·</span>
+    <a href="/dashboard/?tab=Membership" class="navlink">Plans &amp; access</a>
+    <button type="button" class="avatar" id="nav-avatar" aria-label="Open my profile" title="Open my profile">·</button>
     <button id="logout" class="navlink">Log out</button>
   </nav>
 </header>
@@ -323,7 +325,7 @@
   <div class="mobile-nav-head"><strong>Your Creative House</strong><button class="mobile-nav-close" id="mobile-nav-close" aria-label="Close menu">&times;</button></div>
   <div class="mobile-workspaces" id="mobile-workspaces"><span>Switch workspace</span><div><button data-mobile-mode="applicant">Applicant</button><button data-mobile-mode="hiring" id="mobile-hire-mode">Hiring</button></div></div>
   <div class="mobile-nav-tabs" id="mobile-nav-tabs"></div>
-  <div class="mobile-nav-links"><a href="/admin/" id="mobile-admin-link" class="mobile-role-link" style="display:none;"><strong>Mission Control</strong><span>Admin panel →</span></a><a href="/moderation/" id="mobile-mod-link" class="mobile-role-link" style="display:none;"><strong>Moderation</strong><span>Keep the house safe →</span></a><a href="/creative-house/">Creative House</a><a href="/pricing/">Pricing</a><a href="/mentors.html">Mentors</a><a href="/community-guidelines.html">Community standards</a><a href="/privacy.html">Privacy</a><a href="mailto:support@visuarealmstudios.com">Support</a><button id="mobile-logout">Sign out</button></div>
+  <div class="mobile-nav-links"><a href="/admin/" id="mobile-admin-link" class="mobile-role-link" style="display:none;"><strong>Mission Control</strong><span>Admin panel →</span></a><a href="/moderation/" id="mobile-mod-link" class="mobile-role-link" style="display:none;"><strong>Moderation</strong><span>Keep the house safe →</span></a><a href="/creative-house/">Creative House</a><a href="/dashboard/?tab=Membership">Plans &amp; access</a><a href="/mentors.html">Mentors</a><a href="/community-guidelines.html">Community standards</a><a href="/privacy.html">Privacy</a><a href="mailto:support@visuarealmstudios.com">Support</a><button id="mobile-logout">Sign out</button></div>
   <p class="mobile-nav-note">You belong here. Take up the room you need.</p>
 </aside></div>
 
@@ -334,7 +336,7 @@
     <div class="rail-note" id="rail-note">Your next step does not have to be a giant one.</div>
     <div class="rail-foot">
       <a href="/creative-house/">The Creative House</a>
-      <a href="/pricing/">Pricing</a>
+      <a href="/dashboard/?tab=Membership">Plans &amp; access</a>
       <a href="/mentors.html">Meet the mentors</a>
       <a href="/moderation/" id="mod-link" style="display:none;">Moderation portal</a>
       <a href="/community-guidelines.html">Community standards</a>
@@ -412,7 +414,7 @@
 <script src="/vendor/supabase-2.110.7.js"></script>
 <script src="/config.js?v=20260721-launch1"></script>
 <script src="/master-gate.js?v=20260721-launch1"></script>
-<script src="/app.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch-v12"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
@@ -485,14 +487,14 @@
 
   // ---------- TABS ----------
   let activeTab='';
-  function tabsFor(){ return mode==='hiring'?['Studio','Productions','Applicants','Company','Settings']:['Home','Browse','Applications','Profile']; }
-  const TAB_META={Studio:['◫','Studio home','Your casting command'],Productions:['□','Productions','Listings and roles'],Applicants:['○','Applicants','Across every project'],Company:['◇','Company profile','What talent sees'],Settings:['·','Settings','Account and privacy'],Home:['⌂','Home','Your next moves'],Browse:['⌕','Browse','Find opportunities'],Applications:['↗','Applications','Your application trail'],Profile:['○','Profile','Identity and settings']};
+  function tabsFor(){ return mode==='hiring'?['Studio','Productions','Applicants','Company','Membership','Settings']:['Home','Browse','Applications','Membership','Profile']; }
+  const TAB_META={Studio:['◫','Studio home','Your casting command'],Productions:['□','Productions','Listings and roles'],Applicants:['○','Applicants','Across every project'],Company:['◇','Company profile','What talent sees'],Membership:['+','Plans & access','Free now, more later'],Settings:['·','Settings','Account and privacy'],Home:['⌂','Home','Your next moves'],Browse:['⌕','Browse','Find opportunities'],Applications:['↗','Applications','Your application trail'],Profile:['○','Profile','Identity and settings']};
   let manageListingId=null; // when set, hiring shows the Application Manager for that listing
   // Grouped notifications link straight here: /dashboard/?tab=Projects&opening=<id>
   (function applyDeepLink(){
     const q=new URLSearchParams(location.search);
     const t=q.get('tab'); const o=q.get('opening');
-    if(t) activeTab=t==='Projects'?'Productions':t;
+    if(t) activeTab=t==='Projects'?'Productions':t==='Account'?(mode==='hiring'?'Settings':'Profile'):t;
     if(o) manageListingId=o;
     if(t||o) history.replaceState({},'',location.pathname);
   })();
@@ -501,12 +503,14 @@
   function openMobileNav(){mobileNav.classList.add('show');mobileNav.setAttribute('aria-hidden','false');mobileMenu.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';}
   mobileMenu.addEventListener('click',openMobileNav);document.getElementById('mobile-nav-close').addEventListener('click',closeMobileNav);mobileNav.addEventListener('click',e=>{if(e.target===mobileNav)closeMobileNav();});
   function chooseTab(name){activeTab=name;manageListingId=null;closeMobileNav();renderTabs();renderBody();}
+  document.getElementById('nav-avatar').addEventListener('click',()=>chooseTab(mode==='hiring'?'Settings':'Profile'));
   function renderTabs(){const t=tabsFor();if(!t.includes(activeTab))activeTab=t[0];
     document.getElementById('tabs').innerHTML=t.map(x=>{const m=TAB_META[x]||['·',x,''];return `<button class="tab ${x===activeTab?'active':''}" data-t="${x}"><i>${m[0]}</i><span><b>${m[1]}</b><small>${m[2]}</small></span></button>`;}).join('');
     document.getElementById('mobile-nav-tabs').innerHTML=t.map(x=>`<button class="${x===activeTab?'active':''}" data-t="${x}"><span>${x}</span></button>`).join('');
     document.querySelectorAll('#tabs .tab,#mobile-nav-tabs button').forEach(b=>b.addEventListener('click',()=>chooseTab(b.dataset.t)));}
   function renderView(){document.title=(mode==='hiring'?'Hiring Studio':'Applicant Dashboard')+' | Creative House';syncMode();renderTabs();renderBody();}
   function renderBody(){
+    if(activeTab==='Membership'){membershipTab();return;}
     if(mode==='applicant'){
       if(activeTab==='Home') homeApplicant();
       else if(activeTab==='Browse') board();
@@ -521,6 +525,24 @@
     }
   }
   function renderTabsOLD_REMOVED(){}
+
+  function membershipTab(){
+    const v=document.getElementById('view'),hiring=mode==='hiring';
+    const currentName=membership?.name||(hiring?'Hiring Free':'House Free');
+    const checkoutOpen=!!(membership?.checkout_available&&!membership?.is_premium),checkoutPlan=hiring?'hiring_studio':'house_plus';
+    v.innerHTML=`<div class="membership-room">
+      <section class="membership-room-hero"><div><span>PLANS & ACCESS / INSIDE YOUR WORKSPACE</span><h2>Begin free. Grow when it makes sense.</h2><p>Your account, work, applications and essential access stay here. Future paid tools add preparation and organization; they never buy visibility or hiring priority.</p></div><aside><b>${CH.esc(currentName)}</b><small>Your current ${hiring?'hiring':'applicant'} access</small></aside></section>
+      ${CH.membershipCard(membership,mode)}
+      <div class="membership-plan-grid">
+        <article class="membership-plan"><header><span>${hiring?'Hiring Free':'Creative House Free'}</span><b>Available now</b></header><h3>$0 · a real beginning</h3><p>${hiring?'Publish a thoughtful first listing and manage applicants with the complete safety layer.':'Build your Creative Passport, find work, apply and keep your complete application trail.'}</p><ul>${(hiring?['One active production listing','Complete applicant manager','Shortlist, No List and Hire','Reporting and safety access']:['Creative Passport and work links','Browse and apply to opportunities','Saved roles and application trail','Reporting and safety access']).map(item=>`<li>${item}</li>`).join('')}</ul></article>
+        <article class="membership-plan future" data-mark="${checkoutOpen?'OPEN':'SOON'}"><header><span>${hiring?'Hiring Studio':'House+'}</span><b>${checkoutOpen?'Available':'Coming soon'}</b></header><h3>${checkoutOpen?(hiring?'$19 CAD monthly':'$6.99 CAD monthly'):'More room, when it is ready.'}</h3><p>${hiring?'For repeat productions, deeper organization and teams managing more than one room.':'For members who want deeper preparation, reusable tools and more ways to organize their search.'}</p><ul>${(hiring?['Multiple active listings','Reusable production templates','Private talent lists','Exports and useful analytics']:['Detailed Match Notes','More reusable application notes','Expanded Keeps and saved searches','Application Trail export']).map(item=>`<li>${item}</li>`).join('')}</ul>${checkoutOpen?`<div class="membership-checkout"><button class="btn solid" type="button" data-membership-checkout="month">Choose monthly</button><button class="btn ghost" type="button" data-membership-checkout="year">${hiring?'$190':'$59'} CAD yearly</button><small>Plus applicable government tax. Renews until cancelled. Review the full total and billing terms before secure checkout.</small></div>`:''}</article>
+      </div>
+      <div class="membership-fairness"><b>Access is not the upgrade.</b><p>Applying, being considered, hearing back and using safety tools remain part of the free House. Paid features are not purchasable yet, and nothing will convert or charge automatically.</p></div>
+      <button type="button" class="btn ghost membership-back" id="membership-back">← Return to ${hiring?'Hiring Studio':'my dashboard'}</button>
+    </div>`;
+    document.getElementById('membership-back').addEventListener('click',()=>chooseTab(hiring?'Studio':'Home'));
+    document.querySelectorAll('[data-membership-checkout]').forEach(button=>button.addEventListener('click',async()=>{const label=button.textContent;button.disabled=true;button.textContent='Opening secure checkout…';const moved=await CH.startCheckout(checkoutPlan,button.dataset.membershipCheckout);if(!moved){button.disabled=false;button.textContent=label;}}));
+  }
 
   // ---------- match scoring (opportunity quality) ----------
   function matchScore(o){
@@ -716,7 +738,7 @@
       <div class="cinema-body"><main>
         ${o.synopsis?`<section class="cinema-section"><div class="cinema-label">The story</div><h3>Synopsis</h3><p>${CH.esc(o.synopsis)}</p></section>`:''}
         ${o.description?`<section class="cinema-section"><div class="cinema-label">The role</div><h3>What you are stepping into</h3><p>${CH.esc(o.description)}</p></section>`:''}
-        ${reasons.length?`<section class="cinema-section"><div class="cinema-label">Match Notes · House+ ${CH.paidMark()}</div><h3>Why this found you</h3><p>Your match is explained, not hidden behind an algorithm.</p><div class="match-reasons">${reasons.map(r=>`<div class="match-reason"><i>✓</i><span>${CH.esc(r)}</span></div>`).join('')}</div></section>`:!canSeeFitNotes?`<section class="cinema-section paid-locked"><div class="cinema-label">Match Notes ${CH.paidMark()}</div><h3>The score can explain itself.</h3><p>House+ opens a plain-language breakdown of which profile details matched this role. It never changes how the hirer sees you.</p><a class="btn ghost sm" href="/pricing/">See House+</a></section>`:''}
+        ${reasons.length?`<section class="cinema-section"><div class="cinema-label">Match Notes · House+ ${CH.paidMark()}</div><h3>Why this found you</h3><p>Your match is explained, not hidden behind an algorithm.</p><div class="match-reasons">${reasons.map(r=>`<div class="match-reason"><i>✓</i><span>${CH.esc(r)}</span></div>`).join('')}</div></section>`:!canSeeFitNotes?`<section class="cinema-section paid-locked"><div class="cinema-label">Match Notes ${CH.paidMark()}</div><h3>The score can explain itself.</h3><p>House+ opens a plain-language breakdown of which profile details matched this role. It never changes how the hirer sees you.</p><a class="btn ghost sm" href="/dashboard/?tab=Membership">See House+</a></section>`:''}
         ${o.requirements?`<section class="cinema-section"><div class="cinema-label">What they are looking for</div><h3>Requirements</h3><p>${CH.esc(o.requirements)}</p></section>`:''}
         ${gallery.some(g=>CH.safeImageUrl(g))?`<section class="cinema-section"><div class="cinema-label">From the production</div><h3>Gallery</h3><div class="cinema-gallery">${gallery.map(g=>CH.safeImageUrl(g)?`<a href="${CH.esc(CH.safeImageUrl(g))}" target="_blank" rel="noopener noreferrer"><img src="${CH.esc(CH.safeImageUrl(g))}" alt="Production still" loading="lazy"></a>`:'').join('')}</div></section>`:''}
         ${CH.safeUrl(o.script_url)?`<section class="cinema-section"><div class="cinema-label">Material</div><h3>Script or sides</h3><a class="btn ghost sm" href="${CH.esc(CH.safeUrl(o.script_url))}" target="_blank" rel="noopener noreferrer">Open document ↗</a></section>`:''}
@@ -1167,7 +1189,7 @@
       <div class="split" style="margin:28px 0;"></div>
       <h2 class="block" id="account-settings" style="margin:0 0 4px;">Account & Settings</h2>
       <p class="hint" style="margin:0 0 16px;">Everything about your account, in one place.</p>
-      ${entitlements?`${CH.membershipCard(entitlements,mode)}<div class="membership-actions">${entitlements.checkout_available&&!entitlements.is_premium?`<a class="btn solid sm" href="/pricing/">See membership</a>`:''}${['subscription','trial'].includes(entitlements.source)?`<button class="btn ghost sm" id="manage-billing">Manage billing</button>`:''}</div>`:''}
+      ${entitlements?`${CH.membershipCard(entitlements,mode)}<div class="membership-actions">${entitlements.checkout_available&&!entitlements.is_premium?`<a class="btn solid sm" href="/dashboard/?tab=Membership">See membership</a>`:''}${['subscription','trial'].includes(entitlements.source)?`<button class="btn ghost sm" id="manage-billing">Manage billing</button>`:''}</div>`:''}
       <div class="panel" style="margin-bottom:14px;"><p class="fieldset-title">Email</p>
         <p class="lead" style="margin-top:0;">Current: <b>${CH.esc(profile.email||'')}</b></p>
         <label class="f"><span class="lab">New email</span><input id="ps-email" type="email" placeholder="you@email.com"></label>

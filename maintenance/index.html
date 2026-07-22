@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex,nofollow">
-<title>Coming Soon | VISUAREALM</title>
+<title>A New Creative House Is Underway | VISUAREALM</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/Images/favicon-32.png">
 <link rel="apple-touch-icon" sizes="180x180" href="/Images/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,8 +21,8 @@
 <body>
 <div class="loader" id="loader"><div class="load-inner"><div class="load-brand"><span class="load-word" id="load-word">CONNECTING</span><b id="load-num">00%</b></div><div class="track"><i id="load-track"></i></div><div class="load-meta"><span>VISUAREALM SYSTEM</span><span id="load-note">Checking the signal</span></div></div></div>
 <div class="scene" id="scene"><div class="grid"></div><div class="orb one"></div><div class="orb two"></div><div class="scan"></div><div class="noise"></div>
-  <header class="top"><a href="/" class="brand">VISUA<span>REALM</span></a><div class="top-right"><div class="status"><i></i><span id="status-text">New signal loading</span></div><a class="quiet-login" id="quiet-login" href="/create-account/?mode=login&from=maintenance">Sign in</a></div></header>
-  <main class="main"><section class="hero-copy"><div class="kicker" id="kicker">Something new is taking shape</div><h1 class="glitch" id="glitch" data-text="COMING SOON"><span>COMING</span><span class="stroke">SOON</span></h1><p class="sub" id="sub">The next version of VISUAREALM is being shaped in the dark. <em>More room to make, more people to meet, and a better place to begin.</em></p><div class="transmission"><i></i><span id="message">We stepped behind the curtain to build what comes next.</span></div><div class="signal-words"><span>Make</span><span>Meet</span><span>Begin</span><span>You belong</span></div></section></main><footer class="bottom"><span>Toronto / Canada</span><span id="clock">Local signal</span><span>Built with care</span></footer>
+  <header class="top"><a href="/" class="brand">VISUA<span>REALM</span></a><div class="top-right"><div class="status"><i></i><span id="status-text">Major evolution underway</span></div><a class="quiet-login" id="quiet-login" href="/create-account/?mode=login&from=maintenance">Sign in</a></div></header>
+  <main class="main"><section class="hero-copy"><div class="kicker" id="kicker">The House is evolving</div><h1 class="glitch" id="glitch" data-text="COMING SOON"><span>COMING</span><span class="stroke">SOON</span></h1><p class="sub" id="sub">We are rebuilding Creative House from the inside out. <em>Major new updates, sharper tools and an entirely evolved experience are underway.</em> What returns will be bigger, clearer and built for where the next generation of creatives is going.</p><div class="transmission"><i></i><span id="message">This is more than an update. It is the beginning of a new chapter.</span></div><div class="signal-words"><span>Rebuilding</span><span>Evolving</span><span>Expanding</span><span>You belong</span></div></section></main><footer class="bottom"><span>Toronto / Canada</span><span id="clock">Local signal</span><span>Built with care</span></footer>
 </div>
 <script src="/vendor/supabase-2.110.7.js"></script><script src="/config.js?v=20260721-launch1"></script>
 <script>
@@ -32,7 +32,7 @@
  setInterval(()=>{const g=document.getElementById('glitch');g.classList.add('hit');setTimeout(()=>g.classList.remove('hit'),260)},1800+Math.random()*2200);
  const clock=()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+' / LOCAL';clock();setInterval(clock,30000);
  try{const c=window.VISUAREALM_CONFIG||{},sb=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY),{data,error}=await sb.rpc('ch_master_maintenance_state');if(error)throw error;const state=data||{};if(state.message)document.getElementById('message').textContent=state.message;if(!state.active){document.getElementById('scene').classList.add('open-state');document.getElementById('status-text').textContent='The House is open';document.getElementById('kicker').textContent='The signal is back';document.getElementById('glitch').dataset.text='WE ARE OPEN';document.getElementById('glitch').innerHTML='<span>WE ARE</span><span class="stroke">OPEN</span>';document.getElementById('sub').innerHTML='The work is live and the doors are open. <em>Come inside.</em>';document.getElementById('message').textContent='Everything is ready. Welcome back to VISUAREALM.';document.getElementById('quiet-login').textContent='Enter';document.getElementById('quiet-login').href='/';}}
- catch(e){document.getElementById('message').textContent='We are making the next version worth the wait.';}
+ catch(e){document.getElementById('message').textContent='This is more than an update. It is the beginning of a new chapter.';}
  setInterval(async()=>{try{const c=window.VISUAREALM_CONFIG||{},sb=window.supabase.createClient(c.SUPABASE_URL,c.SUPABASE_ANON_KEY),{data}=await sb.rpc('ch_master_maintenance_state');if(data&&data.active===false)location.replace('/');}catch(e){}},15000);
 })();
 </script>

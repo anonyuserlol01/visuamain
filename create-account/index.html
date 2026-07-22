@@ -183,15 +183,16 @@
 <script src="/vendor/supabase-2.110.7.js"></script>
 <script src="/config.js?v=20260721-launch1"></script>
 <script src="/master-gate.js?v=20260721-launch1"></script>
-<script src="/app.js?v=20260721-launch1"></script>
+<script src="/app.js?v=20260721-launch-v12"></script>
 <script>
 (async function(){
   const alertEl=document.getElementById('alert');
   const forms={signup:document.getElementById('form-signup'),login:document.getElementById('form-login'),recover:document.getElementById('form-recover'),verify:document.getElementById('form-verify')};
   const tagline=document.getElementById('tagline'),title=document.getElementById('auth-title'),kicker=document.getElementById('kicker');
   const search=new URLSearchParams(window.location.search),opportunityEntry=search.get('view')==='opportunities';
-  const afterAuth=search.get('next')==='pricing'?'/pricing/':(CH.routes.afterLogin||'/dashboard/');
-  let chosenDiscipline=null,chosenSpecialization=null,chosenMode='applicant',signupState={mode:'open'};
+  const requestedRole=search.get('role')==='hiring'?'hiring':'applicant';
+  const afterAuth=search.get('next')==='pricing'?'/pricing/':opportunityEntry?'/dashboard/?tab=Browse':(CH.routes.afterLogin||'/dashboard/');
+  let chosenDiscipline=null,chosenSpecialization=null,chosenMode=requestedRole,signupState={mode:'open'};
 
   function signupGate(){
     const closed=['paused','maintenance'].includes(signupState.mode),flow=document.getElementById('signup-flow'),gate=document.getElementById('signup-closed');
@@ -230,8 +231,8 @@
   }
 
   document.getElementById('mode-cards').innerHTML=`
-    <button type="button" class="rolecard sel" data-m="applicant"><div class="rc-t">Apply</div><div class="rc-d">Find roles and apply to productions.</div></button>
-    <button type="button" class="rolecard" data-m="hiring"><div class="rc-t">Hire</div><div class="rc-d">Post listings and build your team.</div></button>`;
+    <button type="button" class="rolecard ${chosenMode==='applicant'?'sel':''}" data-m="applicant"><div class="rc-t">Apply</div><div class="rc-d">Find roles and apply to productions.</div></button>
+    <button type="button" class="rolecard ${chosenMode==='hiring'?'sel':''}" data-m="hiring"><div class="rc-t">Hire</div><div class="rc-d">Post listings and build your team.</div></button>`;
   document.querySelectorAll('#mode-cards .rolecard').forEach(c=>c.addEventListener('click',()=>{
     document.querySelectorAll('#mode-cards .rolecard').forEach(x=>x.classList.remove('sel'));c.classList.add('sel');chosenMode=c.dataset.m;}));
 
@@ -273,7 +274,7 @@
     const pwIssue=CH.passwordIssue(password);
     if(pwIssue){CH.toast(alertEl,pwIssue,'err');btn.disabled=false;btn.textContent='Create Account';return;}
     const legal={birth_date,guardian_acknowledged:age<18&&guardian.checked,terms_version:'2026-07-21',privacy_version:'2026-07-21',guidelines_version:'2026-07-21',marketing_consent:document.getElementById('su-marketing').checked};
-    let data,error;try{({data,error}=await CH.withTimeout(CH.sb.auth.signUp({email,password,options:{data:{full_name,discipline:chosenDiscipline||'Crew',primary_department:chosenSpecialization||'',primary_mode:chosenMode,invite_code:document.getElementById('su-invite').value.trim()||undefined,agreed_guidelines:'true',...legal}}}),20000));}catch(x){error=x;}
+    let data,error;try{({data,error}=await CH.withTimeout(CH.sb.auth.signUp({email,password,options:{emailRedirectTo:new URL(afterAuth,window.location.origin).href,data:{full_name,discipline:chosenDiscipline||'Crew',primary_department:chosenSpecialization||'',primary_mode:chosenMode,invite_code:document.getElementById('su-invite').value.trim()||undefined,agreed_guidelines:'true',...legal}}}),20000));}catch(x){error=x;}
     btn.disabled=false;btn.textContent='Create Account';
     if(error){CH.toast(alertEl,error.message,'err');return;}
     if(data.session){window.location.href=afterAuth;}
@@ -286,7 +287,7 @@
     btn.disabled=false;btn.textContent='I’ve verified, continue';
     CH.toast(alertEl,'Not verified yet, or you need to sign in. If you opened the link, sign in below.','err');show('login');
   });
-  async function googleIn(mode,creating=false){let legal=null;if(creating){const age=ageOn(birth.value);if(age===null||age<16||!agree.checked||(age<18&&!guardian.checked)){CH.toast(alertEl,'Complete the age and agreement checks before continuing with Google.','err');return;}legal={birth_date:birth.value,guardian_acknowledged:age<18&&guardian.checked,terms_version:'2026-07-21',privacy_version:'2026-07-21',guidelines_version:'2026-07-21',marketing_consent:document.getElementById('su-marketing').checked,full_name:document.getElementById('su-name').value.trim()||undefined};}const {error}=await CH.signInWithGoogle(mode,legal);if(error)CH.toast(alertEl,error.message,'err');}
+  async function googleIn(mode,creating=false){let legal=null;if(creating){const age=ageOn(birth.value);if(age===null||age<16||!agree.checked||(age<18&&!guardian.checked)){CH.toast(alertEl,'Complete the age and agreement checks before continuing with Google.','err');return;}legal={birth_date:birth.value,guardian_acknowledged:age<18&&guardian.checked,terms_version:'2026-07-21',privacy_version:'2026-07-21',guidelines_version:'2026-07-21',marketing_consent:document.getElementById('su-marketing').checked,full_name:document.getElementById('su-name').value.trim()||undefined};}const {error}=await CH.signInWithGoogle(mode,legal,afterAuth);if(error)CH.toast(alertEl,error.message,'err');}
   document.getElementById('g-login').addEventListener('click',()=>googleIn(null));
   document.getElementById('g-signup').addEventListener('click',()=>googleIn(chosenMode,true));
   document.getElementById('verify-resend').addEventListener('click',async()=>{
