@@ -88,7 +88,12 @@
         membership_era:era,source:open?'launch_access':'free',
         is_premium:open,name:hiring?(open?'Hiring Studio':'Hiring Free'):(open?'House+':'House Free'),
         badge:open?'OPEN HOUSE':'FREE',checkout_available:false,
-        entitlements:{fit_notes:open,application_export:open,hiring_analytics:open,applicant_export:open,talent_lists_limit:open?100:0}
+        entitlements:{
+          fit_notes:open,application_export:open,hiring_analytics:open,applicant_export:open,
+          talent_lists_limit:open?100:0,signals:open,application_studio:open,
+          passport_editions_limit:open?8:1,trail_plus:open,
+          lantern_monthly_limit:open?100:5,calendar_export:open
+        }
       };
     },
     async membership(audience){

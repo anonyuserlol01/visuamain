@@ -22,6 +22,7 @@ supabase/.env.*
 /EMAIL-SETUP-START-HERE.md
 /START-HERE-ADMIN-UI-V9.md
 /START-HERE-LAUNCH-COMPLETION.md
+/START-HERE-HOUSE-PLUS-V14.md
 /TEST-RESULTS*.md
 
 # Keep the pinned browser client: /vendor/ is a required website asset.
@@ -51,3 +52,5 @@ Desktop.ini
 .idea/
 .vscode/*
 !.vscode/settings.json
+
+/START-HERE*.md
